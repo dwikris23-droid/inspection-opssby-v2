@@ -1,0 +1,86 @@
+---
+title: immutability
+description: Validates against passing functions that mutate captured local variables into frozen contexts such as JSX props, hook arguments, and hook return values.
+---
+
+<Callout type="warn">
+  This is an evaluation implementation and may contain false positives or negatives that have not yet been fully audited. Review each report carefully before applying fixes.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/immutability
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/immutability
+```
+
+**Features**
+
+`🧪`
+
+## Rule Details
+
+A function that mutates a variable captured from an enclosing scope is, in effect, a mutable value: unlike a mutable array or object, the caller of the function has no way to prevent the mutation from happening once the function is invoked. This rule flags such functions when they are handed to a context that expects a stable, "frozen" value:
+
+- Passed as a JSX prop
+- Passed as an argument to a hook call
+- Returned from a custom hook
+
+Mutations to `ref`-like values (an identifier named `ref` or ending in `Ref`) are exempted, since refs are mutable by design.
+
+## Examples
+
+```tsx
+// 🔴 Problem: `fn` mutates `cache` after render
+function Component() {
+  const cache = new Map();
+  const fn = () => {
+    cache.set("key", "value");
+  };
+  return <Foo fn={fn} />;
+}
+```
+
+```tsx
+// 🟢 Recommended: use state instead of a captured mutable variable
+function Component() {
+  const [cache, setCache] = useState(() => new Map());
+  const fn = () => {
+    setCache((prev) => new Map(prev).set("key", "value"));
+  };
+  return <Foo fn={fn} />;
+}
+```
+
+## Options
+
+### Shared Settings
+
+Custom ref hooks can also be configured via shared ESLint settings, which apply consistently across all rules in the plugin:
+
+```json
+{
+  "settings": {
+    "react-x": {
+      "additionalRefHooks": "(useMyRef|useCustomRef)"
+    }
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/immutability/immutability.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/immutability/immutability.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/immutability/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `immutability` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/immutability)
+- [React Docs: Components and Hooks must be pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure)
+- [React Docs: Keeping Components Pure](https://react.dev/learn/keeping-components-pure)

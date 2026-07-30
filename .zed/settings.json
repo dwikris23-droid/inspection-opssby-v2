@@ -1,0 +1,51 @@
+{
+  "format_on_save": "on",
+  "formatter": {
+    "external": {
+      "command": "node_modules/.bin/dprint",
+      "arguments": [
+        "fmt",
+        "--stdin",
+        "{buffer_path}"
+      ]
+    }
+  },
+  "soft_wrap": "none",
+  "show_wrap_guides": true,
+  "wrap_guides": [120],
+  "preferred_line_length": 1000,
+  "prettier": {
+    "allowed": false
+  },
+  "file_types": {
+    "Markdown": [
+      "md",
+      "mdx"
+    ]
+  },
+  "languages": {
+    "Markdown": {
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "node_modules/.bin/dprint",
+          "arguments": [
+            "fmt",
+            "--stdin",
+            "{buffer_path}"
+          ]
+        }
+      }
+    }
+  },
+  "lsp": {
+    "eslint": {
+      "settings": {
+        "workingDirectory": {
+          "mode": "auto",
+          "changeProcessCWD": true
+        }
+      }
+    }
+  }
+}

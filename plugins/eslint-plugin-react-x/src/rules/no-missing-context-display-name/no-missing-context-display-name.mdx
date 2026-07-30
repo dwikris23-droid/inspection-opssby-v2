@@ -1,0 +1,80 @@
+---
+title: no-missing-context-display-name
+description: Enforces that all contexts have a 'displayName' that can be used in DevTools.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-missing-context-display-name
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-missing-context-display-name
+```
+
+**Features**
+
+`🔧`
+
+## Rule Details
+
+Context `displayName` property is used by React DevTools to identify the context in the component tree. Without it, debugging becomes difficult as contexts appear as "Context" or "Context.Provider" without any distinguishing information.
+
+## Examples
+
+### Creating a Context without setting displayName
+
+```tsx
+// 🔴 Problem: Different contexts cannot be distinguished in React DevTools, making debugging difficult
+import React from "react";
+
+const MyContext = React.createContext();
+```
+
+### Creating a Context and adding displayName
+
+```tsx
+// 🟢 Recommended: Assign displayName immediately after creating the Context so it can be identified in DevTools
+import React from "react";
+
+const MyContext = React.createContext();
+MyContext.displayName = "MyContext";
+```
+
+### Creating a context with a default value and displayName
+
+When you create a context with a default value, always set `displayName` so that React DevTools can show a meaningful name for the context and its provider.
+
+```tsx
+// 🟢 Recommended: Create a context with a default value and displayName
+import { createContext, useContext } from "react";
+
+interface ThemeContextType {
+  theme: "light" | "dark";
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "light",
+  toggleTheme: () => {},
+});
+ThemeContext.displayName = "ThemeContext";
+
+function ThemedButton() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  return (
+    <button onClick={toggleTheme}>
+      Current theme: {theme}
+    </button>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-context-display-name/no-missing-context-display-name.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-context-display-name/no-missing-context-display-name.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-context-display-name/CHANGELOG.md)

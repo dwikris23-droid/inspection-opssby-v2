@@ -1,0 +1,100 @@
+name: 💬 Rule Request
+title: "[rule] "
+description: Suggest a rule
+labels: ["rule request"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Rule Request
+
+        Before submitting, please check whether an equivalent rule is already available in https://eslint-react.xyz/docs/third-party-plugins or another actively maintained plugin. If you have checked and still believe this rule should be developed and maintained by this project, please provide the necessary rationale, which will be very helpful for avoiding duplicate effort.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Describe what problem this rule will solve. Provide specific code examples to illustrate the issue.
+      placeholder: "This rule will solve..."
+
+  - type: textarea
+    id: alternative-solutions
+    attributes:
+      label: Alternative Solutions
+      description: Have you tried to solve the problem by changing the API or introducing a new API? Why aren't these methods sufficient to solve the problem?
+      placeholder: "I've tried..."
+
+  - type: textarea
+    id: rule-docs-template
+    attributes:
+      label: Rule Documentation Template
+      description: |
+        Provide the rule documentation following the standard template structure used in this repository.
+        This will help reviewers understand the rule's purpose, behavior, and edge cases.
+      placeholder: |
+        ## Rule Details
+
+        <!-- Describe what problem this rule solves and why it's important. -->
+        <!-- Explain the React concept or pattern that this rule enforces. -->
+
+        ## Examples
+
+        ### TODO: Add scenario title
+
+        <!-- Describe the situation/context where the problematic pattern occurs -->
+
+        ```tsx
+        // 🔴 Problem: Explain why this pattern is problematic
+        ```
+
+        ### TODO: Add scenario title
+
+        <!-- Describe the recommended approach for this situation -->
+
+        ```tsx
+        // 🟢 Recommended: Explain the correct pattern
+        ```
+
+        ### TODO: Add scenario title (optional)
+
+        <!-- Describe cases where the pattern is acceptable -->
+
+        ```tsx
+        // 🔵 OK: Explain when this pattern is fine
+        ```
+
+        ## Troubleshooting
+
+        <!-- Optional: Address common questions or edge cases -->
+
+        ### Why is this pattern problematic?
+
+        ### What are the alternatives?
+
+        ## Resources
+
+        - [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/...)
+        <!-- Link to where the rule implementation would live -->
+
+        ## Further Reading
+
+        - [React Docs: ...](https://react.dev/...)
+        <!-- Links to relevant React documentation -->
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Evaluation Checklist
+      description: Check the items below as appropriate to help us evaluate whether this request should be accepted.
+      options:
+        - label: I have had problems with the pattern I want to forbid
+          required: false
+        - label: I could not find a way to solve the problem by changing the API of the problematic code or introducing a new API
+          required: false
+        - label: I have thought very hard about what the corner cases could be and what kinds of patterns this would forbid that are actually okay, and they are acceptable
+          required: false
+        - label: I think the rule explains well enough how to solve the issue to make sure beginners are not blocked by it
+          required: false
+        - label: I believe this rule would be valuable for the broader community
+          required: false

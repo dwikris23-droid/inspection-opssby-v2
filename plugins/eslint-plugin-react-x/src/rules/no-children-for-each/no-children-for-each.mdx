@@ -1,0 +1,145 @@
+---
+title: no-children-for-each
+description: Disallows the use of 'Children.forEach' from the 'react' package.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-children-for-each
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-children-for-each
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using `Children.forEach` to iterate over the children tree is a form of React child introspection. It creates fragile coupling between parent and child components:
+
+- Breaks when children are wrapped in HOCs, `forwardRef`, or `memo`.
+- Prevents React from optimizing rendering.
+- Creates implicit contracts that types can't enforce.
+- Makes composition unpredictable with fragments, portals, and other React features.
+
+Prefer these alternatives:
+
+- Compound components with context
+- Render props or slot props
+- Data-driven APIs (array of config objects)
+- CSS-based solutions (grid, flexbox, `:nth-child`, etc.)
+
+[See common alternatives](https://react.dev/reference/react/Children#alternatives).
+
+## Examples
+
+### Iterating over children to augment them
+
+Using `Children.forEach` to walk through and transform children is brittle because it relies on React's internal children structure. Prefer letting the parent handle iteration with standard array methods or restructuring your component API.
+
+For example, if you need to interleave separators between children, let the parent pass an array directly and use `.map()`:
+
+```tsx
+// 🟢 Recommended: accept data as an array prop and use standard JS methods
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  return (
+    <>
+      {items.map((item, index) => (
+        <div key={item}>
+          {item}
+          {index < items.length - 1 && <hr />}
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+```tsx
+// 🔴 Problem: Using Children.forEach to iterate over and transform children
+import React, { Children } from "react";
+
+interface MyComponentProps {
+  children: React.ReactNode;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  const result = [];
+  Children.forEach(children, (child, index) => {
+    result.push(child);
+    result.push(<hr key={index} />);
+  });
+  // ...
+}
+```
+
+### Using data props and CSS instead of augmenting children
+
+If you need to add separators or other decorations between items, let the parent control the layout with CSS or pass structured data as props rather than transforming children.
+
+```tsx
+// 🟢 Recommended: control separators with CSS or pass data as props
+interface Item {
+  id: string;
+  name: string;
+}
+
+function List({ items }: { items: Item[] }) {
+  return (
+    <ul className="list-with-separators">
+      {items.map((item) => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// CSS: .list-with-separators li + li { border-top: 1px solid #ccc; }
+```
+
+```tsx
+// 🟢 Recommended: pass structured data when each item needs custom wrapping
+interface Row {
+  id: string;
+  content: React.ReactNode;
+}
+
+function RowList({ rows }: { rows: Row[] }) {
+  return (
+    <div className="RowList">
+      {rows.map((row) => (
+        <div className="Row" key={row.id}>
+          {row.content}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-for-each/no-children-for-each.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-for-each/no-children-for-each.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-for-each/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `Children`](https://react.dev/reference/react/Children)
+- [Astryx `no-react-introspection` Rule](https://github.com/facebook/astryx/blob/main/internal/eslint-plugin-astryx/no-react-introspection.js)

@@ -1,0 +1,260 @@
+---
+title: Custom Rules Of State
+description: Validates state usage. Prefer the updater function form in useState setters
+---
+
+## Overview
+
+This recipe contains one custom rule for validating state usage:
+
+1. **[`preferStateUpdaterFunction`](#preferstateupdaterfunction)**: Reports when a `useState` setter is called with an expression that directly references the corresponding state variable. Using the callback (updater function) form ensures the update uses the latest state value, avoiding stale-state bugs in closures, event handlers, and timeouts.
+
+## preferStateUpdaterFunction
+
+Copy the following code into your project (e.g. `.config/preferStateUpdaterFunction.ts`):
+
+```ts title=".config/preferStateUpdaterFunction.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+import type { ScopeVariable } from "@typescript-eslint/scope-manager";
+import type { TSESTree } from "@typescript-eslint/types";
+import { findVariable } from "@typescript-eslint/utils/ast-utils";
+
+/** Require the updater function form of useState setters when referencing the corresponding state variable. */
+export function preferStateUpdaterFunction(): RuleFunction {
+  function isFunction({ type }: TSESTree.Node) {
+    return type === "FunctionDeclaration" || type === "FunctionExpression" || type === "ArrowFunctionExpression";
+  }
+  return (context, { is, settings }) => {
+    const setterToStateVar = new Map<ScopeVariable, ScopeVariable>();
+    const pendingCalls: { callerVar: ScopeVariable; node: TSESTree.CallExpression }[] = [];
+
+    return {
+      CallExpression(node: TSESTree.CallExpression) {
+        // Register useState pairs.
+        if (is.useStateLikeCall(node, settings.additionalStateHooks)) {
+          const { parent } = node;
+          if (parent.type === "VariableDeclarator" && parent.id.type === "ArrayPattern") {
+            const [stateEl, setterEl] = parent.id.elements;
+            if (stateEl?.type === "Identifier" && setterEl?.type === "Identifier") {
+              const scope = context.sourceCode.getScope(node);
+              const stateVar = findVariable(scope, stateEl.name);
+              const setterVar = findVariable(scope, setterEl.name);
+              if (stateVar != null && setterVar != null) {
+                setterToStateVar.set(setterVar, stateVar);
+              }
+            }
+          }
+          return;
+        }
+
+        // Queue potential setter calls for deferred checking at Program:exit,
+        // so that useState pairs declared after the setter call are still detected.
+        if (node.callee.type !== "Identifier") return;
+        const scope = context.sourceCode.getScope(node);
+        const callerVar = findVariable(scope, node.callee.name);
+        if (callerVar != null) {
+          pendingCalls.push({ callerVar, node });
+        }
+      },
+
+      "Program:exit"() {
+        for (const { callerVar, node } of pendingCalls) {
+          if (!setterToStateVar.has(callerVar)) continue;
+          const stateVar = setterToStateVar.get(callerVar)!;
+          const arg = node.arguments[0];
+          if (arg == null) continue;
+
+          // Already using the callback form.
+          if (isFunction(arg)) continue;
+
+          // Check if the argument contains a reference to the state variable.
+          const [argStart, argEnd] = arg.range!;
+          const hasStateRef = stateVar.references.some(
+            (ref) =>
+              argStart <= ref.identifier.range![0]
+              && ref.identifier.range![1] <= argEnd,
+          );
+
+          if (hasStateRef) {
+            context.report({
+              node,
+              message: `Do not reference '${
+                context.sourceCode.getText(node.callee)
+              }' directly; use the updater function form instead.`,
+            });
+          }
+        }
+      },
+    };
+  };
+}
+```
+
+## Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { preferStateUpdaterFunction } from "./.config/preferStateUpdaterFunction";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(preferStateUpdaterFunction)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+## Examples
+
+### Referencing state directly in the setter
+
+```tsx
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  // 🔴 Problem: Referencing `count` directly creates a stale state risk.
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      {/*                           ^^^^^ Do not reference 'setCount' directly; use the updater function form instead. */}
+      {count}
+    </button>
+  );
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function Toggle() {
+  const [enabled, setEnabled] = useState(false);
+
+  // 🔴 Problem: Negating state directly creates a stale state risk.
+  return (
+    <button onClick={() => setEnabled(!enabled)}>
+      {/*                             ^^^^^^^^ Do not reference 'setEnabled' directly; use the updater function form instead. */ }
+      {enabled ? "On" : "Off"}
+    </button>
+  );
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function UserEditor() {
+  const [user, setUser] = useState({ name: "John", age: 25 });
+
+  // 🔴 Problem: Spreading state directly creates a stale state risk.
+  const updateAge = () => setUser({ ...user, age: 30 });
+  //                                   ^^^^ Do not reference 'setUser' directly; use the updater function form instead.
+
+  return <button onClick={updateAge}>Update Age</button>;
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function ItemList() {
+  const [items, setItems] = useState(["a", "b"]);
+
+  // 🔴 Problem: Calling a method on state directly creates a stale state risk.
+  const addItem = () => setItems([...items, "c"]);
+  //                                 ^^^^^ Do not reference 'setItems' directly; use the updater function form instead.
+
+  return <button onClick={addItem}>Add</button>;
+}
+```
+
+### Using the updater function or a constant value
+
+```tsx
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  // 🟢 Recommended: Callback form always gets the latest state.
+  return (
+    <button onClick={() => setCount((prev) => prev + 1)}>
+      {count}
+    </button>
+  );
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function Component() {
+  const [count, setCount] = useState(0);
+
+  // 🔵 OK: Setting a constant value does not reference state.
+  return <button onClick={() => setCount(0)}>Reset</button>;
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function Component() {
+  const [user, setUser] = useState({ name: "John" });
+  const newUserFromApi = { name: "Jane" };
+
+  // 🔵 OK: Setting a value that does not reference the state variable.
+  setUser(newUserFromApi);
+
+  return <div />;
+}
+```
+
+```tsx
+import { useState } from "react";
+
+function Component() {
+  const [count, setCount] = useState(0);
+  const [total, setTotal] = useState(100);
+
+  // 🔵 OK: Referencing a *different* state variable is fine.
+  setCount(total);
+
+  return <div />;
+}
+```
+
+## Using All Rules
+
+To use all state-related rules together:
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import {
+  preferStateUpdaterFunction,
+  // Additional state rules can be added here
+} from "./.config";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(preferStateUpdaterFunction)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+## Further Reading
+
+- [React Docs: Updating state based on the previous state](https://react.dev/reference/react/useState#updating-state-based-on-the-previous-state)
+
+## Resources
+
+- [AST Explorer](https://ast-explorer.dev/#eNpNkE9PwzAMxb+K5dMmDbiXrQeQOCIEEqdcQuqJjDSpEncCVf3u2Al/donk3/Pzi71gwA5P9myLy35i3OEkgL8mauCKSvBRuRPuxyllhmeyjuGY0wgGsxYGb000UX1wNzOn+JTTVOAAi4kA7t2HIVPsmvW6vo9pIHEBpHgfvPvoYLOFQw/n5Afha514nKNjn+LP1M3yNwvW7jJq25Iy8Zwj7N+qAvqhg8FWGeyXX/e6v2mw1ygTZcEkC9YZBsmN9pVykWCDnYBgmYpsufvXH8hKFBVtqDYVTuVTa84z1VZlcrTgaXjh7PVQTVVRYldcvwGs9YT5) - A tool for exploring the abstract syntax tree (AST) of JavaScript code, which is essential for writing custom rules.
+- [ESLint Developer Guide](https://eslint.org/docs/latest/extend/custom-rules) - Official ESLint documentation for creating custom rules.
+- [Using the TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#type-checker-apis) - TypeScript compiler API documentation for working with type information in custom rules.

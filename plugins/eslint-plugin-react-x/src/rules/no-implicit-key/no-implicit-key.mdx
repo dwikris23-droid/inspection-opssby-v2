@@ -1,0 +1,103 @@
+---
+title: no-implicit-key
+description: Prevents implicitly passing the 'key' prop to components.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-implicit-key
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-implicit-key
+```
+
+**Features**
+
+`💭` `🧪`
+
+## Rule Details
+
+This makes it hard to see whether the key was passed correctly to the element or where it came from.
+
+It is also proposed to be deprecated in this RFC: [Deprecate spreading key from objects](https://github.com/reactjs/rfcs/pull/107#issue-413235149).
+
+The following cases are **allowed** and will not be reported:
+
+1. The `key` property originates from React's own type definitions (ex: `React.Attributes.key`), such as when spreading `React.ComponentProps<"div">`, `React.HTMLAttributes<T>`, or similar React-provided types.
+2. The `key` property's **type** is `React.Key`, even if the property is declared in a user-defined type.
+
+## Examples
+
+### Implicitly passing key via the spread operator
+
+Spreading an object that contains `key` directly onto a component makes the source and purpose of `key` unclear.
+
+```tsx
+import React from "react";
+
+declare let someValues: { foo: string; bar: string; key: string };
+
+// 🔴 Problem: Implicitly passing key when spreading an object
+function MyComponent() {
+  return <div {...someValues} />;
+}
+```
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; key: string };
+
+// 🟢 Recommended: Explicitly destructure and pass key
+function MyComponent() {
+  const { key, ...rest } = someValues;
+  return <div key={key} {...rest} />;
+}
+```
+
+### key type is React.Key
+
+When the `key` type is the React built-in `React.Key`, spreading is allowed.
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; key: React.Key };
+
+// 🔵 OK: key type is React.Key, which is a React built-in type
+function MyComponent() {
+  return <div {...someValues} data-slot="pagination-item" />;
+}
+```
+
+### Spreading React built-in component props
+
+When spreading props from React built-in types (such as `React.ComponentProps`), the `key` originates from React's type definitions and is allowed.
+
+```tsx
+import React from "react";
+
+// 🔵 OK: props come from React.ComponentProps, key originates from React.Attributes
+function PaginationItem({ ...props }: React.ComponentProps<"li">) {
+  return <li data-slot="pagination-item" {...props} />;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-key/no-implicit-key.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-key/no-implicit-key.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-key/CHANGELOG.md)
+
+## Further Reading
+
+- [React RFC: Deprecate spreading key from objects](https://github.com/reactjs/rfcs/pull/107)
+- [React Docs: Why does React need keys?](https://react.dev/learn/rendering-lists#why-does-react-need-keys)

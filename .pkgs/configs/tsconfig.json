@@ -1,0 +1,20 @@
+{
+  "extends": [
+    "@local/configs/tsconfig.base.json",
+    "@tsconfig/node24/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "stripInternal": false,
+    "noEmit": false,
+    "declaration": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "testing/samples"
+  ],
+  "include": [
+    "*.ts",
+    "*.d.ts"
+  ]
+}

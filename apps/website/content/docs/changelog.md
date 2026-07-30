@@ -1,0 +1,5629 @@
+---
+title: Changelog
+---
+
+## v5.18.0 (2026-07-23)
+
+### ✨ New
+
+- `@eslint-react/core`: added `isUseRefLikeCall` and a new `additionalRefHooks` setting for declaring custom ref-creating hooks; the following rules now recognize them: (#1922, closes #1904)
+  - `react-x/refs`
+  - `react-x/immutability`
+  - `react-x/set-state-in-effect`
+  - `react-naming-convention/ref-name`
+  - `react-debug/is-from-ref`
+
+### 📝 Documentation
+
+- Updated rule docs to match current rule sources. (#1920)
+
+### 🏗️ Internal
+
+- `@local/testkit`: simplified internals.
+- `react-x`: extracted a shared `createImplicitPropListener` helper used by `no-implicit-children`, `no-implicit-key`, and `no-implicit-ref`. (#1923)
+- Bumped `tsdown` to `0.22.13`, `typescript-eslint` to `8.65.0`, `eslint-plugin-jsdoc` to `63.2.0`, `import-integrity-lint` to `1.2.0`, `react` to `19.2.8`, `next` to `16.2.11`, and `postcss` to `8.5.21`.
+- Replaced `vite-node` with `nub` for running workspace scripts. (#1919)
+- Unified JSDoc comment style of exported APIs in `@eslint-react/ast` and `@eslint-react/core`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.17.3...v5.18.0
+
+## v5.17.3 (2026-07-20)
+
+### 🏗️ Internal
+
+- `@eslint-react/ast`: reworked the `Extract` API — replaced `getRootIdentifier` with the position-based `getIdentifierAt`, renamed `getStaticPropertyName` to `getPropertyName` (with a `min`/`max` effort option), and added `findProperty` for finding properties in nested object expressions; added `Check.isConditional` for matching conditional expressions and control flow statements. (#1918)
+- Bumped `eslint-plugin-jsdoc` to `63.1.0`, `expect-type` to `1.4.0`, `@preact/preset-vite` to `2.10.6`, and `pnpm` to `11.15.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.17.2...v5.17.3
+
+## v5.17.2 (2026-07-19)
+
+### 📝 Documentation
+
+- `@eslint-react/kit`: added a README with quick start and API overview.
+
+### 🏗️ Internal
+
+- `@eslint-react/core`: migrated `JsxDetectionHint` and related JSX detection helpers from `@eslint-react/jsx`. (#1913)
+- `@eslint-react/jsx`: consolidated helpers into focused `attribute`, `children`, `element`, and `text` modules. (#1914)
+- `@eslint-react/var`: renamed `computeObjectType` to `resolveObjectType`.
+- `@local/testkit`: extracted shared test helpers into a new local package. (#1915)
+- Bumped `tsdown` to `0.22.9`, `eslint-plugin-jsdoc` to `63.0.14`, and `pnpm` to `11.13.1`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.17.1...v5.17.2
+
+## v5.17.1 (2026-07-17)
+
+### 🏗️ Internal
+
+- `react-jsx/no-key-after-spread`: reworked the attribute scan to a pipeline style using `dropWhile` and `not` from `@local/eff`, `Check.is` from `@eslint-react/ast`, and the new `isAttribute` helper from `@eslint-react/jsx`. (#1912)
+- `@eslint-react/jsx`: added `isAttribute` for matching JSX attributes by name.
+- `@local/eff`: added `dropWhile` and `takeWhile`.
+- Bumped `tsdown` to `0.22.8`, `tsl-dx` to `0.13.3`, `import-integrity-lint` to `1.1.4`, `fumadocs` to `16.11.5`, and `fumadocs-mdx` to `15.2.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.17.0...v5.17.1
+
+## v5.17.0 (2026-07-17)
+
+### 🐞 Fixes
+
+- `react-jsx/no-leaked-dollar`: the intentional-`$` exemption (e.g. `<div>${price}</div>`) is no longer defeated by surrounding whitespace or empty siblings — a lone `$` before a single expression is now allowed whenever all other siblings are non-substantive. (#1911)
+- `react-jsx/no-leaked-semicolon`: consecutive leaked semicolons (e.g. `;;`) at the start of a JSX text node are now detected. (#1911)
+
+### 📝 Documentation
+
+- `react-x/no-unnecessary-use-prefix`: reorganized the rule examples.
+
+### 🏗️ Internal
+
+- `react-jsx`: extracted the shared `find-create-element-children-prop` and `remove-jsx-attribute` rule helpers, removed dead `Literal` visitors from `no-comment-textnodes` and `no-leaked-semicolon`, simplified the `no-key-after-spread` attribute scan, and hoisted `no-useless-fragment` detection and fix helpers to module level. (#1911)
+- `@local/eff`: synced the `Function` module with effect and added missing `@category` tags.
+- Unified JSDoc comment style across packages.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.16.1...v5.17.0
+
+## v5.16.1 (2026-07-16)
+
+### 🐞 Fixes
+
+- `react-jsx/no-children-prop`: `React.createElement` calls whose props argument is wrapped in a TypeScript type assertion (e.g. `{ children: "x" } as Props`) are now reported; computed property keys written as template literals (e.g. `{ [`children`]: "x" }`) are now recognized as the `children` prop; fixed a false positive where a computed identifier key in a `createElement` props object (e.g. `{ [propName]: "Children" }`) was treated as the static `children` prop; the suggestion fix now escapes JSX-sensitive characters (`<`, `>`, `{`, `}`, `&`) when moving a string `children` prop value into element content. (#1910)
+- `react-jsx/no-children-prop-with-children`: same `createElement` edge-case fixes as `no-children-prop`. (#1910)
+- `react-jsx/no-useless-fragment`: `allowExpressions: false` now only flags fragments with a single expression child, matching the option's documented behavior, instead of flagging any fragment inside a JSX element; fragments with spread attributes (e.g. `<Fragment {...props}>`) are no longer auto-fixed; the auto-fixer now removes leading indentation when collapsing whitespace-only fragments. (#1910)
+- `react-jsx/no-leaked-dollar`: `$` character references (`&#36;`, `&#x24;`) are no longer treated as leaked dollar signs; only a literal `$` in the source is reported. (#1910)
+- `react-jsx/no-leaked-semicolon`: leaked semicolons followed by spaces or tabs before a newline, including CRLF line endings, are now detected. (#1910)
+- `react-x/immutability`: added `useHistory` to known navigation hooks, so navigation methods such as `.push()` are not treated as in-place mutations inside frozen callbacks.
+
+### 🏗️ Internal
+
+- `@eslint-react/ast`: added `Extract.getStaticPropertyName` for resolving static property names from object properties. (#1910)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.16.0...v5.16.1
+
+## v5.16.0 (2026-07-16)
+
+### ✨ New
+
+- `@eslint-react/core`: added support for hook calls written as tagged template literals. (#1909)
+
+  ```tsx
+  const x = useMotionValue(100);
+  const transform = useMotionTemplate`transform(${x}px)`;
+  //                ^^^ tagged template literal hook call
+  ```
+
+- `@eslint-react/jsx`: `findAttribute` now resolves nested spread identifiers and nested object expression spreads. (#1908)
+
+### 🏗️ Internal
+
+- Added tests and per-rule changelogs for tagged template literal hook calls. (#1909)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.15.0...v5.16.0
+
+## v5.15.0 (2026-07-15)
+
+### 📝 Documentation
+
+- Added a FAQ entry on improving analyzer accuracy to the website. (#1907)
+- Fixed inconsistencies and omissions in internal documentation.
+
+### 🏗️ Internal
+
+- Bumped `typescript-eslint` to `8.64.0`, `nx` to `23.1.0`, `eslint-plugin-package-json` to `1.6.0`, and `pnpm` to `11.13.0`.
+- Enabled `strictBooleanExpressions` in TSL and synchronized sample rule configurations. (#1907)
+- Removed the website-specific changelog file.
+- Switched CI workflows to use `pnpm/action-setup` instead of installing pnpm globally via npm.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.10...v5.15.0
+
+## v5.14.10 (2026-07-15)
+
+### 🐞 Fixes
+
+- `@eslint-react/ast`: `Extract.getCalleeName` now returns `null` for computed member expressions (e.g. `obj[foo]()`, `obj["foo"]()`, `obj[`foo`]()`) instead of the property name, so callers don't treat dynamically chosen methods as static method names. (#1906)
+
+### 🏗️ Internal
+
+- Added unit tests for `Extract.getCalleeName`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.9...v5.14.10
+
+## v5.14.9 (2026-07-15)
+
+### 🐞 Fixes
+
+- `@eslint-react/ast`: removed `Extract.getPropertyName` and added `Extract.getCalleeName` for simpler callee name resolution. (#1905)
+- Rules that match calls by method name no longer treat computed string-literal property access as a static match (e.g. `obj["foo"]()` is no longer resolved to `"foo"`). This avoids relying on the runtime value of computed keys and aligns callee matching across the codebase. Affected rules:
+  - `react-dom/no-dangerously-set-innerhtml`
+  - `react-dom/no-find-dom-node`
+  - `react-dom/no-flush-sync`
+  - `react-web-api/no-leaked-event-listener`
+  - `react-web-api/no-leaked-fetch`
+  - `react-x/globals`
+  - `react-x/immutability`
+- `core.isJsxLike`: no longer treats `React['createElement']` calls as JSX-like, since the callee is accessed through a computed member expression.
+
+### 🏗️ Internal
+
+- Simplified callee name checks across `core`, `react-dom`, `react-web-api`, and `react-x` rules using `Extract.getCalleeName`.
+- Bumped `@effect/platform`, `effect`, `fumadocs-core`, `fumadocs-mdx`, `fumadocs-ui`, `postcss`, `pnpm`, and `tsdown`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.8...v5.14.9
+
+## v5.14.8 (2026-07-14)
+
+### 📝 Documentation
+
+- `react-x`: refreshed the React Compiler diff reports. (#1903)
+
+### 🏗️ Internal
+
+- `react-x`: moved the purity and refs resolvers into `lib.ts`. (#1902)
+- Bumped `tsdown`, `postcss`, and `fumadocs`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.7...v5.14.8
+
+## v5.14.7 (2026-07-13)
+
+### 🐞 Fixes
+
+- `react-x/immutability`: ignore navigation hook methods (e.g. `useNavigate`, `useNavigation`) as mutations. (#1901)
+
+### 🏗️ Internal
+
+- Refreshed `pnpm` lockfile.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.6...v5.14.7
+
+## v5.14.6 (2026-07-13)
+
+### 🐞 Fixes
+
+- `react-x/immutability`: ignore `useRouter()` navigation methods (e.g. `.push()`) as mutations when they appear inside frozen callbacks; aliases created through variable declarators are also recognized. (#1898)
+
+### 🏗️ Internal
+
+- Added `Check.isExpression` to `@eslint-react/ast` along with unit tests.
+- Bumped `eslint`, `nx`, `dompurify`, and `pnpm`.
+- Restored standalone quality workflows.
+- Simplified `react-x/immutability` analysis helpers by sharing initializer provenance checks for `useRef()` and `useRouter()` and using AST parent traversal for function-boundary detection.
+- Started running CI tests on Node.js 26.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.5...v5.14.6
+
+## v5.14.5 (2026-07-11)
+
+### 📝 Documentation
+
+- Temporarily disabled the Bluesky embed on the community page to avoid API rate limits.
+
+### 🏗️ Internal
+
+- Consolidated the `check:configs` and `check:docs` scripts into a single `check:rules` script.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.4...v5.14.5
+
+## v5.14.4 (2026-07-11)
+
+### 🏗️ Internal
+
+- Fixed rule discovery in documentation and configuration checks to exclude helper modules from rule entry files.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.3...v5.14.4
+
+## v5.14.3 (2026-07-11)
+
+### 🐞 Fixes
+
+- `react-x/immutability`: stopped treating mutations of resolvable global and module bindings as captured local mutations. (#1897)
+- `react-x/immutability`: followed variable-declarator aliases when resolving mutation targets, fixing missed mutations through aliases created inside callbacks. (#1897)
+- `react-x/immutability`: followed `useRef` provenance through variable-declarator aliases, preventing false positives for ref mutations through locally aliased refs. (#1897)
+
+### 🏗️ Internal
+
+- `react-x/immutability`: separated AST fact collection from captured-mutation effect inference and reporting. (#1897)
+- Synchronized the `react-x/immutability` specification and IMPL-SPEC report with the current React Compiler validation pass, and expanded behavior-boundary coverage. (#1897)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.2...v5.14.3
+
+## v5.14.2 (2026-07-11)
+
+### 🐞 Fixes
+
+- `react-x/globals`: added detection for global writes through destructuring assignments and property deletion with `delete`. (#1896)
+- `react-x/globals`: propagated render-time global mutation effects through directly called helpers and stable local aliases. (#1896)
+
+### 🏗️ Internal
+
+- Expanded behavior-boundary coverage for `react-debug` component and source detection, `react-naming-convention` naming rules, and `react-x/immutability` React Compiler fixtures.
+- Strengthened documentation verification and added formatting, configuration, architecture, MDX, website type, and production build checks to CI.
+- Gated publishing on the check, test, and workflow security jobs, including for application, example, and configuration changes.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.1...v5.14.2
+
+## v5.14.1 (2026-07-11)
+
+### 🐞 Fixes
+
+- `react-rsc/function-definition`: fixed invalid async autofixes for object and class methods with local `'use server'` directives, including generator and computed methods; accessors and constructors are now reported without an unsafe fix.
+
+### 🏗️ Internal
+
+- Added behavior-boundary tests for `react-rsc/function-definition`, covering directive placement, export resolution, function forms, and autofix behavior.
+- Cleaned up redundant code and comments in `react-rsc/function-definition` and `react-x/unsupported-syntax`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.14.0...v5.14.1
+
+## v5.14.0 (2026-07-10)
+
+### ✨ New
+
+- `react-x/refs`: added render-reachability support for function declarations, IIFEs, synchronous array callbacks, and render-time callbacks passed to `useMemo` and `useReducer`. (#1895)
+- `react-x/refs`: added lazy-initialization support for explicit `undefined` guards and for null guards enclosing additional nested conditions. (#1895)
+
+### 🐞 Fixes
+
+- `react-x/refs`: reworked render-time call analysis as an unbounded fixed-point propagation, removing the previous 50-iteration cap. (#1895)
+- `react-x/refs`: tightened inverted lazy-initialization handling so the non-null branch must unconditionally return or throw. (#1895)
+- `react-x/refs`: stopped treating `!ref.current` as a null guard because initialized refs may contain falsy values. (#1895)
+
+### 🏗️ Internal
+
+- `react-x/refs`: refactored ref aliases, function bindings, JSX refs, and duplicate initialization tracking to use scoped ESLint variable identities and position-aware binding events instead of file-wide identifier names. (#1895)
+- Added behavior-boundary tests for `react-x/immutability` and documented them in the spec diff report.
+- Updated build scripts.
+- Bumped `@effect/language-service` to `^0.86.5`.
+- Bumped `preact` to `^10.29.7`.
+- Bumped `vite` to `^8.1.4` in example apps.
+- Bumped `dprint` JSON plugin to `^0.23.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.13.2...v5.14.0
+
+## v5.13.2 (2026-07-09)
+
+### 🐞 Fixes
+
+- `react-x/immutability`: fixed false positive on `ref.current` write inside `useEffect`. (#1894)
+
+### 🏗️ Internal
+
+- Bumped `@types/node` to `^26.1.1`.
+- Bumped `preact` to `^10.29.6`.
+- Bumped `tsdown` to `^0.22.4`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.13.1...v5.13.2
+
+## v5.13.1 (2026-07-09)
+
+### 🐞 Fixes
+
+- `react-x/refs`: aligned error message wording for `readDuringRender`, `writeDuringRender`, and `refPassedToFunction` with the React Compiler specification.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.13.0...v5.13.1
+
+## v5.13.0 (2026-07-09)
+
+### ✨ New
+
+- `react-x/refs` now detects nested property writes on a ref's value (e.g. `ref.current.inner = value`), which are now reported as `writeDuringRender` instead of being misclassified as a read.
+- `react-x/refs` now tracks functions bound to (and called through) simple object-member-expression targets (e.g. `object.foo = () => ref.current; object.foo();`), closing a gap in the render-reachability analysis that previously only covered plain variable bindings.
+- `react-x/refs` now detects `ref.current` accesses inside the lazy initializer function passed directly as `useState`'s first argument, since it runs synchronously during the initial render unlike other hook-callback arguments.
+- `react-x/refs` now exempts calls to a function named `render` (e.g. `props.render(ref)`, a common render-prop pattern) from the `refPassedToFunction` diagnostic, alongside the existing `mergeRefs`/hook exemptions.
+
+### 🐞 Fixes
+
+- Improved `react-x/refs` lazy-init guard-block detection so it is direction-aware: inside the branch of an `if (ref.current == null)`-style guard that is guaranteed to see `ref.current` as null, only a direct write is treated as the (single) valid initialization; reads or values passed to a function there are still reported.
+
+### 🏗️ Internal
+
+- Refactored `react-x/refs` internals, replacing `isRefCurrentNullCheck` with `getRefCurrentNullCheckBranch` in `lib.ts`.
+- Upgraded `fumadocs` packages and `preact`.
+- Cleaned up redundant code in the `react-debug/jsx` rule.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.12.2...v5.13.0
+
+## v5.12.1 (2026-07-08)
+
+### 📝 Documentation
+
+- Fixed `react-x/immutability` rule description in docs.
+
+### 🏗️ Internal
+
+- Cleaned up redundant code in some rules.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.12.0...v5.12.1
+
+## v5.12.0 (2026-07-08)
+
+### ✨ New
+
+- Reworked `react-x/immutability` to align with the React Compiler's `ValidateNoFreezingKnownMutableFunctions` validation pass: it now detects functions that (transitively) mutate a captured local variable and reports them when passed as a JSX prop, passed as a hook argument, or returned from a hook. (#1891)
+
+### 📝 Documentation
+
+- Cleaned up the rule relations table.
+
+### 🏗️ Internal
+
+- Bumped `typescript-eslint` packages to `^8.63.0`.
+- Bumped `eslint-plugin-perfectionist` to `^5.10.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.11.3...v5.12.0
+
+## v5.11.3 (2026-07-07)
+
+### 🐞 Fixes
+
+- Fixed `FunctionComponentDetectionHint.DoNotIncludeFunctionDefinedAsClassProperty` checking for object `Property` nodes instead of class `PropertyDefinition` nodes, so functions defined as class fields are now correctly excluded when the hint is set. (#1890)
+
+### 🏗️ Internal
+
+- Renamed fix helpers and formatted `MessageID` types.
+- Inlined local string constants in rule implementations.
+- Bumped `eslint-plugin-jsdoc`, `typedoc`, `undici` and `pnpm`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.11.2...v5.11.3
+
+## v5.11.2 (2026-07-05)
+
+### 📝 Documentation
+
+- Updated rule documentation for React introspection APIs (`react-x/no-children-count`, `react-x/no-children-for-each`, `react-x/no-children-map`, `react-x/no-children-only`, `react-x/no-children-to-array`, and `react-x/no-clone-element`) with clearer guidance on why child introspection creates fragile component coupling and links to Astryx's `no-react-introspection` rule. (#1889)
+- Updated the function-component collector sequence diagram on the website.
+- Updated `THIRD-PARTY-LICENSE` file.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.11.0...v5.11.2
+
+## v5.11.0 (2026-07-05)
+
+### ✨ New
+
+- `react-x/refs` now detects ref mutations/reads inside helper functions that are called (directly, or through a simple variable alias) during render, closing a gap where any nested function was previously treated as a safe boundary regardless of whether it was actually invoked during render.
+- `react-x/refs` now reports a second guarded ref initialization: only a single `if (ref.current == null) { ref.current = ... }` guarded initialization is allowed per ref per component/hook, and a second guarded write (in the same or a different `if` block) is reported as `duplicateRefInit`.
+- `react-x/refs` now supports `.current` accesses whose base is a member expression that looks like a ref (e.g. `props.ref.current`), not just a plain identifier.
+
+### 🏗️ Internal
+
+- Added unit tests for `packages/ast/src/check.ts`.
+- Bumped `@effect/language-service` to `^0.86.4` and `preact` to `^10.29.4`.
+- Refactored `react-x/static-components` internals without changing behavior: `findVariableForIdentifier` now delegates to `@typescript-eslint/utils/ast-utils`'s `findVariable` instead of a hand-rolled scope-chain walk, `resolveDynamicValue` was split into `findDynamicCreationSite` and `findReassignmentCreationSite`, and render-boundary/JSX-candidate handling was extracted into dedicated helpers.
+- Unified the signatures of `Check.isDirective` and `Check.isIdentifier` in `@eslint-react/ast`: both now take the node as the first argument and an optional `name` as the second, replacing the previous curried `(name) => (node) => boolean` shape. Removed `Check.isStringLiteral`; use `ts-pattern`'s `isMatching` or an inline type guard instead.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.10.4...v5.11.0
+
+## v5.10.4 (2026-07-04)
+
+### 🐞 Fixes
+
+- Fixed `react-x/no-misused-capture-owner-stack` not recognizing `process.env.NODE_ENV` checks wrapped in TypeScript type expressions such as `(process.env as any).NODE_ENV`. (#1813)
+- Fixed `Extract.getFullyQualifiedName` to unwrap `TSAsExpression`, `TSTypeAssertion`, `TSNonNullExpression`, and `ChainExpression` before resolving names. This improves name resolution for rules that identify React APIs or collect component/hook names through type-wrapped expressions.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.10.3...v5.10.4
+
+## v5.10.3 (2026-07-04)
+
+### 🏗️ Internal
+
+- Bumped `typescript-eslint` packages to `^8.62.1`.
+- Bumped `@effect/language-service` to `^0.86.3`.
+- Bumped `undici` and `undici-types` to `^8.6.0`.
+- Updated the `@eslint-react/eslint-plugin` package description.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.10.2...v5.10.3
+
+## v5.10.2 (2026-07-03)
+
+### 🐞 Fixes
+
+- Fixed an issue where several rules treated computed identifier keys in spread props (e.g. `<div {...{ [key]: value }} />`) as static prop names. The actual property name is the runtime value of the variable; computed string literal keys are still recognized. Affected rules:
+  - `react-x/no-missing-key`
+  - `react-jsx/no-children-prop-with-children`
+  - `react-jsx/no-children-prop`
+  - `react-jsx/no-useless-fragment`
+  - `react-dom/no-dangerously-set-innerhtml-with-children`
+  - `react-dom/no-dangerously-set-innerhtml`
+  - `react-dom/no-missing-button-type`
+  - `react-dom/no-missing-iframe-sandbox`
+  - `react-dom/no-string-style-prop`
+  - `react-dom/no-unsafe-iframe-sandbox`
+  - `react-dom/no-unsafe-target-blank`
+  - `react-dom/no-void-elements-with-children`
+  - `react-web-api/no-leaked-event-listener`
+  - `react-web-api/no-leaked-fetch`
+- Fixed `react-x/unsupported-syntax` to no longer report IIFEs in JSX. This makes the rule consistent with the upstream [`react-hooks/unsupported-syntax`](https://react.dev/reference/eslint-plugin-react-hooks/lints/unsupported-syntax) and removes the `iife` message.
+
+### ✨ New
+
+- `react-x/unsupported-syntax` now detects `eval` calls via `globalThis.eval`, `globalThis["eval"]`, and type assertions like `(globalThis as any).eval`.
+
+### 🏗️ Internal
+
+- Added an optional `resolve` parameter to `Extract.getPropertyName` so callers can control how identifier and private identifier property names are resolved.
+- Added unit tests for `Extract.getPropertyName`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.10.1...v5.10.2
+
+## v5.10.1 (2026-07-03)
+
+### 🐞 Fixes
+
+- Added the missing `static-components` rule to `disable-conflict-eslint-plugin-react-hooks`, closes #1884.
+
+### 📝 Documentation
+
+- Rewrote the `noCircularEffect` recipe sample to use `@eslint-react/kit` collectors and `simpleTraverse`, and updated the recipe overview accordingly.
+- Removed the under construction brand assets page from the website.
+
+### 🏗️ Internal
+
+- Bumped `typescript-eslint`, `@types/node`, `vite`, and `tailwindcss`.
+- Bumped `fumadocs`, `lucide-react`, and `postcss` in the website.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.10.0...v5.10.1
+
+## v5.10.0 (2026-06-28)
+
+### 📝 Documentation
+
+- Added status emoji markers to recipe and rule documentation code examples (#1882).
+- Fixed the v5.7.2 changelog entry for `react-x/no-unused-state`.
+- Updated the community projects list.
+
+### 🏗️ Internal
+
+- Bumped `eslint` to `^10.6.0`.
+- Bumped `js-yaml` workspace override to `^4.3.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.5...v5.10.0
+
+## v5.9.5 (2026-06-27)
+
+### 🐞 Fixes
+
+- `Compare.isEqual` now recognizes structurally identical `CallExpression` nodes. This fixes false positives in the following rules when the compared target (event target, controller, or observed element) is derived from a function call such as `window.matchMedia('…')` or `getEl()`:
+  - `react-web-api/no-leaked-event-listener`
+  - `react-web-api/no-leaked-fetch`
+  - `react-web-api/no-leaked-resize-observer`
+  - `react-web-api/no-leaked-intersection-observer`
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.4...v5.9.5
+
+## v5.9.4 (2026-06-26)
+
+### 🐞 Fixes
+
+- The following rules now detect member expression calls made with computed string property access (e.g. `obj["foo"]()`):
+  - `react-x/no-array-index-key`
+  - `react-x/no-duplicate-key`
+  - `react-x/no-unnecessary-use-prefix`
+  - `react-x/set-state-in-effect`
+  - `react-x/set-state-in-render`
+  - `react-dom/no-find-dom-node`
+  - `react-dom/no-flush-sync`
+  - `react-dom/no-hydrate`
+  - `react-dom/no-render`
+  - `react-dom/no-render-return-value`
+  - `react-dom/no-use-form-state`
+  - `react-web-api/no-leaked-fetch`
+
+### 📝 Documentation
+
+- Updated the community page and project list.
+
+### 🏗️ Internal
+
+- Unified member expression property name checks with `Extract.getPropertyName` (#1881).
+- Updated dependencies and switched `postinstall` to `prepare`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.3...v5.9.4
+
+## v5.9.3 (2026-06-25)
+
+### 🐞 Fixes
+
+- **`ast`**: Corrected the `TSESTreeJSX` union and handling of computed member expressions (#1877).
+- **`jsx`**: Handled namespaced host elements and cleaned up the spread child API (#1876).
+
+### 📝 Documentation
+
+- Refined the rule feature system docs and renamed the term-based patterns document.
+- Renamed `import-paths.md` to `repo-path-aliases.md`.
+- Updated JSX type aliases and `unwrap` documentation.
+
+### 🏗️ Internal
+
+- Aligned `RuleContext` imports in the kit package.
+- Bumped `typescript-eslint` packages to `^8.62.0` and related dependencies.
+- Renamed scripts with numeric prefixes and renamed `verify-*` scripts to `check-*`.
+- Replaced `pnpm run` with `node --run` across scripts (#1879).
+- Replaced the website brand component with an inline logo SVG.
+- Restructured the test directory and added integration tests (#1880).
+- Updated `nx` to `^23.0.1` and `pnpm` to `11.9.0`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.2...v5.9.3
+
+## v5.9.2 (2026-06-23)
+
+### 📝 Documentation
+
+- Cleaned up the "Further Reading" links in the rule docs.
+
+### 🏗️ Internal
+
+- Switched to `pnpm/action-setup` to install Node and pnpm in CI.
+- Updated dependencies and the lockfile.
+- Updated the `baseline.json` timestamp and quality signal.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.1...v5.9.2
+
+## v5.9.1 (2026-06-20)
+
+### 📝 Documentation
+
+- Updated rule patterns and feature system documentation (#1875).
+- Refined naming convention rule docs for `context-name`, `id-name`, and `ref-name` (#1873).
+- Updated the example comment in the `react-x/unsupported-syntax` docs.
+- Removed the `ast.unwrap` example from the kit package docs.
+- Fixed a typo in a warning callout description.
+
+### 🏗️ Internal
+
+- Bumped `actions/checkout` to `v7.0.0` (#1874).
+- Moved `getHumanReadableKind` from the ast package into the specific rules that use it.
+- Moved the iterator callback position map for `react-x/no-missing-key` into `lib.ts`.
+- Updated `dprint` line width to `160` and reformatted the codebase.
+- Updated `eslint` to `^10.5.0` and bumped miscellaneous dependencies.
+- Updated the `dprint` JSON plugin to `v0.22.0`.
+- Updated the baseline and `DocsPage` styling, and pruned `pnpm` workspace excludes.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.9.0...v5.9.1
+
+## v5.9.0 (2026-06-13)
+
+### ✨ New
+
+- Added `react-web-api/no-leaked-intersection-observer` rule to prevent leaked `IntersectionObserver` instances in components and hooks, enabled as `warn` in the `recommended` preset (#1841, #1868).
+
+### 🐞 Fixes
+
+- **`react-web-api/no-leaked-intersection-observer`**, **`react-web-api/no-leaked-resize-observer`**: Report when `disconnect` is only called inside the observer's own callback, since the callback may never run if the component unmounts before the element intersects or resizes (#1872).
+
+### 🏗️ Internal
+
+- Improved CI configuration and updated `SECURITY.md` documentation (#1871).
+- Bumped `fumadocs-core` and `fumadocs-ui` to `16.10.1`.
+
+### New Contributors
+
+- **Maikel van Dort** (@Netail) made their first contribution in #1868.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.19...v5.9.0
+
+## v5.8.19 (2026-06-12)
+
+### 🏗️ Internal
+
+- Simplified `isJsxLike` in core package and added behavior boundary tests (#1869).
+- Aligned code style in jsx package with core package (#1870).
+- Updated `@types/node` to `^25.9.3`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.18...v5.8.19
+
+## v5.8.18 (2026-06-11)
+
+### 🐞 Fixes
+
+- Improved key detection in `react-x/no-array-index-key` and `react-x/no-missing-key` rules (#1867).
+
+### 📝 Documentation
+
+- Removed 'See Also' sections from custom rule recipes.
+- Reordered AST section in kit package docs (#1866).
+- Formatted examples as accordions in kit package docs.
+
+### 🏗️ Internal
+
+- Removed `postinstall` script on the website.
+- Updated `textlint` rules for inclusive language.
+- Updated dependencies and relaxed `eslint` peer dependency.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.17...v5.8.18
+
+## v5.8.17 (2026-06-10)
+
+### 📝 Documentation
+
+- Simplified project description (#1860).
+- Updated LICENSE copyright to include contributors (#1858).
+- Updated brand assets guidelines and trademark policy on the website (#1859).
+
+### 🏗️ Internal
+
+- Bumped `typescript-eslint` packages to `v8.61.0` (#1863, #1864).
+- Cleaned up config files (#1856).
+- Dropped `rename-rule` script and npm script (#1857).
+- Updated `sponsors.svg` (#1855).
+- Updated `undici` and cleaned up `dprint` config (#1854).
+- Updated brand component and removed boilerplate on the website (#1861).
+- Updated scaffold script, docs and baseline (#1862).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.16...v5.8.17
+
+## v5.8.16 (2026-06-07)
+
+### 🐞 Fixes
+
+- Aligned dependency versions across monorepo (#1853).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.15...v5.8.16
+
+## v5.8.15 (2026-06-07)
+
+### 📝 Documentation
+
+- Added under-construction callouts and refined kit pages on the website (#1850, #1851).
+- Removed `AGENTS.md` and `CONTRIBUTING.md` documents and references (#1848).
+- Updated home and third-party plugins pages on the website.
+- Updated issue template guidance and labels.
+
+### 🏗️ Internal
+
+- Bumped `@types/*` dependencies (#1852).
+- Relaxed checklist requirements in issue templates (#1849).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.13...v5.8.15
+
+## v5.8.13 (2026-06-06)
+
+### 📝 Documentation
+
+- Added `GoogleCloudPlatform/gke-mcp` and removed archived `antfu/shiki-stream` from community projects on the website.
+- Improved RSC Directives wording in documentation.
+- Removed the `no-multiple-children-in-title` recipe from the website.
+- Removed the kit beta banner from the website (#1846).
+
+### 🏗️ Internal
+
+- Added `RuleListener` return type to all rule `create` functions (#1845).
+- Added boundary and edge case tests for `react-dom` rules, JSX rules, and `naming-convention` rules (`context-name`, `id-name`, `ref-name`).
+- Added identifier resolution tests for `react-x/no-leaked-conditional-rendering` (#1844).
+- Bumped `pnpm` and updated lockfile.
+- Bumped `tsdown` to `0.22.2` and updated dependencies.
+- Removed redundant single-argument `merge()` calls in rules (#1843).
+- Switched GitHub workflows to `ubuntu-latest`.
+- Updated website brand assets and icons.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.12...v5.8.13
+
+## v5.8.12 (2026-06-05)
+
+### 🪄 Improvements
+
+- **`jsx`**: Aligned `getChildren` with Babel's `buildChildren` and `cleanJSXElementLiteralChild` patterns, improving whitespace handling accuracy in `react-jsx/no-useless-fragment` and `react-jsx/no-children-prop` rules. Migrated child text cleanup to `@eslint-react/jsx` utilities and removed local `lib.ts` helpers. (#1836)
+- **`jsx`**: Removed `isPaddingWhitespace` API and added whitespace boundary tests for `react-jsx/no-useless-fragment` and `react-dom/no-dangerously-set-innerhtml-with-children` rules. (#1837)
+- **`jsx`**: Renamed `cleanJSXTextValue` to `collapseMultilineText` in the public API and updated `react-jsx/no-useless-fragment` to use the new name. (#1838)
+
+### 📝 Documentation
+
+- **Website**: Expanded the Brand Assets page with an icons section and formatted file names as inline code. (#1834)
+
+### 🏗️ Internal
+
+- Added `scripts/generate-website-icons.py` for automated icon generation and refined logo geometry across all website assets. (#1833)
+- Bumped `import-integrity-lint` and `enhanced-resolve`.
+- Bumped `axios` to `^1.17.0` and `shiki` to `4.2.0`.
+- Updated pnpm lockfiles for `dompurify` and `rolldown`.
+- Updated rule-level changelogs for `no-useless-fragment`, `no-children-prop`, and `no-dangerously-set-innerhtml-with-children`. (#1836, #1837, #1838)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.11...v5.8.12
+
+## v5.8.11 (2026-06-04)
+
+### 📝 Documentation
+
+- Added a new **Brand Assets** page and updated Meta legal name (#1832).
+
+### 🏗️ Internal
+
+- Updated default React fallback version to `19.2.7` (#1827).
+- Recreated logo with an open-source workflow, removing reliance on SVG assets exported by Amadine (#1831).
+- Removed `@fontsource/iosevka-aile` and switched to system font fallbacks.
+- Bumped TypeScript to `6.0.3` (#1828).
+- Patch bumped `@typescript-eslint/*` to `8.60.1`, `react` / `react-dom` to `19.2.7`, `next` to `16.2.7`, and `@types/react` to `19.2.16`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.10...v5.8.11
+
+## v5.8.10 (2026-06-02)
+
+### 🐞 Fixes
+
+- **`react-dom/no-unused-class-component-members`**: Aligned preset details in rule documentation (#1825).
+- **`react-dom/no-unsafe-iframe-sandbox`**, **`react-x/context-name`**, **`react-x/id-name`**, **`react-x/ref-name`**, **`react-x/no-unnecessary-use-prefix`**, **`react-x/no-string-style-prop`**: Fixed missing or incorrect presets in rule documentation (#1826).
+
+### 📝 Documentation
+
+- **`naming-convention`**: Expanded examples and annotated Ok cases for `context-name`, `id-name`, and `ref-name` rules (#1819).
+- Refactored `MyComponent` examples to `Button` component in custom rules of props and function component definition recipes (#1823).
+- Added `azat-io` eslint-config to the community presets list.
+
+### 🏗️ Internal
+
+- **`jsx`**: Consolidated whitespace child predicates and added `isEmptyStringExpression` to the public API (#1820).
+- Added preset verification to `check-docs.ts` (#1822).
+- Added `AGENTS.md` guide for AI coding agents (#1824).
+- Normalized local package metadata in `.pkgs/*`.
+- Bumped `vite` to `^8.0.15` and `ansis` to `^4.3.1` across workspace packages.
+
+### New Contributors
+
+- **Kenton Jacobsen** (@brokentone) made their first contribution in #1825.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.9...v5.8.10
+
+## v5.8.9 (2026-06-01)
+
+### 🐞 Fixes
+
+- **`react-x/no-direct-mutation-state`**: Detect nested state mutations and member expressions in assignment expressions (#1818).
+
+### 📝 Documentation
+
+- Updated contributing guide and monorepo structure documentation.
+
+### 🏗️ Internal
+
+- Removed `.vscode` directories from all examples, added missing `engines.node` to Preact examples, cleaned up redundant `.config/*.ts` from `tsconfig.node.json`, and updated `.gitignore`.
+- Cleaned up configs and docs.
+- Patch bumped `eslint`, `tinyglobby`, and `tsdown` across workspace packages; added `@fontsource/iosevka-aile` to the website; reordered CSS imports in `layout.tsx`.
+- Updated `.sentrux` baseline timestamp.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.8...v5.8.9
+
+## v5.8.8 (2026-05-31)
+
+### 📝 Documentation
+
+- **`kit`**: Added `is.APICall` callout to the Kit documentation (#1813).
+- **`jsx`**: Updated `getChildren` and `hasChildren` API documentation to reflect empty string children behavior.
+- Reworked status emoji indicators across docs and examples (#1816).
+- Added ℞ prefix to recipe titles and cleaned up See Also sections.
+- Removed the `custom-rules-of-children` recipe and cross-linked the remaining recipes.
+- Added redirects for moved rule documentation.
+- Cleaned up the "Community Maintained Presets that use ESLint React" documentation page.
+
+### 🏗️ Internal
+
+- **`react-x/no-misused-capture-owner-stack`**: Added edge-case tests for `captureOwnerStack` (#1813).
+- Updated fonts and dropped the `data-theme` attribute.
+- Updated theme configuration (#1815).
+- Aligned the `tsdown` version in `@local/configs`.
+- Enabled `trustPolicy: "no-downgrade"` and added `minimumReleaseAge: 1440` (1 day).
+- Bumped `eslint` to `10.4.1` across workspace packages.
+- Bumped `pnpm` to `11.5.0` and refreshed the lockfile.
+- Bumped `fumadocs` packages and `tinyexec`.
+- Bumped `eslint-plugin-package-json` to `1.2.0`.
+- Updated dprint plugins and reformatted font families in example projects.
+- Updated Sentrux baseline metrics.
+- Updated `.gitignore`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.7...v5.8.8
+
+## v5.8.7 (2026-05-29)
+
+### 🐞 Fixes
+
+- **`react-x/no-create-ref`**: Fixed a false positive where `createRef` calls in non-React classes were reported. The rule now only reports `createRef` calls inside function components or Hooks (#1812).
+- **`react-x/no-unused-state`**: Removed the "only used in effects" detection so the rule only reports state variables that are defined but never used, reducing false positives (#1808, #1749).
+- **`jsx`**: Aligned children filtering and `hasChildren` behavior with React source, updating `no-children-prop` and `no-useless-fragment` rules accordingly (#1805).
+- **Zod compatibility**: Relaxed `zod` peer dependency to support both v3 and v4 (#1810).
+
+### 📝 Documentation
+
+- **`react-dom`**, **`react-web-api`**, **`react-x`**: Enriched rule MDX examples with TypeScript snippets from react.dev (#1809).
+- **`react-dom`**: Added more rule examples to `no-dangerously-set-innerhtml`, `no-find-dom-node`, `no-hydrate`, `no-render`, and `no-render-return-value` documentation (#1804).
+- **`react-dom`**: Added legitimate `flushSync` use cases to `no-flush-sync` rule documentation (#1803).
+- Bumped the documented ESLint minimum version to `10.3.0`.
+- Clarified that the `off` preset disables all rules.
+- Fixed inaccurate minimum ESLint version and `off` preset description in README.
+
+### 🏗️ Internal
+
+- **`react-x/no-misused-capture-owner-stack`**: Refactored the `process.env.NODE_ENV` detection helpers to use the shared `core.isAPI` utility (#1812).
+- **`react-x/no-unused-state`**: Removed incorrect invalid test cases.
+- **`jsx`**: Added targeted test cases for empty string children behavior in `no-children-prop-with-children` and `no-useless-fragment` rules (#1806).
+- Removed `eslint-plugin-function` and bumped website dependencies (#1811).
+- Flattened `scripts/lib` into the `scripts` root.
+- Updated `.textlintrc.json`.
+- Updated dprint plugins and tidied scripts.
+- Removed `enriching-rule-examples-from-react-dev.md` from main branch.
+- Updated Sentrux baseline metrics.
+- Updated per-rule CHANGELOGs for `no-useless-fragment`, `no-children-prop`, and `no-children-prop-with-children` (#1805).
+- Bumped dependencies:
+  - `@takumi-rs/image-response` to `^1.6.0`
+  - `dompurify` to `3.4.6`
+  - `fumadocs-mdx` and updated pnpm lockfile
+  - `tsdown` to `0.22.1`
+  - dprint plugins (`g-plane/markup_fmt` and `markdown`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.6...v5.8.7
+
+## v5.8.6 (2026-05-27)
+
+### 📝 Documentation
+
+- Improved `react-x/context-name` rule description accuracy.
+- Removed broken Further Reading links across rule documentation.
+- Reordered Further Reading links by relevance in `react-x`, `react-dom`, and `react-web-api` rule documentation.
+- Updated `rule-implementation-patterns-term-based.md` documentation.
+
+### 🏗️ Internal
+
+- **`ast`**: Replaced `isLiteral` with `isStringLiteral` in `Check` utilities (#1798).
+- Bumped dependencies across workspace packages:
+  - `@typescript-eslint` to `^8.60.0`
+  - `eslint-plugin-jsdoc` to `63.0.0`
+  - `fumadocs` patch versions
+  - `nx` to `^22.7.4`
+  - `pnpm` and lockfile updates
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.5...v5.8.6
+
+## v5.8.5 (2026-05-24)
+
+### 📝 Documentation
+
+- Added rule implementation patterns guide (`docs/rule-implementation-patterns.md`) and term-based rule patterns guide (`docs/rule-implementation-patterns-term-based.md`).
+- Lowered minimum TypeScript version requirement from `5.1.0` to `5.0.0` across README and documentation.
+- Fixed textlint war-metaphor warnings and refined `.textlintrc.json` patterns.
+
+### 🏗️ Internal
+
+- Adjusted formatting across configuration and script files (#1795).
+- Fixed a typo in the CI test workflow step.
+- Added regression tests for oxc issues compatibility verification (#1796).
+- Bumped dependencies across workspace packages:
+  - `@effect/language-service` to `^0.86.2`
+  - `@takumi-rs/image-response` to `^1.3.0`
+  - `@tsconfig/vite-react` to `^8.0.6`
+  - `@types/node` to `^25.9.1`
+  - `@types/react` to `^19.2.15`
+  - `eslint-plugin-package-json` to `^1.1.0`
+  - `fumadocs-core` to `^16.9.0`
+  - `fumadocs-mdx` to `^15.0.7`
+  - `fumadocs-ui` to `^16.9.0`
+  - `lru-cache` to `11.5.0`
+  - `nx` to `^22.7.3`
+  - `postcss` to `^8.5.15`
+  - `vite` to `^8.0.14`
+  - `vitest` to `^4.1.7`
+  - `pnpm` to `11.2.1`
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.4...v5.8.5
+
+## v5.8.4 (2026-05-22)
+
+### 📝 Documentation
+
+- Restructured the FAQ page from an accordion layout to standard headings for better SEO, accessibility, and direct anchor linking.
+- Replaced the homepage `Hint` popover with a direct link to the FAQ anchor explaining the project's human/LLM collaboration policy.
+- Added a new **"What does 90% human-written mean?"** section to the FAQ.
+- Updated documentation for `isClassComponent` and `JsxConfig`.
+- Removed outdated documentation files.
+
+### 🏗️ Internal
+
+- **`core`**: Simplified `isClassComponent` by removing the `context` parameter and replacing `isClassComponentLoose` with the simplified function.
+- **`eslint-plugin-react-x`**: Removed unnecessary optional chaining across multiple rules (`immutability`, `no-unused-state`, `purity`, `refs`, `set-state-in-effect`, `static-components`, `use-memo`, etc.) and expanded test coverage for edge cases (#1792).
+- Added automated GitHub Release workflow and fixed `actions/setup-node` cache parameter error.
+- Added null-safety boundary tests for rules affected by PR #1792 (#1794).
+- Bumped dependencies across workspace packages: `@takumi-rs/image-response` to 1.2.1, `fumadocs-mdx` to 15.0.6, `import-integrity-lint` to 1.1.1, `preact` to 10.29.2, `tsx` to 4.22.1, `@typescript-eslint` to `^8.59.4`, `@types/node` to `^25.9.0`, `dompurify` to `^3.4.5`, `pnpm` to `11.1.3`, `textlint` to 15.7.1, and dprint TypeScript plugin to 0.96.1.
+- Cleaned up stray empty string in `tsl.config.ts`.
+- Cleaned up type and lint errors across the workspace (#1793).
+- Downgraded TypeScript override in `pnpm-workspace.yaml` from `^6.0.3` to `5.9.3`.
+- Fixed zizmor security audit findings in release workflow and moved ignore comments inline, removing `.github/zizmor.yml`.
+- Removed `scripts/verify-lockfile.ts`, `scripts/verify-devtools.ts`, and all references to them.
+- Reordered handler functions in `react-jsx/no-children-prop` (no logic change).
+- Updated baseline metrics and compacted tsconfig.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.3...v5.8.4
+
+## v5.8.3 (2026-05-20)
+
+### 🐞 Fixes
+
+- **`react-dom/no-unknown-property`**: Added React 19 `precedence` and `blocking` attributes to the known property allowlist with version-gated tag checks, preventing false positives on `<style>`, `<link>`, and `<script>` elements (#1789, #1790).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.2...v5.8.3
+
+## v5.8.2 (2026-05-20)
+
+### 📝 Documentation
+
+- Added React 19 `use` hook guidance to `error-boundaries`, `rules-of-hooks`, and `no-use-context` docs.
+- Added migration examples and corrected rule descriptions for class-component-related rules.
+- Improved `eslint-plugin-react-x` rule documentation with scenario-based examples, Troubleshooting sections, and Further Reading links across 48 rule docs (#1786).
+- Removed inline ESLint error annotations (`^^^`) from documentation examples for better readability (#1785).
+- Updated migration guide for `eslint-plugin-react` with additional details.
+
+### 🏗️ Internal
+
+- Set up textlint and fixed inappropriate wording in documentation (#1787).
+- Bumped dependencies across workspace packages (#1788).
+- Updated `pnpm-lock.yaml`: bumped `nx` to 22.7.2 and `brace-expansion` to 5.0.5.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.1...v5.8.2
+
+## v5.8.1 (2026-05-18)
+
+### 📝 Documentation
+
+- Restructured rule documentation across all plugins (`eslint-plugin-react-x`, `eslint-plugin-react-dom`, `eslint-plugin-react-jsx`, `eslint-plugin-react-web-api`, `eslint-plugin-react-naming-convention`, `eslint-plugin-react-debug`, `eslint-plugin-react-rsc`) from the `Common Violations / Invalid / Valid` format to the new `Examples / scenario-based / Troubleshooting / Further Reading` format (#1784).
+- Updated README tagline and description, removed the Benchmark section, and fixed migration guide links (#1783).
+- Updated website recipe docs, FAQ, and third-party plugins page (#1783).
+
+### 🏗️ Internal
+
+- Updated `scripts/90-scaffold-rule.ts` and the rule request issue template to match the new documentation structure (#1782).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.8.0...v5.8.1
+
+## v5.8.0 (2026-05-17)
+
+### 🪄 Improvements
+
+- **`react-jsx/no-children-prop`**, **`react-jsx/no-children-prop-with-children`**: Added support for `createElement` calls in addition to JSX elements (#1780).
+
+### 📝 Documentation
+
+- Added `eslint-plugin-perfectionist` to the third-party plugins documentation page (#1778).
+
+### 🏗️ Internal
+
+- Bumped `import-integrity-lint` to 1.0.1.
+- Fixed multiple versions of `typescript-eslint` and `import-integrity-lint` in the workspace (#1776).
+- Increased pnpm `minimumReleaseAge` to 3 days and updated lockfile (#1779).
+- Removed `.repos` directory references from config files (#1773).
+- Removed obsolete maintenance scripts (`create-spec-alignment-issues.sh`, `migrate-labels.sh`) (#1777).
+- Replaced `eslint-plugin-fast-import` with `import-integrity-lint` (#1774).
+- Simplified the publish CI workflow by skipping install scripts and removing the lint step (#1775).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.10...v5.8.0
+
+## v5.7.10 (2026-05-16)
+
+### 🐞 Fixes
+
+- **`react-x/no-leaked-conditional-rendering`**, **`react-x/set-state-in-effect`**: Added cycle detection to prevent stack overflow in recursive function analysis (#1769).
+
+### 📝 Documentation
+
+- Added `third-party-plugins.mdx` documentation page.
+- Added spec diff and compiler test fixtures for `react-x/globals` rule.
+- Updated ESLint Stylistic link to rules anchor.
+- Updated community projects (added Obsidian Copilot).
+- Added redirects and simplified removed docs page.
+
+### 🏗️ Internal
+
+- **`react-x/error-boundaries`**: Simplified `getEnclosingTryBlock` implementation.
+- Added `minimumReleaseAge` and `minimumReleaseAgeExclude` entries to `pnpm-workspace.yaml`.
+- Bumped `fumadocs-core` and `fumadocs-ui` to 16.8.11.
+- Pinned pnpm to v11 in CI and adjusted install hooks.
+- Fixed the git diff noise issue caused by a large number of external repository files introduced by "Vendored `facebook/react` as git subtree under `.repos`" in v5.7.9 (re-released as v5.7.10, closes #1772).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.8...v5.7.10
+
+## v5.7.8 (2026-05-14)
+
+### 🐞 Fixes
+
+- **`react-x/no-missing-key`**: Fixed the rule not detecting `ConditionalExpression`/`LogicalExpression` returned from block-bodied `.map`/`Array.from` callbacks. The rule now reports both branches when both lack a `key`, instead of only the first (#1767, #1766).
+
+### 📝 Documentation
+
+- Added `[NEEDS VERIFICATION]` markers to spec diffs for React Compiler aligned rules.
+- Added Repo Issue Labels Doc and migration scripts.
+- Added a `Hint` component to the website and used it on the home page.
+
+### 🏗️ Internal
+
+- Bumped `@effect/language-service` to 0.86.0.
+- Bumped `dompurify` to 3.4.3.
+- Bumped `fumadocs-mdx` to 15.0.4 and related dependencies.
+- Bumped `pnpm` from 11.1.0 to 11.1.1.
+- Enabled caching for Nx targets.
+- Removed `experimental.useFlatConfig` from Zed settings.
+- Removed two dprint plugins from `dprint.json`.
+- Updated Sentrux baseline metrics.
+
+## New Contributors
+
+- @lixiaoyan made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1767
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.7...v5.7.8
+
+## v5.7.7 (2026-05-12)
+
+### 🐞 Fixes
+
+- Fixed the rule documentation URLs returned by `eslint-plugin-react-jsx` and `eslint-plugin-react-rsc` to include the `jsx-` / `rsc-` prefixes so editor `Open documentation` links resolve correctly (#1757) — by @kasmacioma.
+
+### 🏗️ Internal
+
+- Bumped `@types/node` from 25.6.2 to 25.7.0.
+- Bumped `pnpm` from 11.0.9 to 11.1.0.
+- Bumped `mermaid` from 11.14.0 to 11.15.0 and pinned it via `pnpm-workspace.yaml` overrides, dropping the transitive `chevrotain@12.0.0` chain in favor of `@chevrotain/types@11.1.2`.
+- Enabled `trustPolicy: "no-downgrade"` in `pnpm-workspace.yaml`.
+
+## New Contributors
+
+- @kasmacioma made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1757
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.6...v5.7.7
+
+## v5.7.6 (2026-05-12)
+
+### 📝 Documentation
+
+- Migrated the website to the fumadocs solar theme; removed the WIP Frutiger Aero variant and consolidated theme overrides.
+- Each rule documentation page now lists prior versions in a `Versions` accordion sourced from per-rule `CHANGELOG.md`.
+- Added the `mikoto` project to the community showcase.
+- Updated README badges to use `@eslint-react/core`.
+
+### 🏗️ Internal
+
+- Bumped `@typescript-eslint` packages from 8.59.2 to 8.59.3.
+- Bumped `fumadocs-core` and `fumadocs-ui` from 16.8.7 to 16.8.10.
+- Bumped `fumadocs-mdx` from 14.3.2 to 15.0.3.
+- Bumped `tailwindcss` and `@tailwindcss/postcss` from 4.2.4 to 4.3.0.
+- Bumped `tailwind-merge` from 3.5.0 to 3.6.0.
+- Bumped `vitest` from 4.1.5 to 4.1.6.
+- Bumped `ansis` from 4.2.0 to 4.3.0.
+- Bumped `semver` from 7.7.4 to 7.8.0.
+- Bumped `pnpm` from 11.0.8 to 11.0.9.
+- Upgraded dprint biome plugin from 0.12.10 to 0.12.11.
+- Reverted `nx` from a 23.0.0 canary back to 22.7.1 stable.
+- Renamed the `verify:rule-docs` script to `check:docs`.
+- Removed unused `assets/logo.html` and `assets/react-icon.html` (#1755, #1756).
+- Updated Sentrux baseline metrics.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.5...v5.7.6
+
+## v5.7.5 (2026-05-08)
+
+### 🏗️ Internal
+
+- Bumped `@eslint/compat` from 2.0.5 to 2.1.0.
+- Bumped `@types/node` from 25.6.0 to 25.6.2.
+- Bumped `next` from 16.2.5 to 16.2.6.
+- Bumped `publint` from 0.3.19 to 0.3.20.
+- Bumped `tsdown` from 0.21.10 to 0.22.0.
+- Bumped `pnpm` from 10.33.4 to 11.0.8.
+- Adjusted website styles.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.4...v5.7.5
+
+## v5.7.4 (2026-05-07)
+
+### 🏗️ Internal
+
+- Bumped `@typescript-eslint` packages from 8.59.1 to 8.59.2.
+- Bumped `react` and `react-dom` from 19.2.5 to 19.2.6.
+- Bumped `next` from 16.2.4 to 16.2.5.
+- Bumped `nx` from 22.7.1 to 23.0.0-canary.20260506-b594537.
+- Bumped `fumadocs-core` and `fumadocs-ui` from 16.8.5 to 16.8.7.
+- Bumped `postcss` from 8.5.13 to 8.5.14.
+- Bumped `publint` from 0.3.18 to 0.3.19.
+- Bumped `pnpm` from 10.33.2 to 10.33.4.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.3...v5.7.4
+
+## v5.7.3 (2026-05-06)
+
+### 🐞 Fixes
+
+- **`react-x/immutability`**: Exempted ref mutations via a naming heuristic — any object whose identifier is `ref` or ends with `Ref` is treated as a mutable ref and skipped from immutability checks. This fixes false positives when mutating `RefObject<T>` values received as props (#1752, #1751).
+- **`react-x/immutability`**: Added `noRefLikeStateName` diagnostic to prevent state variables from being named `ref` or ending with `Ref`, which would otherwise bypass the ref exemption heuristic (#1752).
+
+### 📝 Documentation
+
+- Fixed the full rule name in `react-jsx/no-key-after-spread` documentation (`jsx/no-key-after-spread` → `jsx-no-key-after-spread`) (#1750).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.2...v5.7.3
+
+## v5.7.2 (2026-05-04)
+
+### 🐞 Fixes
+
+- **`react-x/no-unused-state`**: Removed the rule from the `recommended` preset for now (#1747, #1748).
+
+### 📝 Documentation
+
+- Added individual CHANGELOG.md files for all rules (#1746).
+- Added rule changelog links to all rule documentation pages.
+- Updated AST Explorer links in docs.
+- Various documentation cleanups.
+
+### 🏗️ Internal
+
+- Updated baseline metrics.
+- Updated roadmap milestone labels.
+- Upgraded dprint biome plugin from 0.12.9 to 0.12.10.
+- Cleaned up snapshot generation script and snapshot file.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.1...v5.7.2
+
+## v5.7.1 (2026-05-02)
+
+### 🐞 Fixes
+
+- **`all` preset**: Fixed an issue where the `all` preset accidentally included rules requiring type information (#1744).
+
+### 📝 Documentation
+
+- Fixed a typo in the shared settings description.
+- Fixed missing trailing commas in ESLint settings examples.
+- Updated `no-unused-state` rule wording and examples.
+- Added a Resources section with AST Explorer, ESLint Developer Guide, and TypeScript Compiler API links to kit-related documentation pages.
+
+### 🏗️ Internal
+
+- Pinned dependency versions for `next` and `@rbxts/react`.
+- Added `react-compiler-fixtures-all-preset.jsonl` snapshot generation.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.7.0...v5.7.1
+
+## v5.7.0 (2026-05-02)
+
+### ✨ New
+
+- **`react-x/no-unused-state`**: The rule re-added as a no-op in `v5.6.6` is now fully implemented. It detects state variables declared via `useState` (or similar state hooks) that are defined but never read, or only read inside an effect or effect dependency array (#1741).
+
+### 📝 Documentation
+
+- Updated minimum version requirements in README and docs (ESLint 10.2.1, TypeScript 6.0.3, pnpm 10.33.2).
+- Fixed `no-unused-state` migration docs and removed rule reasons.
+
+> **LTS Maintenance Mode**: Starting with v5.7.0, the project has entered a Long-Term Support (LTS) maintenance mode. New feature development is temporarily on hold while the project prioritizes bug fixes, rule improvements, and documentation updates. See [#1740](https://github.com/Rel1cx/eslint-react/issues/1740) for details.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.6.6...v5.7.0
+
+## v5.6.6 (2026-05-01)
+
+### ✨ New
+
+- **`react-x/no-unused-state`**: Re-add the `react-x/no-unused-state` rule that was removed in `5.0.0` as a no-op rule for detecting unused state in function components in a future release.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.6.4...v5.6.6
+
+## v5.6.4 (2026-05-01)
+
+### ✨ New
+
+- **`react-x/no-unused-class-component-members`**: Now flags `shouldComponentUpdate` methods defined in classes extending `PureComponent` as unused, since `PureComponent` implements its own `shouldComponentUpdate` with shallow prop and state comparison (#1738).
+
+### 📝 Documentation
+
+- Added `jsx` preset documentation to multiple rule docs.
+- Removed empty Presets sections from rule documentation.
+
+### 🏗️ Internal
+
+- **`ast`**: Added an optional `stop` predicate to `findParent` utility for more control over ancestor traversal (#1736).
+- Replaced `skott` with `sentrux` for architecture linting.
+- Updated sentrux rules and baseline metrics.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.6.3-beta.0...v5.6.4
+
+## v5.6.3-beta.0 (2026-04-30)
+
+### 🏗️ Internal
+
+- **JSX detection utilities moved to `@eslint-react/core`**: `isJsxLike`, `JsxConfig`, `JsxDetectionHint`, and related types now import from `@eslint-react/core`. The old `@eslint-react/jsx` module no longer re-exports these symbols. `isJsxText` and `JsxEmit` have been removed in favor of core equivalents.
+- Added Nx and set up project graph caching.
+- Added architectural boundaries for app and package dependencies.
+- Added devtools verification script.
+- Added sentrux layer architecture and dependency rules.
+- Updated sentrux baseline timestamps.
+- Upgraded `zod` from 4.3.6 to 4.4.1.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.6.2...v5.6.3-beta.0
+
+## v5.6.2 (2026-04-30)
+
+### 🐞 Fixes
+
+- **`react-x/use-memo`**: Fixed false positives in `useMemo` dependency analysis by using reference/definition analysis (#1735).
+
+### 📝 Documentation
+
+- Added anchor links to rule names in recipe docs.
+- Added migration overview page with sidebar entry.
+- Added naming-convention preset configuration documentation.
+- Simplified conditional formatting in `custom-rules-of-state` recipe.
+- Updated migration guide and added `noDirectAccessProps` custom rule example.
+
+### 🏗️ Internal
+
+- Removed unused diagram components and imports.
+- Reordered redirects with comments for clarity.
+- Bumped `lucide-react` from 1.12.0 to 1.14.0.
+- Updated `baseline-browser-mapping` to 2.10.24.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.6.0...v5.6.2
+
+## v5.6.0 (2026-04-29)
+
+This release consolidates all changes since v4.2.1.
+
+### 💥 Breaking Changes
+
+#### Core API Refactoring (@eslint-react/core)
+
+- Performed a large-scale flattening refactor of the core package's internal structure, merging modules previously scattered across subdirectories like `component/`, `function/`, `hook/`, `semantic/`, and `api/` into the root directory.
+- Renamed several core APIs:
+  - `isReactAPI` → `isAPI`
+  - `isReactAPICall` → `isAPICall`
+  - `isInitializedFromReact` → `isAPIFromReact`
+  - `isInitializedFromReactNative` → `isAPIFromReactNative`
+  - `ComponentDetectionHint` → `FunctionComponentDetectionHint`
+  - `ComponentFlag` → `FunctionComponentFlag`
+  - `getComponentCollector` → `getFunctionComponentCollector`
+  - `getComponentCollectorLegacy` → `getClassComponentCollector`
+- Migrated type utilities (`type-is`, `type-name`, `type-variant`) from `eslint-plugin-react-x` to `@eslint-react/core`.
+- Updated the `Toolkit` interface in `@eslint-react/kit` to reflect the naming changes above.
+
+#### Kit API Simplification (@eslint-react/kit)
+
+- **Simplified `RuleToolkit.is` API**: Removed pre-built identifier predicates (`memo`, `lazy`, `forwardRef`, etc.) from `RuleToolkit.is`. Only `*Call` variants and `API`/`APICall` factories are now available.
+- **Renamed initialization checkers**:
+  - `initializedFromReact` → `APIFromReact`
+  - `initializedFromReactNative` → `APIFromReactNative`
+- Code using `is.memo(node)`, `is.lazy(node)`, etc. must migrate to `is.memoCall(node)` or use `is.API("memo")(node)`.
+
+#### Type Alias Removal
+
+- **Removed deprecated `RuleDefinition` type alias**: The `RuleDefinition` type has been completely removed from `@eslint-react/kit`. Use `RuleFunction` instead.
+
+#### Removed Rules
+
+The following rules have been removed from `eslint-plugin-react-x`, `eslint-plugin-react-dom`, and `eslint-plugin-react-debug`:
+
+| Rule                                   | Package       | Notes                    |
+| -------------------------------------- | ------------- | ------------------------ |
+| `component-hook-factories`             | `react-x`     | Removed from all configs |
+| `no-redundant-should-component-update` | `react-x`     | Removed from all configs |
+| `no-unnecessary-use-callback`          | `react-x`     | Removed from all configs |
+| `no-unnecessary-use-memo`              | `react-x`     | Removed from all configs |
+| `no-unused-state`                      | `react-x`     | Removed from all configs |
+| `prefer-destructuring-assignment`      | `react-x`     | Removed from all configs |
+| `prefer-namespace-import`              | `react-x`     | Removed from all configs |
+| `prefer-namespace-import`              | `react-dom`   | Removed from all configs |
+| `debug/class-component`                | `react-debug` | Removed from all configs |
+
+#### Class Component Support Deprecation
+
+- All Class Component-related detection functions in the core package (such as `isClassComponent`, `isPureComponent`, and various lifecycle checkers) have been marked as `@deprecated`, retaining only minimal compatibility support for existing rules.
+- Rules in `eslint-plugin-react-web-api`, including `no-leaked-event-listener`, `no-leaked-interval`, and `no-leaked-timeout`, have removed detection for Class Component lifecycles (`componentDidMount` / `componentWillUnmount`) and now only report on Hook Effects (`useEffect`, etc.).
+
+### ✨ New
+
+#### New Rules
+
+- **`react-x/globals`**: New rule for restricting usage of global variables in React components.
+- **`react-x/static-components`**: New rule for enforcing static component definitions. Enhanced with variable reference tracking and a `createdHere` diagnostic to reduce false positives.
+- **`react-web-api/no-leaked-fetch`**: New rule that detects leaked `fetch` calls in effects, closing #1714.
+
+#### Kit Enhancements
+
+- Added `ast.findParent` utility to `@eslint-react/kit` for traversing AST ancestors.
+- Added support for **Universally Unique Lexicographically Sortable Identifiers (ULID)** for anonymous rules (later migrated to `node:crypto randomBytes`).
+
+#### Custom Rule Examples
+
+- Added Error Boundaries custom rule example.
+- Added boolean prop naming custom rule and documentation.
+
+### 🐞 Fixes
+
+#### Rule Fixes
+
+- **`react-x/error-boundaries`**: Fixed false positives on non-React code and resolved catch block over-reporting.
+- **`react-x/set-state-in-effect`**: Improved validation accuracy.
+- **`react-x/use-memo`**: Added reassignment check, aligned message IDs, and added support for `for-of`/`for-in` loops.
+
+#### Config Fixes
+
+- Added missing rules to presets, cleaned up experimental disables, and updated documentation.
+- Extracted naming-convention preset and fixed config gaps.
+
+#### Type Expression Fixes
+
+- Added missing `Extract.unwrap` for type expressions and chain expressions.
+- Unwrapped type expressions before inspecting AST node types.
+
+### 🪄 Improvements
+
+#### API & Refactoring
+
+- **`ast`**: Normalized API naming conventions and rewrote Check helpers.
+- **`ast`**: Renamed `isJSXLike` → `isJSXElementOrFragment` and `isMethodOrProperty` → `isPropertyOrMethod`.
+- Extracted ESLint types and utilities into the `@eslint-react/eslint` package.
+- Extracted `@eslint-react/jsx` from `@eslint-react/core` into a standalone utility package for static analysis of JSX patterns.
+- Migrated to `@` and `#` path aliases and replaced `tsx` with `vite-node`.
+- Moved pattern utilities to rule directories and extracted rule helpers into co-located `lib.ts` modules across multiple plugins.
+- Reorganized imports across the codebase.
+- Replaced `RuleConfig` with `Linter.RulesRecord` from ESLint.
+- Restructured monorepo packages directory layout.
+- Unified import style across packages and plugins.
+
+#### Core & AST Improvements
+
+- **`ast`**: Updated `FunctionInitPath` types to support method definitions and property arrow functions in class expressions.
+- **`ast/isNodeEqual`**: Fixed `JSXNamespacedName` comparison logic.
+
+#### Rule Improvements
+
+- **`react-x/static-components`**: Registered in `all`, `x`, and `disable-experimental` configs.
+- **`react-rsc/function-definition`**: Added directive position and quote checks.
+- Extracted HOC detection helpers to dedicated `lib.ts` files.
+
+#### Website & Documentation Improvements
+
+- Added LLM routes (`/llms.txt`, `/llms-full.txt`, `/llms.mdx`).
+- Added inline TOCs and improved navigation.
+- Enabled twoslash type-checking for code examples.
+- Improved accessibility and unified layout configuration.
+
+#### Testing
+
+- Expanded compiler fixture coverage across 9 rules.
+- Added comprehensive unit tests for component/hook detection utilities.
+
+#### Dependencies
+
+- Bumped TypeScript to 6.0.3.
+- Bumped Vite to ^8.0.7 in examples.
+- Bumped `@typescript-eslint` packages to 8.59.1.
+- Bumped `tsl-dx`, `tsdown`, `fumadocs`, `postcss`, `lucide-react`, `eslint-plugin-package-json`, and other dependencies.
+
+### 📝 Documentation
+
+- Added custom rule recipes for React Children API, Context API, props, state, boolean prop naming, and error boundaries.
+- Added migration examples (`no-set-state`, `no-string-refs`).
+- Added IMPL–SPEC diff documents for 5 React Compiler aligned rules.
+- Added spec documentation for validation rules.
+- Added rule feature docs.
+- Added table of contents to multiple documentation files.
+- Updated migrating-from-eslint-plugin-react guide.
+- Updated local packages docs.
+- Updated roadmap and contributing architecture diagram.
+
+### 🏗️ Internal
+
+- Added `build:plugins` script and updated build path patterns.
+- Added `publishConfig.access` to packages and marked `@local/eff` as private.
+- Added documentation comments to rule scripts.
+- Added typedoc docs and engines field.
+- Extracted shared tsdown config.
+- Fixed high-priority build, lockfile, script and doc inconsistencies.
+- Removed `major-release-checklist.md`.
+- Removed `scripts/prepare-release.ts` and the accompanying `prepare:release` npm script.
+- Removed barrel exports for utils.
+- Removed unused dependencies and added missing devDependencies.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.1...v5.6.0
+
+## v5.6.0-beta.1 (2026-04-28)
+
+### 🐞 Fixes
+
+- fix: unwrap type expressions before inspecting AST node types (#1732) (`c5290fcb3`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.6-beta.0...v5.6.0-beta.1
+
+## v5.5.6-beta.0 (2026-04-28)
+
+### 🪄 Improvements
+
+- Register `static-components` rule in `all`, `x`, and `disable-experimental` configs (`1d179849c`)
+
+### 🏗️ Internal
+
+- Add major release checklist to internal docs (`1d179849c`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.5-beta.1...v5.5.6-beta.0
+
+## v5.5.5-beta.1 (2026-04-28)
+
+### 🪄 Improvements
+
+- **eslint-plugin-react-x:** improve `set-state-in-effect` validation (#1731) (`081ef976b`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.4-beta.0...v5.5.5-beta.1
+
+## v5.5.4-beta.0 (2026-04-28)
+
+### 🐞 Fixes
+
+- **eslint-plugin-react-x:** resolve catch block over-reporting in `error-boundaries` rule (#1730) (`68b36a6ce`)
+
+### 🪄 Improvements
+
+- Bump tsl-dx to 0.12.1 across multiple packages (`6438ea58f`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.3-beta.2...v5.5.4-beta.0
+
+## v5.5.3-beta.2 (2026-04-28)
+
+### 📝 Documentation
+
+- Add rule feature docs (`0f453bfc7`)
+- Update roadmap to remove completed Docs and Website items (`d1a8c7881`)
+
+### 🪄 Improvements
+
+- Bump @typescript-eslint packages to 8.59.1 and add typescript as devDep (`7a1dcdc24`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.3-beta.1...v5.5.3-beta.2
+
+## v5.5.3-beta.1 (2026-04-27)
+
+### 📝 Documentation
+
+- add IMPL–SPEC diff documents for 5 React Compiler aligned rules (`d83ff84c2`)
+- add spec documentation for validation rules (`a69486e34`)
+- update all IMPL–SPEC diff docs (`2d6575a84`)
+
+### 🪄 Improvements
+
+- expand compiler fixture coverage across 9 rules (`efa367254`)
+- bump postcss to 8.5.12 (`f491962e0`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.3-beta.0...v5.5.3-beta.1
+
+## v5.5.3-beta.0 (2026-04-26)
+
+### ✨ New
+
+- **eslint-plugin-react-x:** enhance static-components rule with variable reference tracking (#1728) (`3aa068ef2`)
+- **eslint-plugin-react-x:** add createdHere diagnostic to static-components and support for-of/for-in in use-memo (#1729) (`1b4f3d6f2`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.2-beta.0...v5.5.3-beta.0
+
+## v5.5.2-beta.0 (2026-04-26)
+
+### ✨ New
+
+- **eslint-plugin-react-x:** add reassignment check and align message IDs in `use-memo` rule (#1727) (`c9d21bf3f`)
+
+### 📝 Documentation
+
+- update roadmap to reflect completed rules and restructure entries (`7392c4a49`)
+- update roadmap with v5.2.3-v5.5.1 changes and new package (`bbddec6e9`)
+
+### 🏗️ Internal
+
+- relax typedoc version pin and add engines field (`c99f33606`)
+- add documentation comments to rule scripts (`55681ca1e`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.1-beta.1...v5.5.2-beta.0
+
+## v5.5.1-beta.1 (2026-04-26)
+
+### 🏗️ Internal
+
+- remove unused dependencies and add missing devDependencies (`0862bb744`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.1-beta.0...v5.5.1-beta.1
+
+## v5.5.1-beta.0 (2026-04-25)
+
+### ✨ New
+
+- **kit:** add `ast.findParent` utility (#1726) (`cb61f68a1`)
+- **website,examples,ast:** add Error Boundaries custom rule example (#1725) (`76a79e275`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.5.0-beta.0...v5.5.1-beta.0
+
+## v5.5.0-beta.0 (2026-04-25)
+
+### 💥 Breaking Changes
+
+- **eslint-plugin-react-x:** remove `component-hook-factories` rule as the upstream plugin (`eslint-plugin-react-hooks`) has removed the equivalent rule upstream (#1724) (`6e28b16da`)
+
+### 🏗️ Internal
+
+- Return failure from verify-lockfile (`357e901cd`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.4.0-beta.0...v5.5.0-beta.0
+
+## v5.4.0-beta.0 (2026-04-25)
+
+### ✨ New
+
+- **eslint-plugin-react-x:** add static-components rule and port Re… (#1723) (`f217198b3`)
+
+### 📝 Documentation
+
+- **website:** add missing modules to contributing architecture diagram (`2c0e47891`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.4-beta.0...v5.4.0-beta.0
+
+## v5.3.4-beta.0 (2026-04-21)
+
+### ✨ New
+
+- **eslint-plugin-react-rsc:** add directive position and quote checks to function-definition (#1721) (`9efcd5b4a`)
+
+### 📝 Documentation
+
+- simplify boolean prop naming example with `ts.TypeFlags.BooleanLike` (`54a135930`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.3-beta.0...v5.3.4-beta.0
+
+## v5.3.3-beta.0 (2026-04-21)
+
+### 🐞 Fixes
+
+- **configs:** add missing rules to presets, clean up experimental disables, and update docs (#1720) (`c994e55f9`)
+
+### 📝 Documentation
+
+- minor fixes (`3c13fd6b9`)
+
+### 🏗️ Internal
+
+- add missing naming-convention config verification and bump deps (`03694fa66`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.2-beta.0...v5.3.3-beta.0
+
+## v5.3.2-beta.0 (2026-04-20)
+
+### 🐞 Fixes
+
+- **eslint-plugin:** extract naming-convention preset and fix config gaps (`d39a0c9f7`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.1-beta.0...v5.3.2-beta.0
+
+## v5.3.1-beta.0 (2026-04-20)
+
+### ✨ New
+
+- **react-x:** add `globals` rule (#1716) (`324b38891`)
+
+### 🐞 Fixes
+
+- add missing `Extract.unwrap` for type expressions and chain expressions (#1717) (`24bc183e1`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.0-beta.2...v5.3.1-beta.0
+
+## v5.3.0-beta.2 (2026-04-19)
+
+### ✨ New
+
+- **custom-rules:** add boolean prop naming custom rule and docs (`e0ac2090c`)
+
+### 🪄 Improvements
+
+- **custom-rules:** update booleanPropNaming.ts (`f55e8686b`)
+
+### 📝 Documentation
+
+- add `no-set-state` and `no-string-refs` migration examples (`7691e11b3`)
+- add 'Requires type checking' legend (`630e41fc6`)
+- improve custom rule examples readability and consistency (`bfeaea095`)
+- update migrating-from-eslint-plugin-react.mdx (`24e393566`)
+- update rule warning text in plugin docs (`3d511d657`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.3.0-beta.1...v5.3.0-beta.2
+
+## v5.3.0-beta.1 (2026-04-18)
+
+### ✨ New
+
+- **react-web-api:** add `no-leaked-fetch` rule, closes #1714 (#1715) (`09a3b1664`)
+
+### 🪄 Improvements
+
+- **ast:** rename `isJSXLike` to `isJSXElementOrFragment` and `isMethodOrProperty` to `isPropertyOrMethod` (`7b21cf210`)
+- **eslint-plugin-react-x:** rename component and hook collectors to short names (`e02d773a7`)
+- extract rule helpers into co-located `lib.ts` modules across multiple plugins (`405964d31`)
+- unify import style across packages and plugins (`5734462a4`)
+- fix imports in website and custom rules examples (`ec8cf3cea`)
+- add `publishConfig.access` to packages and mark `@local/eff` as private (`684e7f0d7`)
+
+### 📝 Documentation
+
+- **website:** add banner for kit beta and disable inline CSS (`4686faa3f`)
+
+### 🏗️ Internal
+
+- bump `tsl-dx`, `eslint-plugin-react-hooks`, and `@takumi-rs/image-response` (`7d9ff2677`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.2.4-beta.3...v5.3.0-beta.1
+
+## v5.2.4-beta.3 (2026-04-17)
+
+### 🪄 Improvements
+
+- **ast:** normalize API naming conventions (`17e2f02d5`)
+- **ast:** rewrite Check helpers (`d0c134bd1`)
+- **core,kit:** replace ulid with node:crypto randomBytes (#1710) (`90b58e374`)
+
+### 📝 Documentation
+
+- **kit:** trim README to website link and simplify website docs (`711b74ca0`)
+- **website:** add inline TOCs (`1006386c1`)
+- **website:** add marigold and nodejs.org to community projects (`ee0d2b7ed`)
+- **website:** enable twoslash type-checking for code examples (#1713) (`a3c475ef7`)
+- **website:** fix content and formatting issues in non-rule docs (`6c912a07d`)
+- **website:** fix grammar, spacing, and table alignment in documentation (`d92b3fda1`)
+- add v4.2.1 release notes (`aa1f659aa`)
+- fix broken links and add missing `additionalEffectHooks` documentation (#1711) (`d30e047a9`)
+- fix content and formatting issues in non-rule documentation (`94ebfbfd1`)
+
+### 🏗️ Internal
+
+- Bump TypeScript to 6.0.3 and update deps (`2463160ce`)
+- bump tsdown to 0.21.9 and fumadocs-mdx to 14.3.0 (`07bd7f267`)
+- bump fumadocs and postcss in website (`612376c89`)
+- extract shared tsdown config, add typedoc docs, and clean up (`ec8ad997a`)
+- fix high-priority build, lockfile, script and doc inconsistencies (`50023dfd8`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.2.3-beta.0...v5.2.4-beta.3
+
+## v5.2.3-beta.0 (2026-04-14)
+
+### 🪄 Improvements
+
+- use `Linter.RulesRecord` from eslint instead of custom `RuleConfig` (`01b79efd2`)
+
+### 📝 Documentation
+
+- **website:** fix rules table 404 pages, closes #1702 (`c8721be38`)
+- **kit:** remove redundant characteristics table for anonymous rules (`5f46e094f`)
+- Update roadmap with completed v5 items (`e48117cdb`)
+- Update flowchart label for Aggregated Plugin (`3122d37dc`)
+- Update Kit docs link to internal route (`1c79c0892`)
+
+### 🏗️ Internal
+
+- add `build:plugins` script and update build path patterns (`b0cc71b6a`)
+- consolidate AST utilities and clean up `packages/ast` (`5b19496a8`)
+- extract ESLint types and utilities into `@eslint-react/eslint` package (`f5cb25679`)
+- move pattern utilities to rule directories and rename assignment target helper (`0b3f8b6b6`)
+- restructure monorepo packages directory layout (`c0cefd0c2`)
+- update Vite to ^8.0.7 in examples (`59165fdc7`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v5.0.2-beta.0...v5.2.3-beta.0
+
+## v5.0.2-beta.0 (2026-04-07)
+
+### 💥 Breaking Changes
+
+#### Kit API Simplification (@eslint-react/kit)
+
+- **Simplified `RuleToolkit.is` API**: Removed pre-built identifier predicates (`memo`, `lazy`, `forwardRef`, etc.) from `RuleToolkit.is`. Only `*Call` variants and `API`/`APICall` factories are now available.
+- **Renamed initialization checkers**:
+  - `initializedFromReact` → `APIFromReact`
+  - `initializedFromReactNative` → `APIFromReactNative`
+- Code using `is.memo(node)`, `is.lazy(node)`, etc. must migrate to `is.memoCall(node)` or use `is.API("memo")(node)`.
+
+#### Type Alias Removal
+
+- **Removed deprecated `RuleDefinition` type alias**: The `RuleDefinition` type has been completely removed from `@eslint-react/kit`. Use `RuleFunction` instead.
+
+#### Removed Rules
+
+The following rules have been removed from `eslint-plugin-react-x` and `eslint-plugin-react-dom`:
+
+| Rule                              | Package     | Notes                    |
+| --------------------------------- | ----------- | ------------------------ |
+| `no-unnecessary-use-callback`     | `react-x`   | Removed from all configs |
+| `no-unnecessary-use-memo`         | `react-x`   | Removed from all configs |
+| `no-unused-state`                 | `react-x`   | Removed from all configs |
+| `prefer-destructuring-assignment` | `react-x`   | Removed from all configs |
+| `prefer-namespace-import`         | `react-dom` | Removed from all configs |
+| `prefer-namespace-import`         | `react-x`   | Removed from all configs |
+
+### ✨ New Features
+
+#### Anonymous Rule Identifier
+
+- Added support for **Universally Unique Lexicographically Sortable Identifiers (ULID)** for anonymous rules. This provides more robust identification for rules created without explicit names, improving debugging and traceability.
+
+### 📝 Documentation
+
+- **New Recipes**:
+  - Added `custom-rules-of-children` recipe for creating custom ESLint rules for React Children API.
+  - Added `custom-rules-of-context` recipe for creating custom ESLint rules for React Context API.
+  - Added `no-multiple-children-in-title` rule example.
+  - Added `prefer-namespace-import` recipe for enforcing namespace imports.
+- **Documentation Improvements**:
+  - Updated kit documentation to reflect API renames and removals.
+  - Synchronized API documentation across packages.
+  - Reordered recipes (Context before Children) for better logical flow.
+  - Removed Utility Modules section from READMEs.
+  - Added beta warning to Configure Project Rules documentation.
+
+### 🏗️ Internal Improvements
+
+- **JSX Package Refactoring**: Moved rule-specific JSX helpers into per-rule `lib.ts` files for better code organization.
+- **HOC Detection**: Extracted HOC detection helpers to dedicated `lib.ts` files.
+- **Website Improvements**: Improved accessibility and unified layout configuration.
+- **Dependencies**: Bumped Vite to 8.0.5 across examples.
+
+## v5.0.0-beta.0 (2026-04-04)
+
+### 💥 Breaking Changes
+
+#### Core API Refactoring (@eslint-react/core)
+
+- Performed a large-scale flattening refactor of the core package's internal structure, merging modules previously scattered across subdirectories like `component/`, `function/`, `hook/`, `semantic/`, and `api/` into the root directory.
+- Renamed several core APIs:
+  - `isReactAPI` → `isAPI`
+  - `isReactAPICall` → `isAPICall`
+  - `isInitializedFromReact` → `isAPIFromReact`
+  - `isInitializedFromReactNative` → `isAPIFromReactNative`
+  - `ComponentDetectionHint` → `FunctionComponentDetectionHint`
+  - `ComponentFlag` → `FunctionComponentFlag`
+  - `getComponentCollector` → `getFunctionComponentCollector`
+  - `getComponentCollectorLegacy` → `getClassComponentCollector`
+- Migrated type utilities `type-is`, `type-name`, and `type-variant` from `eslint-plugin-react-x` to `@eslint-react/core`.
+- Updated the `Toolkit` interface in `@eslint-react/kit` to reflect the naming changes above.
+
+#### Removed Rules
+
+- `@eslint-react/no-redundant-should-component-update`: This rule, along with its documentation and tests, has been removed from `eslint-plugin-react-x` and all configuration presets (`all`, `x`, `recommended`, `strict`, etc.).
+- `debug/class-component`: This debug rule has been removed from `eslint-plugin-react-debug` and the `debug/all` configuration.
+
+#### Class Component Support Deprecation
+
+- All Class Component-related detection functions in the core package (such as `isClassComponent`, `isPureComponent`, and various lifecycle checkers) have been marked as `@deprecated`, retaining only minimal compatibility support for existing rules.
+- Rules in `eslint-plugin-react-web-api`, including `no-leaked-event-listener`, `no-leaked-interval`, and `no-leaked-timeout`, have removed detection for Class Component lifecycles (`componentDidMount` / `componentWillUnmount`) and now only report on Hook Effects (`useEffect`, etc.).
+
+### 📝 Documentation
+
+- Added an Examples page (`/docs/examples`), listing all official example projects and links.
+- Removed redundant Overview headings in several places throughout the documentation.
+- Updated the migration guide and roadmap.
+
+### 🏗️ Internal Improvements
+
+- Unified the import style for `@typescript-eslint/types` across the codebase, merging `TSESTree` types and `AST_NODE_TYPES` constants into single-line imports.
+- Removed `scripts/prepare-release.ts` and the accompanying `prepare:release` npm script.
+- Updated dependency versions for `esbuild`, `@eslint/compat`, `@types/node`, `undici`, etc.
+
+## v4.2.5-beta.1 (2026-04-03)
+
+### 🐞 Fixes
+
+- `react-x`: `error-boundaries`: Fix false positives on non-react code, closes #1690 (#1693) (`d2103595d`)
+
+### 📝 Documentation
+
+- add missing index pages and clean up redirects for flattened URLs (`c419f4282`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.3...v4.2.5-beta.0
+
+## v4.2.3 (2026-04-03)
+
+### ✨ New
+
+- **jsx:** add jsx-no-leaked-dollar rule, add suggest fix to jsx-no-leaked-semicolon rule (#1688) (`b86bdd6da`)
+- **jsx:** add jsx-no-leaked-semicolon rule, closes #1685 (#1686) (`fbb495000`)
+
+### 📝 Documentation
+
+- update recipe section structure (Code→Rule, Usage→Config) (`8cade3008`)
+- update custom rule examples code style (#1684) (`dc9d05c33`)
+- update recipe titles to Title Case (`6a2d941b6`)
+- improve recipes overview (`8278f45c9`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.2...v4.2.3
+
+## v4.2.2 (2026-04-02)
+
+### 🪄 Improvements
+
+- `refactor(kit)`: Rename `RuleDefinition` to `RuleFunction` and deprecate the old name (#1683). The `RuleDefinition` type is now deprecated and will be removed in a future major release. Please migrate to `RuleFunction`.
+
+### 📝 Documentation
+
+- `docs`: Add `noCircularEffect` recipe and register in examples, closes #755 (#1681).
+- `docs`: Add `component-hook-factories` recipe and update examples.
+- `docs`: Add `noExplicitSpreadProps` rule to `custom-rules-of-props` recipe, closes #503.
+- `docs`: Migrate recipe docs to MDX format.
+- `docs`: Flatten recipe docs from tabbed UI to plain markdown sections.
+- `docs`: Standardize quotes in rule descriptions (#1680).
+- `docs`: Standardize punctuation and phrasing in recipe docs (#1682).
+- `docs`: Standardize recipe frontmatter descriptions.
+- `docs(website)`: Update recipes overview page.
+- `docs(website)`: Add "See Also" cross-references to recipes docs.
+- `docs(website)`: Simplify rule definition example in recipes overview.
+- `docs`: Remove obsolete `component-hook-factories` references from recipes.
+- `docs`: Remove Roadmap section from READMEs.
+- `docs`: Remove Custom Rules for Missing Rules link.
+- `docs`: Add Recipes link and update install command.
+- `docs`: Switch to installing `@eslint-react/kit` without rc tag.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.1...v4.2.2
+
+## v4.2.1 (2026-04-01)
+
+This release consolidates all changes since v3.0.0.
+
+### 💥 Breaking Changes
+
+**New `eslint-plugin-react-jsx` package**
+
+A new dedicated plugin for React Flavored JSX rules has been introduced. Several rules have been migrated from `eslint-plugin-react-x` and `eslint-plugin-react-dom` to this new package:
+
+| Old Rule (`react-x/`)      | New Rule (`react-jsx/`) | Change             |
+| :------------------------- | :---------------------- | :----------------- |
+| `jsx-key-before-spread`    | `no-key-after-spread`   | relocated, renamed |
+| `jsx-no-comment-textnodes` | `no-comment-textnodes`  | relocated, renamed |
+| `no-children-prop`         | `no-children-prop`      | relocated          |
+| `no-useless-fragment`      | `no-useless-fragment`   | relocated          |
+
+| Old Rule (`react-dom/`) | New Rule (`react-jsx/`) | Change    |
+| :---------------------- | :---------------------- | :-------- |
+| `no-namespace`          | `no-namespace`          | relocated |
+
+**Rule prefix changes in `@eslint-react/eslint-plugin`**
+
+Rules from individual plugins now use a flattened naming convention when accessed through the unified `@eslint-react/eslint-plugin` package:
+
+- `@eslint-react/<rule>` -> `@eslint-react/<rule>` (no changes)
+- `@eslint-react-jsx-<rule>` -> `@eslint-react-jsx-<rule>` (no changes)
+- `@eslint-react/rsc/<rule>` -> `@eslint-react/rsc-<rule>`
+- `@eslint-react/dom/<rule>` -> `@eslint-react/dom-<rule>`
+- `@eslint-react/web-api/<rule>` -> `@eslint-react/web-api-<rule>`
+- `@eslint-react/naming-convention/<rule>` -> `@eslint-react/naming-convention-<rule>`
+- `@eslint-react/debug/<rule>` -> `@eslint-react/debug-<rule>`
+
+**Removed Rules from `eslint-plugin-react-x`**
+
+The following rules have been removed from `eslint-plugin-react-x`:
+
+| Rule                              | Replaced by                                                                                                  |
+| :-------------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `react-x/jsx-dollar`              | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+| `react-x/jsx-shorthand-boolean`   | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+| `react-x/jsx-shorthand-fragment`  | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+| `react-x/unstable-rules-of-props` | [Recipes: custom-rules-of-props](/docs/recipes/custom-rules-of-props)                                        |
+| `react-x/unstable-rules-of-state` | [Recipes: custom-rules-of-state](/docs/recipes/custom-rules-of-state)                                        |
+
+**JSX utilities extracted from `@eslint-react/core` to `@eslint-react/jsx`**
+
+The JSX module has been extracted from `@eslint-react/core` into a new standalone `@eslint-react/jsx` package. The following exports are no longer available from `@eslint-react/core`:
+
+- `JsxInspector` class — removed, replaced with standalone utility functions from `@eslint-react/jsx` (e.g. `findAttribute`, `hasAttribute`, `getChildren`, `isElement`, `isFragmentElement`, `isHostElement`, `isJsxLike`, etc.)
+- `JsxConfig`, `JsxDetectionHint`, `JsxAttributeValue` — moved to `@eslint-react/jsx`
+- `getElementType` — renamed to `getElementFullType` in `@eslint-react/jsx`
+- `getElementSelfName` — renamed to `getElementSelfType` in `@eslint-react/jsx`
+
+**Removed ref APIs from `@eslint-react/core`**
+
+The following ref-related APIs have been removed from `@eslint-react/core` without replacement:
+
+- `isRefId`
+- `isInitializedFromRef`
+- `getRefInit`
+- `isRefLikeName`
+
+**Core collector API renames**
+
+The collector APIs in `@eslint-react/core` have been renamed:
+
+| Before                           | After                            |
+| :------------------------------- | :------------------------------- |
+| `useComponentCollector()`        | `getComponentCollector()`        |
+| `useComponentCollectorLegacy()`  | `getComponentCollectorLegacy()`  |
+| `useHookCollector()`             | `getHookCollector()`             |
+| Collector return property `.ctx` | Collector return property `.api` |
+
+**`@eslint-react/kit` API restructuring**
+
+The `hint` API in `@eslint-react/kit` has been restructured for better namespacing:
+
+| Before                  | After                    |
+| :---------------------- | :----------------------- |
+| `hint.defaultComponent` | `hint.component.Default` |
+
+**`@eslint-react/kit` API redesign**
+
+The `defineConfig` function has been replaced with a chainable builder API for better composability and type inference:
+
+| Before                                    | After                                                |
+| :---------------------------------------- | :--------------------------------------------------- |
+| `defineConfig({ rules: [rule1, rule2] })` | `eslintReactKit().use(rule1).use(rule2).getConfig()` |
+
+The new API provides better TypeScript intellisense and allows for more flexible rule configuration:
+
+```ts
+import eslintReactKit from "@eslint-react/kit";
+
+export default defineConfig(
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      // ... other configs
+      eslintReactKit()
+        .use(functionComponentDefinition)
+        .use(maxComponentPerFile, { max: 1 })
+        .getConfig(),
+    ],
+  },
+);
+```
+
+- `react-jsx`: Rename `no-deoptimization` rule to `no-key-after-spread` for clearer intent (#1668).
+- `kit`: Remove `files` option from `getConfig()` and normalize file extensions handling (#1669). The `files` option is no longer supported; file extensions are now automatically normalized to include both standard and TypeScript variants.
+
+### ✨ New
+
+- New `jsx` and `disable-jsx` config presets in `@eslint-react/eslint-plugin`.
+- New `react-dom-with-custom-rules` example project demonstrating custom rule creation with `@eslint-react/kit`.
+- `eslint-plugin-react-jsx`: New plugin dedicated to React Flavored JSX rules. Ships with `recommended` and `strict` config presets.
+- `react-jsx/no-children-prop-with-children`: New rule that disallows passing `children` as a prop when children are also passed as nested content.
+- `react-jsx/no-key-after-spread`: New rule that prevents patterns causing deoptimization when using the automatic JSX runtime (e.g. placing `key` after spread props).
+- `react-jsx/no-namespace`: New rule that disallows JSX namespace syntax, as React does not support them.
+- `@eslint-react/jsx`: New utility package for static analysis of JSX patterns in TSESTree ASTs, extracted from `@eslint-react/core`.
+- `@eslint-react/kit`: New utility module for building custom ESLint rules with React awareness. Provides a chainable `eslintReactKit().use().getConfig()` builder API and a `RuleToolkit` interface with pre-bound context helpers for component/hook analysis.
+- `@eslint-react/kit`: Re-export types from `@eslint-react/shared` for better TypeScript intellisense.
+- `kit`: Add `getPlugin()` API to `Builder` for fine-grained control over plugin namespace and rule severities.
+- `kit`: Support more file extensions in `getConfig` defaults (`js`, `mjs`, `cjs`, `jsx`, `ts`, `mts`, `cts`, `tsx`), closes #1659.
+- `kit.settings`: Expose normalized ESLint React settings via `settings` property on `RuleToolkit`.
+- `docs(utilities)`: Add utilities documentation for utility modules, closes #1656.
+
+### 🐞 Fixes
+
+- `purity`: Remove console methods from impurity detection, closes #1616 (#1676).
+- `purity`: Treat `new Date(arg)` as pure, closes #1582 (#1677).
+- `react-jsx`: Improve type safety and edge case handling for JSX rules (#1664).
+- `react-x`: `component-hook-factories`: Exclude HOC patterns and test mocks from component detection, closes #1652. Thanks @zerone0x!
+- `react-x`: `component-hook-factories`: Use `isComponentNameLoose` for more accurate component parameter checks.
+- `react-x`: `immutability`: Exclude event handler params from props mutation check, closes #1647. Thanks @zerone0x!
+- `react-x`: `no-duplicate-key`: Fix false positive for SVG `xlink` attributes.
+- `react-x`: `purity`: Remove `AbortController` from impure constructors, closes #1648. Thanks @zerone0x!
+- `core`: `isReactAPI`: Fix API name matching logic to use `endsWith` for precise matching.
+- `core`: `isRenderMethodLike`: Support `ClassExpression` in addition to `ClassDeclaration`.
+- `core`: `findImportSource`: Add cycle detection to prevent infinite recursion when resolving variable aliases.
+- `ast`: Fix JSX attribute name comparison to use `isNodeEqual` instead of string comparison, properly handling `JSXNamespacedName` (e.g., `xlink:href`).
+- `ast`: Update `FunctionInitPath` types to support method definitions and property arrow functions in class expressions.
+- `ast`: `isNodeEqual`: Fix `JSXNamespacedName` comparison logic.
+- `var`: Fix logic bugs in `compute-object-type`, `find-enclosing-assignment-target`, and `is-value-equal` utilities (#1672).
+- `docs`: Update package structure documentation in contributing guide and FAQ, closes #1658.
+
+### 🪄 Improvements
+
+- `react-jsx/no-children-prop`: Add suggestion-fix feature to move children from prop to element content.
+- `@eslint-react/eslint-plugin`: Unified plugin architecture refactored — configs now auto-inject the plugin, so users no longer need to manually register it separately.
+- `refactor(kit)`: Improve `Builder` and `RuleFunction` implementation for better type inference and code organization.
+- `refactor(kit)`: Replace `defineConfig` with chainable `.use().getConfig()` builder API, closes #1644.
+- `refactor(kit)`: Remove unused type parameter from `CollectorWithContext<T, E>` to `CollectorWithContext<T>`.
+- `refactor(kit)`: Rename parameter `args` to `options`.
+- `refactor(eff)`: Replace `getOrElse`/`getOrElseUpdate` with `getOrInsert`/`getOrInsertComputed` for better API consistency, closes #1657.
+- `docs(kit)`: Add comprehensive documentation for `getConfig()` and `getPlugin()` APIs with usage examples.
+- `docs(kit)`: Replace "max-component-per-file" example with "destructure-component-props" example for better practical guidance.
+- `docs(website)`: Improve `configure-project-rules` documentation with clearer examples and explanations.
+- `docs`: add recipes section; remove unstable-rules-of-props/state (#1679) (`01edc2f74`)
+- `docs`: Update migrating-from-eslint-plugin-react.mdx with improved examples and fixes, closes #1654.
+- `docs`: Add index sections to migration guides for better navigation.
+- `examples/react-dom-with-custom-rules`: Expand with additional custom rules examples including `forbid-dom-props`, `jsx-fragments`, `jsx-handler-names`, `jsx-max-depth`, `jsx-no-duplicate-props`, `jsx-no-literals`, `jsx-pascal-case`, `jsx-props-no-spread-multi`, and `no-adjacent-inline-elements`, closes #1653.
+- `examples/react-dom-with-custom-rules`: Add `max-component-per-file` custom rule example, closes #1437.
+- `examples/react-dom-with-custom-rules`: Modularize custom rules configuration for better maintainability.
+- `website`: Migrate to new Fumadocs structure and add LLM routes (`/llms.txt`, `/llms-full.txt`, `/llms.mdx`), closes #1588.
+- `test`: Enhance test coverage for `react-x` and `react-dom` rules, closes #1663.
+- `test`: Add comprehensive test coverage for `find-import-source`, `is-react-api`, legacy component detection, hook detection, function init path, and node equality utilities (#1671).
+- `test`: Add comprehensive unit tests for `@eslint-react/var` utilities including `compute-object-type`, `find-enclosing-assignment-target`, `is-assignment-target-equal`, and `is-value-equal` (#1672).
+- `deps`: Update typescript-eslint to ^8.58.0 (#1670).
+
+### 📝 Documentation
+
+- **scripts:** Add comprehensive README and more automation scripts (#1673).
+- `docs`: Update bug report template with upstream eslint-plugin-react-hooks guidance.
+- update @eslint-react/kit installation tag from beta to rc (`2da9b4e9d`)
+- update deprecated rule replacements in removed.md (`dc2fe27fb`)
+
+### ✅ Upgrade Checklist
+
+Use this checklist to upgrade from v3.x to v4.2.1:
+
+#### Package changes
+
+- [ ] Install the new `eslint-plugin-react-jsx` package — this is a new dedicated plugin for React Flavored JSX rules.
+
+#### ESLint configuration
+
+- [ ] Replace `react-x/jsx-key-before-spread` with `react-jsx/no-key-after-spread` in your ESLint config.
+- [ ] Replace `react-x/jsx-no-comment-textnodes` with `react-jsx/no-comment-textnodes` in your ESLint config.
+- [ ] Replace `react-x/no-children-prop` with `react-jsx/no-children-prop` in your ESLint config.
+- [ ] Replace `react-x/no-useless-fragment` with `react-jsx/no-useless-fragment` in your ESLint config.
+- [ ] Replace `react-dom/no-namespace` with `react-jsx/no-namespace` in your ESLint config.
+
+#### Rule prefix changes in `@eslint-react/eslint-plugin`
+
+If you use the unified `@eslint-react/eslint-plugin` package, update the following rule prefixes (slash `\/` -> dash `-`):
+
+- [ ] Replace `@eslint-react/rsc/<rule>` with `@eslint-react/rsc-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/dom/<rule>` with `@eslint-react/dom-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/web-api/<rule>` with `@eslint-react/web-api-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/naming-convention/<rule>` with `@eslint-react/naming-convention-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/debug/<rule>` with `@eslint-react/debug-<rule>` in your ESLint config.
+
+#### Review new rules
+
+- [ ] `react-jsx/no-children-prop-with-children` — new rule that disallows passing `children` as a prop when children are also passed as nested content. Review your codebase for new reports if using presets.
+
+#### Removed rules
+
+- [ ] `react-x/jsx-dollar`
+- [ ] `react-x/jsx-shorthand-boolean`
+- [ ] `react-x/jsx-shorthand-fragment`
+- [ ] `react-x/unstable-rules-of-props` — replaced by [Recipes: custom-rules-of-props](/docs/recipes/custom-rules-of-props)
+- [ ] `react-x/unstable-rules-of-state` — replaced by [Recipes: custom-rules-of-state](/docs/recipes/custom-rules-of-state)
+
+If you still need these rules, you can enforce them using the new `@eslint-react/kit` by creating custom rules that implement the desired checks.
+
+#### `@eslint-react/kit` migration
+
+- [ ] Replace `defineConfig({ rules: [rule1, rule2] })` with `eslintReactKit().use(rule1).use(rule2).getConfig()`.
+- [ ] Replace `hint.defaultComponent` with `hint.component.Default`.
+- [ ] Remove any `files` option passed to `getConfig()` — file extensions are now automatically normalized.
+
+#### Core API changes (for custom rule authors)
+
+- [ ] Replace `useComponentCollector()` with `getComponentCollector()`.
+- [ ] Replace `useComponentCollectorLegacy()` with `getComponentCollectorLegacy()`.
+- [ ] Replace `useHookCollector()` with `getHookCollector()`.
+- [ ] Replace collector return property `.ctx` with `.api`.
+- [ ] Replace `JsxInspector.from(context)` usage with standalone utility functions from `@eslint-react/jsx`.
+- [ ] Replace `getElementType()` with `getElementFullType()` from `@eslint-react/jsx`.
+- [ ] Replace `getElementSelfName()` with `getElementSelfType()` from `@eslint-react/jsx`.
+- [ ] Remove usage of deleted ref APIs (`isRefId`, `isInitializedFromRef`, `getRefInit`, `isRefLikeName`).
+- [ ] Update JSX-related imports from `@eslint-react/core` to `@eslint-react/jsx`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0...v4.2.1
+
+## v4.2.0-beta.3 (2026-04-01)
+
+### 🐞 Fixes
+
+- **purity:** treat new Date(arg) as pure, closes #1582 (#1677) (`f727b59f5`)
+- **purity:** remove console methods from impurity detection, closes #1616 (#1676) (`10fe2eb0e`)
+
+### 📝 Documentation
+
+- **scripts:** add comprehensive README and more automation scripts (#1673) (`dcaa5aa45`)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.0-beta.2...v4.2.0-beta.3
+
+## v4.2.0-beta.2 (2026-03-31)
+
+### 🐞 Fixes
+
+- `var`: Fix logic bugs in `compute-object-type`, `find-enclosing-assignment-target`, and `is-value-equal` utilities (#1672).
+
+### 🪄 Improvements
+
+- `test`: Add comprehensive unit tests for `@eslint-react/var` utilities including `compute-object-type`, `find-enclosing-assignment-target`, `is-assignment-target-equal`, and `is-value-equal` (#1672).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.0-beta.1...v4.2.0-beta.2
+
+## v4.2.0-beta.1 (2026-03-31)
+
+### 🐞 Fixes
+
+- `ast`: `isNodeEqual`: Fix `JSXNamespacedName` comparison logic.
+
+### 🪄 Improvements
+
+- `test`: Add comprehensive test coverage for `find-import-source`, `is-react-api`, legacy component detection, hook detection, function init path, and node equality utilities (#1671).
+- `deps`: Update typescript-eslint to ^8.58.0 (#1670).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.2.0-beta.0...v4.2.0-beta.1
+
+## v4.2.0-beta.0 (2026-03-31)
+
+### 💥 Breaking Changes
+
+- `kit`: Remove `files` option from `getConfig()` and normalize file extensions handling (#1669). The `files` option is no longer supported; file extensions are now automatically normalized to include both standard and TypeScript variants.
+
+### 🐞 Fixes
+
+- `react-x`: `component-hook-factories`: Use `isComponentNameLoose` for more accurate component parameter checks.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.1.0-beta.0...v4.2.0-beta.0
+
+## v4.1.0-beta.0 (2026-03-30)
+
+### 💥 Breaking Changes
+
+- `react-jsx`: Rename `no-deoptimization` rule to `no-key-after-spread` for clearer intent (#1668).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.3-beta.0...v4.1.0-beta.0
+
+## v4.0.3-beta.0 (2026-03-30)
+
+### 🐞 Fixes
+
+- `react-x`: `component-hook-factories`: Exclude HOC patterns and test mocks from component detection, closes #1652. Thanks @zerone0x!
+- `react-jsx`: Improve type safety and edge case handling for JSX rules (#1664).
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.6...v4.0.3-beta.0
+
+## v4.0.2-beta.6 (2026-03-30)
+
+### 🪄 Improvements
+
+- `test`: Enhance test coverage for `react-x` and `react-dom` rules, closes #1663.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.5...v4.0.2-beta.6
+
+## v4.0.2-beta.5 (2026-03-30)
+
+> **Note**: `v4.0.2-beta.4` was skipped.
+
+### 🐞 Fixes
+
+- `core`: `findImportSource`: Add cycle detection to prevent infinite recursion when resolving variable aliases.
+- `core`: `isReactAPI`: Fix API name matching logic to use `endsWith` for precise matching.
+- `core`: `isRenderMethodLike`: Support `ClassExpression` in addition to `ClassDeclaration`.
+- `ast`: Fix JSX attribute name comparison to use `isNodeEqual` instead of string comparison, properly handling `JSXNamespacedName` (e.g., `xlink:href`).
+- `ast`: Update `FunctionInitPath` types to support method definitions and property arrow functions in class expressions.
+- `react-x`: `no-duplicate-key`: Fix false positive for SVG `xlink` attributes.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.3...v4.0.2-beta.5
+
+## v4.0.2-beta.3 (2026-03-29)
+
+### ✨ New
+
+- `kit`: Support more file extensions in `getConfig` defaults (`js`, `mjs`, `cjs`, `jsx`, `ts`, `mts`, `cts`, `tsx`), closes #1659.
+
+### 🐞 Fixes
+
+- `docs`: Update package structure documentation in contributing guide and FAQ, closes #1658.
+
+### 🪄 Improvements
+
+- `refactor(eff)`: Replace `getOrElse`/`getOrElseUpdate` with `getOrInsert`/`getOrInsertComputed` for better API consistency, closes #1657.
+- `refactor(kit)`: Rename parameter `args` to `options`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.2...v4.0.2-beta.3
+
+## v4.0.2-beta.2 (2026-03-28)
+
+### ✨ New
+
+- `docs(utilities)`: Add utilities documentation for utility modules, closes #1656.
+
+### 🪄 Improvements
+
+- `examples(react-dom-with-custom-rules)`: Expand with additional custom rules examples including `forbid-dom-props`, `jsx-fragments`, `jsx-handler-names`, `jsx-max-depth`, `jsx-no-duplicate-props`, `jsx-no-literals`, `jsx-pascal-case`, `jsx-props-no-spread-multi`, and `no-adjacent-inline-elements`, closes #1653.
+- `docs`: Update migrating-from-eslint-plugin-react.mdx with improved examples and fixes, closes #1654.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.1...v4.0.2-beta.2
+
+## v4.0.2-beta.1 (2026-03-28)
+
+### 🐞 Fixes
+
+- `react-x`: `immutability`: Exclude event handler params from props mutation check, closes #1647. Thanks @zerone0x!
+- `react-x`: `purity`: Remove `AbortController` from impure constructors, closes #1648. Thanks @zerone0x!
+
+### 🪄 Improvements
+
+- `docs`: Update bug report template with upstream eslint-plugin-react-hooks guidance.
+- `examples/react-dom-with-custom-rules`: Update custom rules example.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.2-beta.0...v4.0.2-beta.1
+
+## v4.0.2-beta.0 (2026-03-28)
+
+### ✨ New
+
+- `kit`: Add `getPlugin()` API to `Builder` for fine-grained control over plugin namespace and rule severities.
+- `examples/react-dom-with-custom-rules`: Add `require-react-19` custom rule example demonstrating settings usage.
+
+### 🪄 Improvements
+
+- `kit`: `getConfig()` now accepts optional `{ files?: string[] }` argument for more flexible configuration.
+- `docs(kit)`: Add comprehensive documentation for `getConfig()` and `getPlugin()` APIs with usage examples.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.1-beta.1...v4.0.2-beta.0
+
+## v4.0.1-beta.1 (2026-03-28)
+
+### 🪄 Improvements
+
+- `refactor(kit)`: Improve `Builder` and `RuleFunction` implementation for better type inference and code organization.
+- `docs(website)`: Improve `configure-project-rules` documentation with clearer examples and explanations.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.1-beta.0...v4.0.1-beta.1
+
+## v4.0.1-beta.0 (2026-03-27)
+
+### 💥 Breaking Changes
+
+**`@eslint-react/kit` API redesign**
+
+The `defineConfig` function has been replaced with a chainable builder API for better composability and type inference:
+
+| Before                                    | After                                                |
+| :---------------------------------------- | :--------------------------------------------------- |
+| `defineConfig({ rules: [rule1, rule2] })` | `eslintReactKit().use(rule1).use(rule2).getConfig()` |
+
+The new API provides better TypeScript intellisense and allows for more flexible rule configuration:
+
+```ts
+import eslintReactKit from "@eslint-react/kit";
+
+export default defineConfig(
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      // ... other configs
+      eslintReactKit()
+        .use(functionComponentDefinition)
+        .use(maxComponentPerFile, { max: 1 })
+        .getConfig(),
+    ],
+  },
+);
+```
+
+### 🪄 Improvements
+
+- `refactor(kit)`: Replace `defineConfig` with chainable `.use().getConfig()` builder API, closes #1644.
+- `refactor(website)`: Cleanup and organize code.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.0-beta.3...v4.0.1-beta.0
+
+## v4.0.0-beta.3 (2026-03-27)
+
+### ✨ New
+
+- `@eslint-react/kit`: Re-export types from `@eslint-react/shared` for better TypeScript intellisense.
+
+### 🪄 Improvements
+
+- `examples/react-dom-with-custom-rules`: Add `max-component-per-file` custom rule example, closes #1437.
+- `examples/react-dom-with-custom-rules`: Modularize custom rules configuration for better maintainability.
+- `website`: Migrate to new Fumadocs structure and add LLM routes (`/llms.txt`, `/llms-full.txt`, `/llms.mdx`), closes #1588.
+- `docs`: Add index sections to migration guides for better navigation.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.0-beta.2...v4.0.0-beta.3
+
+## v4.0.0-beta.2 (2026-03-25)
+
+### ✨ New
+
+- `kit.settings`: Expose normalized ESLint React settings via `settings` property on `RuleToolkit`.
+
+### 🐞 Fixes
+
+- `website`: Mark `function-component-definition` rule as `🔧` (fixable) in migration guide.
+
+### 🪄 Improvements
+
+- `refactor(kit)`: Remove unused type parameter from `CollectorWithContext<T, E>` to `CollectorWithContext<T>`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.0-beta.1...v4.0.0-beta.2
+
+## v4.0.0-beta.1 (2026-03-25)
+
+### 💥 Breaking Changes
+
+**`@eslint-react/kit` API restructuring**
+
+The `hint` API in `@eslint-react/kit` has been restructured for better namespacing:
+
+| Before                  | After                    |
+| :---------------------- | :----------------------- |
+| `hint.defaultComponent` | `hint.component.Default` |
+
+### 🐞 Fixes
+
+- `docs(kit)`: Fix `defineConfig` import statement in README examples.
+- `docs(kit)`: Update example to use `hint.component.Default` instead of `hint.defaultComponent`.
+
+### 🪄 Improvements
+
+- `docs(kit)`: Replace "max-component-per-file" example with "destructure-component-props" example for better practical guidance.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v4.0.0-beta.0...v4.0.0-beta.1
+
+## v4.0.0-beta.0 (2026-03-24)
+
+### 💥 Breaking Changes
+
+**New `eslint-plugin-react-jsx` package**
+
+A new dedicated plugin for React Flavored JSX rules has been introduced. Several rules have been migrated from `eslint-plugin-react-x` and `eslint-plugin-react-dom` to this new package:
+
+| Old Rule (`react-x/`)      | New Rule (`react-jsx/`) | Change             |
+| :------------------------- | :---------------------- | :----------------- |
+| `jsx-key-before-spread`    | `no-key-after-spread`   | relocated, renamed |
+| `jsx-no-comment-textnodes` | `no-comment-textnodes`  | relocated, renamed |
+| `no-children-prop`         | `no-children-prop`      | relocated          |
+| `no-useless-fragment`      | `no-useless-fragment`   | relocated          |
+
+| Old Rule (`react-dom/`) | New Rule (`react-jsx/`) | Change    |
+| :---------------------- | :---------------------- | :-------- |
+| `no-namespace`          | `no-namespace`          | relocated |
+
+**Rule prefix changes in `@eslint-react/eslint-plugin`**
+
+Rules from individual plugins now use a flattened naming convention when accessed through the unified `@eslint-react/eslint-plugin` package:
+
+- `@eslint-react/<rule>` -> `@eslint-react/<rule>` (no changes)
+- `@eslint-react-jsx-<rule>` -> `@eslint-react-jsx-<rule>` (no changes)
+- `@eslint-react/rsc/<rule>` -> `@eslint-react/rsc-<rule>`
+- `@eslint-react/dom/<rule>` -> `@eslint-react/dom-<rule>`
+- `@eslint-react/web-api/<rule>` -> `@eslint-react/web-api-<rule>`
+- `@eslint-react/naming-convention/<rule>` -> `@eslint-react/naming-convention-<rule>`
+- `@eslint-react/debug/<rule>` -> `@eslint-react/debug-<rule>`
+
+**Removed Rules from `eslint-plugin-react-x`**
+
+The following rules have been removed from `eslint-plugin-react-x`:
+
+| Rule                             | Replaced by                                                                                                  |
+| :------------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `react-x/jsx-dollar`             | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+| `react-x/jsx-shorthand-boolean`  | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+| `react-x/jsx-shorthand-fragment` | [`@eslint-react/kit`](https://github.com/Rel1cx/eslint-react/blob/main/packages/kit/README.md) (custom rule) |
+
+**JSX utilities extracted from `@eslint-react/core` to `@eslint-react/jsx`**
+
+The JSX module has been extracted from `@eslint-react/core` into a new standalone `@eslint-react/jsx` package. The following exports are no longer available from `@eslint-react/core`:
+
+- `JsxInspector` class — removed, replaced with standalone utility functions from `@eslint-react/jsx` (e.g. `findAttribute`, `hasAttribute`, `getChildren`, `isElement`, `isFragmentElement`, `isHostElement`, `isJsxLike`, etc.)
+- `JsxConfig`, `JsxDetectionHint`, `JsxAttributeValue` — moved to `@eslint-react/jsx`
+- `getElementType` — renamed to `getElementFullType` in `@eslint-react/jsx`
+- `getElementSelfName` — renamed to `getElementSelfType` in `@eslint-react/jsx`
+
+**Removed ref APIs from `@eslint-react/core`**
+
+The following ref-related APIs have been removed from `@eslint-react/core` without replacement:
+
+- `isRefId`
+- `isInitializedFromRef`
+- `getRefInit`
+- `isRefLikeName`
+
+**Core collector API renames**
+
+The collector APIs in `@eslint-react/core` have been renamed:
+
+| Before                           | After                            |
+| :------------------------------- | :------------------------------- |
+| `useComponentCollector()`        | `getComponentCollector()`        |
+| `useComponentCollectorLegacy()`  | `getComponentCollectorLegacy()`  |
+| `useHookCollector()`             | `getHookCollector()`             |
+| Collector return property `.ctx` | Collector return property `.api` |
+
+### ✨ New
+
+- `@eslint-react/kit`: New utility module for building custom ESLint rules with React awareness. Provides `defineConfig()`, `merge()`, and a `RuleToolkit` interface with pre-bound context helpers for component/hook analysis.
+- `@eslint-react/jsx`: New utility package for static analysis of JSX patterns in TSESTree ASTs, extracted from `@eslint-react/core`.
+- `eslint-plugin-react-jsx`: New plugin dedicated to React Flavored JSX rules. Ships with `recommended` and `strict` config presets.
+- `react-jsx/no-namespace`: New rule that disallows JSX namespace syntax, as React does not support them.
+- `react-jsx/no-key-after-spread`: New rule that prevents patterns causing deoptimization when using the automatic JSX runtime (e.g. placing `key` after spread props).
+- `react-jsx/no-children-prop-with-children`: New rule that disallows passing `children` as a prop when children are also passed as nested content.
+- New `jsx` and `disable-jsx` config presets in `@eslint-react/eslint-plugin`.
+- New `react-dom-with-custom-rules` example project demonstrating custom rule creation with `@eslint-react/kit`.
+
+### 🪄 Improvements
+
+- `react-jsx/no-children-prop`: Add suggestion-fix feature to move children from prop to element content.
+- `@eslint-react/eslint-plugin`: Unified plugin architecture refactored — configs now auto-inject the plugin, so users no longer need to manually register it separately.
+
+### ✅ Upgrade Checklist
+
+Use this checklist to upgrade from v3.x to v4.0.0:
+
+#### Package changes
+
+- [ ] Install the new `eslint-plugin-react-jsx` package — this is a new dedicated plugin for React Flavored JSX rules.
+- [ ] If you depend on JSX utilities from `@eslint-react/core`, install `@eslint-react/jsx` and update imports accordingly.
+
+#### ESLint configuration
+
+- [ ] Replace `react-x/jsx-key-before-spread` with `react-jsx/no-key-after-spread` in your ESLint config.
+- [ ] Replace `react-x/jsx-no-comment-textnodes` with `react-jsx/no-comment-textnodes` in your ESLint config.
+- [ ] Replace `react-x/no-children-prop` with `react-jsx/no-children-prop` in your ESLint config.
+- [ ] Replace `react-x/no-useless-fragment` with `react-jsx/no-useless-fragment` in your ESLint config.
+- [ ] Replace `react-dom/no-namespace` with `react-jsx/no-namespace` in your ESLint config.
+
+#### Rule prefix changes in `@eslint-react/eslint-plugin`
+
+If you use the unified `@eslint-react/eslint-plugin` package, update the following rule prefixes (slash `\/` -> dash `-`):
+
+- [ ] Replace `@eslint-react/rsc/<rule>` with `@eslint-react/rsc-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/dom/<rule>` with `@eslint-react/dom-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/web-api/<rule>` with `@eslint-react/web-api-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/naming-convention/<rule>` with `@eslint-react/naming-convention-<rule>` in your ESLint config.
+- [ ] Replace `@eslint-react/debug/<rule>` with `@eslint-react/debug-<rule>` in your ESLint config.
+
+#### Review new rules
+
+- [ ] `react-jsx/no-children-prop-with-children` — new rule that disallows passing `children` as a prop when children are also passed as nested content. Review your codebase for new reports if using presets.
+
+#### Removed rules
+
+- [ ] `react-x/jsx-dollar`
+- [ ] `react-x/jsx-shorthand-boolean`
+- [ ] `react-x/jsx-shorthand-fragment`
+
+If you still need these rules, you can enforce them using the new `@eslint-react/kit` by creating custom rules that implement the desired checks.
+
+#### Core API changes (for custom rule authors)
+
+- [ ] Replace `useComponentCollector()` with `getComponentCollector()`.
+- [ ] Replace `useComponentCollectorLegacy()` with `getComponentCollectorLegacy()`.
+- [ ] Replace `useHookCollector()` with `getHookCollector()`.
+- [ ] Replace collector return property `.ctx` with `.api`.
+- [ ] Replace `JsxInspector.from(context)` usage with standalone utility functions from `@eslint-react/jsx`.
+- [ ] Replace `getElementType()` with `getElementFullType()` from `@eslint-react/jsx`.
+- [ ] Replace `getElementSelfName()` with `getElementSelfType()` from `@eslint-react/jsx`.
+- [ ] Remove usage of deleted ref APIs (`isRefId`, `isInitializedFromRef`, `getRefInit`, `isRefLikeName`).
+- [ ] Update JSX-related imports from `@eslint-react/core` to `@eslint-react/jsx`.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0...v4.0.0-beta.0
+
+## v3.0.0 (2026-03-16)
+
+### 🧹 Chores
+
+- Version Packages.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.5...v3.0.0
+
+## v3.0.0-rc.5 (2026-03-16)
+
+### 🐞 Fixes
+
+- `react-web-api/no-leaked-event-listener`: Recognize function parameter as valid signal. Closes #1622. (#1623)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.4...v3.0.0-rc.5
+
+## v3.0.0-rc.4 (2026-03-14)
+
+### 🪄 Improvements
+
+- Update README badge links.
+
+### 🧹 Chores
+
+- Bump fumadocs, eslint-plugin-fast-import, and @vitejs/plugin-react.
+- Pin typescript-eslint to stable version ^8.57.0.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.3...v3.0.0-rc.4
+
+## v3.0.0-rc.3 (2026-03-13)
+
+### 🐞 Fixes
+
+- `react-x/error-boundaries`: Fixed false positive by skipping non-JSX-like values in error boundary detection. (#1615)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.2...v3.0.0-rc.3
+
+## v3.0.0-rc.2 (2026-03-13)
+
+### ✨ New
+
+- `react-x/prefer-set-state-callback`: New rule that enforces using callback form of `setState` when the new state is computed from the previous state. Closes #1289. (#1610, #1613)
+- `react-x/unstable-rules-of-state`: New experimental rule that consolidates state-related validations including `prefer-set-state-callback`. (#1613)
+
+### 🐞 Fixes
+
+- `react-x/use-memo`: Fixed false positive in arrow functions. Fixes #1611. (#1612)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.1...v3.0.0-rc.2
+
+## v3.0.0-rc.1 (2026-03-12)
+
+### ✨ New
+
+- `unstable-rules-of-props`: Implement `noDuplicateProps` check — the rule now detects duplicate props on JSX elements. Closes #1605. (#1608)
+
+### 🪄 Improvements
+
+- Added `inlinedDependencies` metadata to packages.
+- Extended nested expression traversal to handle more AST node types. (#1609)
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v3.0.0-rc.0...v3.0.0-rc.1
+
+## v3.0.0-rc.0 (2026-03-08)
+
+> This entry consolidates all changes from v2.13.0 (2026-02-15) through v3.0.0-rc.0 (2026-03-08).
+
+### 💥 Breaking Changes
+
+**Minimum Node.js version raised from 20 to 22**
+
+The minimum required Node.js version is now `>=22.0.0` (previously `>=20.19.0`).
+
+**Consolidated and removed rules in `eslint-plugin-react-x`**
+
+| Old Rule (`react-x/`)                  | New Rule (`react-x/`) | Change       |
+| :------------------------------------- | :-------------------- | :----------- |
+| `jsx-no-duplicate-props`               | —                     | removed      |
+| `jsx-no-iife`                          | `unsupported-syntax`  | consolidated |
+| `jsx-no-undef`                         | —                     | removed      |
+| `jsx-uses-react`                       | —                     | removed      |
+| `jsx-uses-vars`                        | —                     | removed      |
+| `no-unnecessary-key`                   | —                     | removed      |
+| `no-useless-forward-ref`               | `no-forward-ref`      | consolidated |
+| `prefer-read-only-props`               | `immutability`        | consolidated |
+| `prefer-use-state-lazy-initialization` | `use-state`           | consolidated |
+
+- `jsx-no-duplicate-props`: Removed. LSP and Language Features natively report duplicate JSX props, making this rule redundant.
+- `jsx-no-iife`: The IIFE-in-JSX check has been merged into the new `unsupported-syntax` rule, which also covers `eval` and `with` statements.
+- `jsx-no-undef`: ESLint v10.0.0 now tracks JSX references natively, making this rule redundant. The `no-undef` rule now correctly handles JSX element references.
+- `jsx-uses-react` and `jsx-uses-vars`: These rules were only necessary for older versions of React that required the `React` namespace in scope for JSX. Since React 17, this is no longer required, and ESLint v10.0.0's native variable tracking handles this correctly.
+- `no-unnecessary-key`: The experimental rule has been removed.
+- `no-useless-forward-ref`: Consolidated into `no-forward-ref`. Since React 19, `forwardRef` is no longer necessary as `ref` can be passed as a prop. The `no-forward-ref` rule now covers all `forwardRef` usage patterns.
+- `prefer-read-only-props`: The TypeScript-based read-only props enforcement has been consolidated into the new `immutability` rule, which covers a broader set of immutability violations, including in-place array mutations and direct property assignments on state and props.
+- `prefer-use-state-lazy-initialization`: Its lazy-initialization checks are now part of the `use-state` rule and controlled by the new `enforceLazyInitialization` option (default: `true`).
+
+**Removed previously deprecated rules**
+
+| Rule                     | Deprecated in | Package                                 | Replacement                                                                         |
+| :----------------------- | :------------ | :-------------------------------------- | :---------------------------------------------------------------------------------- |
+| `filename-extension`     | 2.13.0        | `eslint-plugin-react-naming-convention` |                                                                                     |
+| `filename`               | 2.13.0        | `eslint-plugin-react-naming-convention` |                                                                                     |
+| `no-default-props`       | 2.9.3         | `eslint-plugin-react-x`                 | [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) |
+| `no-forbidden-props`     | 2.3.2         | `eslint-plugin-react-x`                 | [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) |
+| `no-prop-types`          | 2.9.3         | `eslint-plugin-react-x`                 | [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) |
+| `no-string-refs`         | 2.9.3         | `eslint-plugin-react-x`                 | [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) |
+| `no-unnecessary-use-ref` | 2.10.0        | `eslint-plugin-react-x`                 |                                                                                     |
+
+**Removed `eslint-plugin-react-hooks-extra` package**
+
+All rules have been migrated into `eslint-plugin-react-x`:
+
+| Old Rule (`react-hooks-extra/`)     | New Rule (`react-x/`) | Change             |
+| :---------------------------------- | :-------------------- | :----------------- |
+| `no-direct-set-state-in-use-effect` | `set-state-in-effect` | relocated, renamed |
+
+**Removed `naming-convention/component-name` rule** (#1557)
+
+**Removed unneeded APIs from `@eslint-react/core`** (#1556)
+
+**Restructured packages and removed deprecated rules for ESLint v10+** (#1592)
+
+**Preset changes**
+
+| Change  | Rule                                                       | Presets affected                                        | Severity / Notes                                              |
+| :------ | :--------------------------------------------------------- | :------------------------------------------------------ | :------------------------------------------------------------ |
+| Added   | `react-x/component-hook-factories`                         | `recommended`, `x`                                      | `error`                                                       |
+| Added   | `react-x/error-boundaries`                                 | `recommended`, `x`                                      | `error`                                                       |
+| Added   | `react-x/exhaustive-deps`                                  | `recommended`, `x`                                      | `warn`                                                        |
+| Added   | `react-x/immutability`                                     | `all`                                                   | `error`                                                       |
+| Added   | `react-x/no-unused-class-component-members`                | `recommended`, `x`                                      | `warn`                                                        |
+| Added   | `react-x/purity`                                           | `recommended`, `x`                                      | `warn`                                                        |
+| Added   | `react-x/refs`                                             | `all`                                                   | `error`                                                       |
+| Added   | `react-x/rules-of-hooks`                                   | `recommended`, `x`                                      | `error`                                                       |
+| Added   | `react-x/set-state-in-effect`                              | `recommended`, `x`                                      | `warn`                                                        |
+| Added   | `react-x/set-state-in-render`                              | `recommended`, `x`                                      | `error`                                                       |
+| Added   | `react-x/unsupported-syntax`                               | `recommended`, `x`                                      | `error`                                                       |
+| Added   | `react-x/use-memo`                                         | `recommended`, `x`                                      | `error`                                                       |
+| Moved   | `react-naming-convention/use-state` -> `react-x/use-state` | `recommended`, `x`                                      | `warn`                                                        |
+| Removed | `@eslint-react/hooks-extra/*`                              | `recommended`, `all` (in `@eslint-react/eslint-plugin`) | removed                                                       |
+| Removed | `react-naming-convention/component-name`                   | `all`                                                   | removed                                                       |
+| Removed | `react-naming-convention/use-state`                        | `all`                                                   | moved to `react-x/use-state`                                  |
+| Removed | `react-x/jsx-no-duplicate-props`                           | `recommended`, `x`, `all`                               | LSP and Language Features natively report duplicate JSX props |
+| Removed | `react-x/jsx-no-iife`                                      | `strict`, `disable-experimental`, `all`                 | merged into `unsupported-syntax`                              |
+| Removed | `react-x/jsx-no-undef`                                     | `all`                                                   | ESLint v10.0.0+ native support                                |
+| Removed | `react-x/jsx-uses-react`                                   | `recommended`, `x`, `all`                               | ESLint v10.0.0+ native support                                |
+| Removed | `react-x/jsx-uses-vars`                                    | `recommended`, `x`, `all`                               | ESLint v10.0.0+ native support                                |
+| Removed | `react-x/no-default-props`                                 | `recommended`, `x`                                      | removed                                                       |
+| Removed | `react-x/no-prop-types`                                    | `recommended`, `x`                                      | removed                                                       |
+| Removed | `react-x/no-string-refs`                                   | `recommended`, `x`                                      | removed                                                       |
+| Removed | `react-x/no-unnecessary-key`                               | `all`                                                   | removed                                                       |
+| Removed | `react-x/no-useless-forward-ref`                           | `recommended`, `x`, `all`                               | merged into `no-forward-ref`                                  |
+| Removed | `react-x/prefer-read-only-props`                           | `disable-experimental`, `disable-type-checked`          | consolidated into `immutability`                              |
+| Removed | `react-x/prefer-use-state-lazy-initialization`             | `recommended`, `x`, `all`                               | merged into `use-state`                                       |
+
+### ✨ New
+
+**Added the following new rules to `eslint-plugin-react-x`:**
+
+- `component-hook-factories`: Validates against higher-order functions defining nested components or hooks. Components and hooks should be defined at the module level.
+- `error-boundaries`: Validates usage of Error Boundaries instead of try/catch for errors in child components. Try/catch blocks can't catch errors during React's rendering process — only [Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) can catch these errors. (#1506)
+- `exhaustive-deps`: Enforces that React hook dependency arrays contain all reactive values used in the callback. (#1499)
+- `immutability` (Experimental): Validates against mutating props, state, and other values that are immutable. Detects in-place array mutations (ex: `push`, `sort`, `splice`) and direct property assignments on state variables from `useState` and props objects. Mirrors the [`immutability`](https://react.dev/reference/eslint-plugin-react-hooks/lints/immutability) lint rule described in the React docs.
+- `no-implicit-children` and `no-implicit-ref`: New rules added in beta.75. (#1594)
+- `no-mixing-controlled-and-uncontrolled` -> `unstable-rules-of-props`: Validates against mixing controlled and uncontrolled prop patterns. (#486, #1571)
+- `purity` (Experimental): Validates that components and hooks are pure by checking that they do not call known-impure functions during render.
+- `refs` (Experimental): Validates correct usage of refs by checking that `ref.current` is not read or written during render. See the ["pitfalls" section in `useRef()`](https://react.dev/reference/react/useRef#caveats).
+- `rules-of-hooks`: Enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-react#rules-of-hooks). (#1499)
+- `set-state-in-effect`: Validates against calling [`setState`](https://react.dev/reference/react/useState#setstate) synchronously in an effect, which can lead to re-renders that degrade performance.
+  > Compared to the old `no-direct-set-state-in-use-effect` rule, the following example from the [React Docs](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) demonstrates that `setState` in an effect is fine if the value comes from a ref, since it cannot be calculated during rendering:
+  >
+  > ```tsx
+  > import { useLayoutEffect, useRef, useState } from "react";
+  >
+  > function Tooltip() {
+  >   const ref = useRef(null);
+  >   const [tooltipHeight, setTooltipHeight] = useState(0);
+  >
+  >   useLayoutEffect(() => {
+  >     const { height } = ref.current.getBoundingClientRect();
+  >     setTooltipHeight(height);
+  >   }, []);
+  >   // ...
+  > }
+  > ```
+- `set-state-in-render` (Experimental): Validates against unconditionally setting state during render, which can trigger additional renders and potential infinite render loops. (#1501)
+- `unsupported-syntax`: Validates against syntax that React Compiler does not support, including `eval`, `with` statements, and IIFEs in JSX (previously covered by `jsx-no-iife`).
+- `use-memo`: Validates that `useMemo` is called with a callback that returns a value. `useMemo` is designed for computing and caching values — without a return value it always returns `undefined`, which defeats its purpose. This rule also catches `useMemo` calls whose return value is discarded (not assigned to a variable), which indicates a side-effect misuse that should use `useEffect` instead.
+- `use-state`: Enforces correct usage of the `useState` hook — destructuring, symmetric naming of the value and setter (ex: `count` / `setCount`), and lazy initialization of expensive initial state. Moved from `eslint-plugin-react-naming-convention` into `eslint-plugin-react-x`. The lazy-initialization behavior (previously `prefer-use-state-lazy-initialization`) is controlled by the `enforceLazyInitialization` option (default: `true`).
+
+**Added `compilationMode` setting:**
+
+Added support for the `compilationMode` setting under `settings["react-x"]`. This setting informs rules about the [React Compiler](https://react.dev/learn/react-compiler) compilation mode the project is using, allowing rules to understand how components and hooks will be optimized by the compiler.
+
+**Added `disable-conflict-eslint-plugin-react-hooks` configuration** to `@eslint-react/eslint-plugin` for easier migration from `eslint-plugin-react-hooks`.
+
+**Added `unstable-rules-of-props` support for generic foo/defaultFoo prop pairs** (#1580)
+
+### 🐞 Fixes
+
+- Enable `immutability` rule in the `all` configuration preset
+- Fix MDX documentation formatting issues (#1559)
+- Fix TS type expressions handling in rules, closes #1583 (#1584)
+- Fix `no-forward-ref`: do not add ref param when type arguments are mismatched (#1561)
+- Fix `no-forward-ref`: handle callback with no params (#1560)
+- Fix `no-unused-props` false positive for anonymous callbacks passed to call expressions (#1602)
+- Fix `no-unused-props` false positive when using Omit on union props type (#1578)
+- Fix `no-useless-fragment` false positive when passing a `ref` to a `Fragment`, closes #1567 (#1568)
+- Fix additional `useState` names should only match patterns configured in `additionalStateHooks` (#1601)
+- Fix object type compute on `Boolean()` like calls, closes #1587 (#1591)
+- Fix the migration guide link 404 in the FAQ, closes #1589 (#1590)
+- Fix traverse type expressions in component id, init path, and wrapper (#1603)
+  ex: components using `satisfies` were previously not detected:
+  ```tsx
+  // previously missed — now correctly identified as a component
+  const App = (() => <div />) satisfies React.FC;
+  ```
+
+### 🪄 Improvements
+
+- Adopted `tsl` for type checking across the monorepo, improving linting performance (#1532)
+- Apply `additionalStateHooks` and `additionalEffectHooks` to more rules (#1597)
+- Bump ESLint to 10.0.3
+- Bump dependencies and update workflows
+- Bump tsdown target to Node 22
+- Changed the following rules from `problem` to `suggestion` type for better categorization:
+  - `react-x/jsx-dollar`
+  - `react-x/jsx-shorthand-boolean`
+  - `react-x/jsx-shorthand-fragment`
+  - `react-x/no-array-index-key`
+  - `react-x/no-children-count`
+  - `react-x/no-children-for-each`
+  - `react-x/no-children-map`
+  - `react-x/no-children-only`
+  - `react-x/no-children-prop`
+  - `react-x/no-children-to-array`
+  - `react-x/no-class-component`
+  - `react-x/no-clone-element`
+  - `react-x/no-create-ref`
+  - `react-x/no-missing-component-display-name`
+  - `react-x/no-missing-context-display-name`
+  - `react-x/no-unnecessary-use-callback`
+  - `react-x/no-unnecessary-use-memo`
+  - `react-x/no-unused-class-component-members`
+  - `react-x/no-unused-props`
+  - `react-x/no-unused-state`
+  - `react-x/no-useless-fragment`
+  - `react-x/prefer-namespace-import`
+  - `react-dom/prefer-namespace-import`
+- Converted React 19 migration rules from auto-fix to suggestions (`no-context-provider`, `no-forward-ref`, `no-use-context`) to prevent automatic code modifications that could break existing code
+- Enhanced `purity` rule with TypeScript type expression support for more accurate detection of impure constructs
+- Improved `resolve` function with comprehensive definition types (#1576)
+- Improved `set-state-in-effect` rule to allow `setState` calls when the new state is derived from refs (aligning with React's recommended patterns) (#1521)
+- Improved detection of React components created via conditional (ternary) expressions in the `function-component` and `no-nested-component-definitions` rules (#1503)
+- Inlined `getChildScopes`, `getVariableInitializer` and cleaned up var utilities (#1562, #1572)
+- Moved `@local/eff` to `devDependencies` across workspace (#1596)
+- Moved `disable-conflict-*` configs to `eslint-plugin-react-x` (#1577)
+- Ported `eslint-plugin-react-hooks` rules (`rules-of-hooks` and `exhaustive-deps`) _verbatim_ with code-path analysis for more accurate hook validation (#1535)
+- Refactored core modules to use the `defineRuleListener` helper for more consistent rule listener definitions (#1517)
+- Refactored refs rule (#1563)
+- Refined JSX attribute value extraction (#1579)
+- Removed React 19 version restriction from `context-name` rule (#1558)
+- Removed config adapters and fixed plugin default export types, closes #1564 (#1565)
+- Replaced jsx submodule functional APIs with `JsxInspector` class (#1585)
+- Restructured and consolidated component-detection modules for better maintainability and accuracy
+- Restructured core, var, and ast utility modules for improved code organization (#1520)
+- Standardized rule docs and unified MDX heading structure (#1555)
+- Updated documentation with standardized "See Also" and "Further Reading" sections (#1536, #1537)
+
+### ✅ Upgrade Checklist
+
+Use this checklist to upgrade from v2.x to v3.0.0:
+
+#### Node.js
+
+- [ ] Upgrade Node.js to `>=22.0.0` (previously `>=20.19.0`).
+
+#### Package changes
+
+- [ ] Remove `eslint-plugin-react-hooks-extra` from your `package.json` — this package is no longer published.
+- [ ] If you were importing `eslint-plugin-react-hooks-extra` directly, replace it with `eslint-plugin-react-x`.
+
+#### ESLint configuration
+
+- [ ] Remove `@eslint-react/hooks-extra/*` rules from your config — these have been removed from `@eslint-react/eslint-plugin`.
+- [ ] Replace `react-hooks-extra/no-direct-set-state-in-use-effect` with `react-x/set-state-in-effect` in your ESLint config.
+- [ ] Replace `react-naming-convention/use-state` (or `@eslint-react/naming-convention-use-state`) with `react-x/use-state` (or `@eslint-react/use-state`) in your ESLint config.
+- [ ] Remove references to the following deleted rules (use [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) instead if needed):
+  - `react-x/no-default-props`
+  - `react-x/no-forbidden-props`
+  - `react-x/no-prop-types`
+  - `react-x/no-string-refs`
+- [ ] Remove `react-x/jsx-no-duplicate-props` from your config if present — this rule has been removed since LSP and Language Features natively report duplicate JSX props.
+- [ ] Remove `react-x/jsx-no-undef` from your config if present — this rule has been removed since ESLint v10.0.0 now tracks JSX references natively.
+- [ ] Remove `react-x/jsx-uses-react` and `react-x/jsx-uses-vars` from your config if present — these rules have been removed since ESLint v10.0.0 now handles JSX variable tracking natively.
+- [ ] Remove `react-x/no-unnecessary-key` from your config if present — this rule has been deleted with no replacement.
+- [ ] Remove `react-x/no-unnecessary-use-ref` from your config if present — this rule has been deleted with no replacement.
+- [ ] Remove `react-x/jsx-no-iife` from your config if present — this rule has been consolidated into `react-x/unsupported-syntax`.
+- [ ] Remove `react-x/no-useless-forward-ref` from your config if present — this rule has been consolidated into `react-x/no-forward-ref`.
+- [ ] Remove `react-x/prefer-read-only-props` from your config if present — this rule has been consolidated into `react-x/immutability`.
+- [ ] Remove `react-x/prefer-use-state-lazy-initialization` from your config if present — this rule has been consolidated into `react-x/use-state` and its lazy-initialization checks are now controlled by the `enforceLazyInitialization` option.
+- [ ] Remove `react-naming-convention/filename` and `react-naming-convention/filename-extension` from your config if present — these rules have been deleted with no replacement.
+- [ ] Remove `react-naming-convention/component-name` from your config if present — this rule has been deleted with no replacement.
+- [ ] Be aware that `react-x/no-context-provider`, `react-x/no-forward-ref`, and `react-x/no-use-context` no longer auto-fix via `--fix` — their fixes have been converted to suggestions to prevent automatic code modifications that could break existing code. If you relied on `eslint --fix` for these rules, you will now need to apply fixes manually.
+
+#### Settings
+
+- [ ] If your project uses [React Compiler](https://react.dev/learn/react-compiler), consider adding the `compilationMode` setting under `settings["react-x"]` to inform rules about the compilation mode your project is using (possible values: `"infer"`, `"annotation"`, `"syntax"`, `"all"`).
+
+#### Review new rules enabled in presets
+
+If you use the `recommended`, `x`, or `all` preset, the following rules are now included automatically. Review your codebase for new reports:
+
+- [ ] `react-x/component-hook-factories` (`error`) — catches factory functions that define components or hooks inside them instead of at the module level.
+- [ ] `react-x/error-boundaries` (`error`) — catches try/catch blocks wrapping JSX or `use` hook calls where [Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) should be used instead.
+- [ ] `react-x/exhaustive-deps` (`warn`) — enforces that hook dependency arrays contain all reactive values.
+- [ ] `react-x/immutability` (`error`, `all` only) — validates against mutating props, state, and other immutable values, including in-place array mutations and direct property assignments.
+- [ ] `react-x/no-unused-class-component-members` (`warn`) — catches unused class component methods and properties.
+- [ ] `react-x/purity` (`warn`) — validates that components and hooks are pure by checking that they do not call known-impure functions during render.
+- [ ] `react-x/refs` (`error`, `all` only) — validates correct usage of refs by checking that `ref.current` is not read or written during render.
+- [ ] `react-x/rules-of-hooks` (`error`) — enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-react#rules-of-hooks).
+- [ ] `react-x/set-state-in-effect` (`warn`) — catches synchronous `setState` calls inside effects.
+- [ ] `react-x/set-state-in-render` (`error`) — catches unconditional `setState` calls during render that can cause infinite loops.
+- [ ] `react-x/unsupported-syntax` (`error`) — catches usage of syntax that React Compiler does not support, including `eval`, `with` statements, and IIFEs in JSX.
+- [ ] `react-x/use-memo` (`error`) — catches `useMemo` calls where the callback has no return value or where the `useMemo` return value is discarded.
+- [ ] `react-x/use-state` (`warn`) — Enforces correct usage of `useState`, including destructuring, symmetric naming of the value and setter (previously `react-naming-convention/use-state`), and wrapping expensive initializers in a lazy initializer function (previously `prefer-use-state-lazy-initialization`).
+
+### 📘 Migration Guide: From `eslint-plugin-react-hooks`
+
+See the [complete migration guide](https://eslint-react.xyz/docs/migrating-from-eslint-plugin-react-hooks) for more details.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.13.0...v3.0.0-rc.0
+
+## v2.13.0 (2026-02-15)
+
+### ✨ New
+
+- Add `naming-convention/id-name` rule for `React.useId()` by @amir-rahmanii in https://github.com/Rel1cx/eslint-react/pull/1497
+- Deprecate `naming-convention/filename` and `naming-convention/filename-extension` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1498
+
+### 🐞 Fixes
+
+- Update rules’ `meta.type` from `"problem"` to `"suggestion"` for naming-convention rules by @amir-rahmanii in https://github.com/Rel1cx/eslint-react/pull/1496
+
+### 📝 Changes you should be aware of
+
+1. The `naming-convention/filename` rule has been deprecated and will be removed in the next major version.
+2. The `naming-convention/filename-extension` rule has been deprecated and will be removed in the next major version.
+
+Modern React frameworks each come with their own naming conventions that can differ or even conflict. A single predefined, framework-agnostic filename or filename extension rule no longer matches real-world usage. Please follow the official naming conventions of the specific React framework you are using.
+
+For example, here are some references for popular frameworks:
+
+- Next.js — App Router and File-system conventions: https://nextjs.org/docs/app, https://nextjs.org/docs/app/api-reference/file-conventions
+- React Router — File Route Conventions: https://reactrouter.com/how-to/file-route-conventions#file-route-conventions
+- TanStack Start — TanStack Router File Naming Conventions: https://tanstack.com/router/v1/docs/framework/react/routing/file-naming-conventions
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.12.4...v2.13.0
+
+## v2.12.4 (2026-02-11)
+
+### 🐞 Fixes
+
+- Fix `preact` and `preact/compat` support in `no-implicit-key` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1494
+
+### 🪄 Improvements
+
+- Refactor `dom/no-unknown-property` rule to fix all ESLint and TypeScript issues by @ulrichstark in https://github.com/Rel1cx/eslint-react/pull/1490
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.12.2...v2.12.4
+
+## v2.12.2 (2026-02-08)
+
+### 🐞 Fixes
+
+- Reduce the sensitivity of component detection to prevent false positives in certain rules, closes #1488 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1489
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.12.1...v2.12.2
+
+## v2.12.1 (2026-02-07)
+
+### 🐞 Fixes
+
+- Check all union constituents and allow all types under `React` namespace in `no-implicit-key` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1487
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.12.0...v2.12.1
+
+## v2.12.0 (2026-02-07)
+
+### 🪄 Improvements
+
+- Upgrade ESLint to v10 across the repo by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1486
+
+### 📝 Changes you should be aware of
+
+ESLint v10 is now supported and used throughout the repository. The minimum required ESLint version remains v8.57.0, but the project now supports and is tested against ESLint v10.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.11.2...v2.12.0
+
+## v2.11.2 (2026-02-07)
+
+### 🐞 Fixes
+
+- Implement a more robust check to handle cases that `getFullyQualifiedName` cannot handle in `no-implicit-key`, closes #1476 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1480
+
+### 🪄 Improvements
+
+- Bump esbuild, node types, jsdoc plugin
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.11.1...v2.11.2
+
+## v2.11.1 (2026-02-07)
+
+### 🐞 Fixes
+
+- Fix React internal key checks in `no-implicit-key`, closes #1476 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1479
+- Add `no-implicit-key` rule to `disable-type-checked` config of `eslint-plugin-react-x`, closes #1477 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1478
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.11.0...v2.11.1
+
+## v2.11.0 (2026-02-06)
+
+### ✨ New
+
+- Add RSC rules to `recommended` presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1475
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.10.1...v2.11.0
+
+## v2.10.1 (2026-02-05)
+
+### 🐞 Fixes
+
+- Relax `no-implicit-key` rule for React internally defined keys, closes #1472 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1474
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.10.0...v2.10.1
+
+## v2.10.0 (2026-02-05)
+
+- Refactor `no-implicit-key` rule to use type checking by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1466
+- Move `no-unnecessary-use-ref` to removed rules, closes #1417 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1471
+
+### 📝 Changes you should be aware of
+
+1. The `no-implicit-key` rule has been updated to use type checking and moved from `recommended` to `type-checked` presets.
+2. The `no-unnecessary-use-ref` rule has been moved to removed rules, because the rule is hard to get right.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.9.4...v2.10.0
+
+## v2.9.4 (2026-02-03)
+
+### 🐞 Fixes
+
+- Fix sub-plugin's READMEs by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1465
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.9.3...v2.9.4
+
+## v2.9.3 (2026-02-02)
+
+### 📝 Changes you should be aware of
+
+The following rules have been deprecated and will be removed in the next major version:
+
+- `no-default-props`
+- `no-prop-types`
+- `no-string-refs`
+
+For legacy codebases, use [`no-restricted-syntax`](https://eslint.org/docs/latest/rules/no-restricted-syntax) as an alternative:
+
+```ts
+{
+    files: ['**/*.jsx', '**/*.tsx'],
+    rules: {
+        "no-restricted-syntax": [
+            "error",
+            {
+                "selector": "AssignmentExpression[operator='='][left.property.name='defaultProps']",
+                "message": "[Deprecated] Use ES6 default parameters instead."
+            },
+            {
+                "selector": "AssignmentExpression[operator='='][left.property.name='propTypes']",
+                "message": "[Deprecated] Use TypeScript or another type-checking solution instead."
+            },
+            {
+                "selector": "JSXAttribute[name.name='ref'][value.type='Literal']",
+                "message": "[Deprecated] Use callback refs instead."
+            }
+        ]
+    }
+}
+```
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.9.2...v2.9.3
+
+## v2.9.2 (2026-02-02)
+
+### 🐞 Fixes
+
+- Fix directives checks by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1461
+- Add missing rsc plugin to `all` config, closes #1462 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1463
+
+### 🪄 Improvements
+
+- Separate message ids for `rsc/function-definition` by @SukkaW in https://github.com/Rel1cx/eslint-react/pull/1460
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.9.0...v2.9.2
+
+## v2.9.0 (2026-02-02)
+
+### ✨ New
+
+- Migrate `no-non-async-server-functions` rule to `rsc/function-definition` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1457
+- Add a new `eslint-plugin-react-rsc` sub-plugin for React Server Components (RSC) rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1457
+- Add a new `rsc` preset to enable RSC rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1457
+- Add a new `disable-rsc` preset to disable RSC rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1457
+
+### 🪄 Improvements
+
+- Move grouped docs from the global overview to per-plugin READMEs by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1449
+
+### 📝 Changes you should be aware of
+
+The `no-non-async-server-functions` rule has been migrated to `rsc/function-definition`. Please update your configuration accordingly if you are using it.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.8.4...v2.9.0
+
+## v2.8.4 (2026-02-01)
+
+### 🐞 Fixes
+
+- Change status of `jsx-shorthand-boolean` rule in migration table by @connorshea in https://github.com/Rel1cx/eslint-react/pull/1446
+- Fix rule name in docs for `debug/is-from-ref` by @amir-rahmanii in https://github.com/Rel1cx/eslint-react/pull/1445
+- Fix rule name in docs for `no-non-async-server-functions` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1447
+- Mark `no-non-async-server-functions` as experimental by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1448
+
+## New Contributors
+
+- @connorshea made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1446
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.8.3...v2.8.4
+
+## v2.8.3 (2026-02-01)
+
+### ✨ New
+
+- feat(#1435): implements `no-non-async-server-functions` by @SukkaW in https://github.com/Rel1cx/eslint-react/pull/1443
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.8.1...v2.8.3
+
+## v2.8.1 (2026-01-29)
+
+### ✨ New
+
+- Function component detection now supports identifying components that don't return a `ReactNode` but have a `'use memo'` or `'use no memo'` directive by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1440
+  The function in below example will be detected as a function component in relevant rules:
+  ```tsx
+  function App() {
+    "use memo";
+  }
+
+  function App() {
+    "use no memo";
+  }
+  ```
+
+### 🐞 Fixes
+
+- Skip unstable value checks when `'use memo';` is present by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1441
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.8.0...v2.8.1
+
+## v2.8.0 (2026-01-29)
+
+### ✨ New
+
+- Function component detection now supports identifying components that don't return a `ReactNode` but call React Hooks by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1438
+  The function in below example will be detected as a function component in relevant rules:
+  ```tsx
+  function App() {
+    useEffect(() => {}, []);
+  }
+  ```
+
+### 🐞 Fixes
+
+- Revert `no-unnecessary-key` to remove constant key checking, closes #1436 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1439
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.7.4...v2.8.0
+
+## v2.7.4 (2026-01-25)
+
+### ✨ New
+
+- Add `debug/is-from-ref` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1433
+
+### 🐞 Fixes
+
+- fix(no-leaked-conditional-rendering): support enum, closes #1428 by @hyoban in https://github.com/Rel1cx/eslint-react/pull/1429
+
+### 🪄 Improvements
+
+- Enhance component detection hints with array patterns and expressions by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1430
+- Enhance rules overview page by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1432
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.7.2...v2.7.3
+
+## v2.7.2 (2026-01-18)
+
+### 🪄 Improvements
+
+- Reimplement the `prefer-destructuring-assignment` rule for better performance by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1423
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.7.1...v2.7.2
+
+## v2.7.1 (2026-01-16)
+
+### 🐞 Fixes
+
+- Fix misdetected functions inside array expressions as function components; closes #1416 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1418
+- Remove unnecessary `no-unnecessary-use-ref` rule from strict configurations and update documentation by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1419
+
+### 📝 Changes you should be aware of
+
+The `no-unnecessary-use-ref` rule has been removed from the strict presets, as it was causing false positives in [certain scenarios](https://github.com/Rel1cx/eslint-react/issues/1417). You can still enable it manually if needed, but please be aware of its current limitations.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.7.0...v2.7.1
+
+## v2.7.0 (2026-01-16)
+
+### ✨ New
+
+- Add `additionalStateHooks` to shared settings, closes #1405 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1411
+
+### 🐞 Fixes
+
+- Fix `no-unnecessary-memo` and `no-unnecessary-use-callback` false positives when unused, closes #1404 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1407
+- Enhance `no-unnecessary-use-ref` to allow previous refs by convention, closes #1406 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1410
+- Fix `no-missing-key` misdetect non-map calls as map since 2.6.4 version, closes #1412 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1413
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.6.4...v2.7.0
+
+## v2.6.4 (2026-01-15)
+
+### ✨ New
+
+- feat: add a `disable-experimental` preset to quickly opt out of experimental rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1403
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.6.2...v2.6.4
+
+## v2.6.2 (2026-01-14)
+
+### 🐞 Fixes
+
+- Fix `no-unnecessary-key` false positives on JSX elements inside render props by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1402
+- Enhance `no-unnecessary-use-ref` rule tests and improve handling of ref references by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1399
+- Support v3 and v4 zod versions by @DoctorFTB in https://github.com/Rel1cx/eslint-react/pull/1400
+
+## New Contributors
+
+- @DoctorFTB made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1400
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.6.0...v2.6.2
+
+## v2.6.0 (2026-01-14)
+
+### ✨ New
+
+- Add `no-unnecessary-use-ref` rule, closes #1394 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1397
+
+### 📝 Changes you should be aware of
+
+The new [`no-unnecessary-use-ref`](https://eslint-react.xyz/docs/rules/no-unnecessary-use-ref) rule is included in the strict presets.
+
+This rule reports unnecessary uses of `useRef` when the ref is only used within a single effect which the value can be co-located inside the effect itself. Thanks to @SukkaW for purposing it!
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.5.7...v2.6.0
+
+## v2.5.7 (2026-01-13)
+
+### 🪄 Improvements
+
+- Enhance `no-unnecessary-key` to catch constant keys outside of map calls, closes #1377 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1393
+
+### 🐞 Fixes
+
+- Revert 'Remove `no-implicit-key` rule from recommended presets' by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1392
+
+### 📝 Changes you should be aware of
+
+The `no-implicit-key` rule has been re-added to the recommended presets.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.5.5...v2.5.7
+
+## v2.5.5 (2026-01-12)
+
+### 🐞 Fixes
+
+- Remove `no-unnecessary-key` rule from strict presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1386
+- Remove `no-duplicate-key` rule from recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1387
+- ~~Remove `no-implicit-key` rule from recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1388~~
+
+### 📝 Changes you should be aware of
+
+The following rules have been removed from the strict and recommended presets:
+
+- `no-unnecessary-key`
+- `no-duplicate-key`
+- ~~`no-implicit-key`~~
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.5.3...v2.5.5
+
+## v2.5.3 (2026-01-09)
+
+### 🐞 Fixes
+
+- Enhance context and ref naming rules with additional cases covered by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1378
+- Update `naming-convention/context-name` rule to include React version checks; closes #1382 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1384
+- Update `naming-convention/ref-name` to allow "ref" as a ref name by @ocavue in https://github.com/Rel1cx/eslint-react/pull/1380
+- Fix `jsx-key-before-spread`: should only be enabled in JSX automatic runtime; update related docs and tests; closes #1381 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1383
+
+## New Contributors
+
+- @ocavue made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1380
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.5.1...v2.5.3
+
+## v2.5.1 (2026-01-05)
+
+### 🐞 Fixes
+
+- Fix `naming-convention/ref-name` false positive with immediate deref, closes #1375 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1376
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.5.0...v2.5.1
+
+## v2.5.0 (2025-12-31)
+
+### ✨ New
+
+- feat: add `naming-convention/use-ref-name` rule by @amir-rahmanii in https://github.com/Rel1cx/eslint-react/pull/1366
+- Rename `naming-convention/use-ref-name` rule to `naming-convention/ref-name` and add it to recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1367
+
+### 🪄 Improvements
+
+- Add `verify-rules-metas` script & minor docs fixes by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1355
+- docs(use-state): add examples for `enforceAssignment` by @amir-rahmanii in https://github.com/Rel1cx/eslint-react/pull/1363
+
+## New Contributors
+
+- @amir-rahmanii made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1363
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.4.0...v2.5.0
+
+## v2.4.0 (2025-12-24)
+
+### ✨ New
+
+- Add `enforceAssignment` and `enforceSetterName` options to `naming-convention/use-state` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1346
+
+### 🐞 Fixes
+
+- Fix False positive in `naming-convention/use-state` for state with no setters, closes #1342, closes #1352 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1346
+- Fix fumadocs theme issues by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1347
+
+### 🪄 Improvements
+
+- Update `typescript-eslint` to `8.50.1` across all packages
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.13...v2.4.0
+
+## v2.3.13 (2025-12-09)
+
+### 🐞 Fixes
+
+- Clean up the code structure of the AST utils and fix an issue where `isNodeEqual` did not handle `as` expressions correctly, closes #1340 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1341
+
+### 🪄 Improvements
+
+- Update next and react to latest versions across all packages
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.12...v2.3.13
+
+## v2.3.12 (2025-12-03)
+
+### ✨ New
+
+- Add `allowEmptyFragment` option to `no-useless-fragment`, closes #1265 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1335
+
+### 🐞 Fixes
+
+- Fix `web-api/no-leaked-event-listener` false positive when using React Native `BackHandler`, closes #1323 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1336
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.11...v2.3.12
+
+## v2.3.11 (2025-12-02)
+
+### 🐞 Fixes
+
+- Fix readonly type detection for class and interface extends, closes #1326 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1329
+- Fix and cleanup `prefer-read-only-props` rule, closes #1326 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1331
+- Fix `forwardRef`'s `ref` should be excluded from check, closes #1332 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1333
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.9...v2.3.11
+
+## v2.3.9 (2025-11-26)
+
+### ✨ New
+
+- feat: Disallow a function wrapped in `useCallback` or a variable wrapped in `useMemo` yet only used in `useEffect` and only in one `useEffect`, closes #1278 by @possum-enjoyer in https://github.com/Rel1cx/eslint-react/pull/1321
+
+### 🐞 Fixes
+
+- docs: fix severity for `no-unsafe-iframe-sandbox` in rule docs by @JstnMcBrd in https://github.com/Rel1cx/eslint-react/pull/1327
+- chore: correct peer dependencies by @ha1fstack in https://github.com/Rel1cx/eslint-react/pull/1328
+
+## New Contributors
+
+- @JstnMcBrd made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1327
+- @ha1fstack made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1328
+- @possum-enjoyer made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1321
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.7...v2.3.9
+
+## v2.3.7 (2025-11-21)
+
+### 🐞 Fixes
+
+- `web-api/no-leaked-event-listener` does not report event listeners with `signal`, closes #1282 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1325
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.5...v2.3.7
+
+## v2.3.5 (2025-11-13)
+
+### 🐞 Fixes
+
+- fix: rule names in `disable-conflict-eslint-plugin-react`, closes #1315 by @jkbdk in https://github.com/Rel1cx/eslint-react/pull/1316
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.4...v2.3.5
+
+## v2.3.4 (2025-11-10)
+
+### ✨ New
+
+- feat(no-unstable-default-props): add `safeDefaultProps` option, closes #1312 by @christopher-buss in https://github.com/Rel1cx/eslint-react/pull/1313
+- feat(no-forbidden-props): Mark this rule as deprecated by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1304
+
+### 🐞 Fixes
+
+- Remove `type-fest` from shared package, closes #1306 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1307
+- Remove 'NodeJS.Require' type from shared package, closes #1308 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1309
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.1...v2.3.4
+
+## v2.3.1 (2025-11-02)
+
+### 🐞 Fixes
+
+- Improve location reporting for `jsx-dollar` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1303
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.3.0...v2.3.1
+
+## v2.3.0 (2025-11-02)
+
+### ✨ New
+
+- Add `jsx-dollar` rule, closes #1300 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1302
+
+### 🪄 Improvements
+
+- Enable `strictNullChecks` in tsconfig samples, closes #1299 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1301
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.2.4...v2.3.0
+
+## v2.2.4 (2025-10-27)
+
+### 🐞 Fixes
+
+- Add `main`, `module`, and `types` fields to `package.json` for multiple packages, closes #1288, closes #1283 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1294
+- Require "Context" suffix for context providers in `no-context-provider` rule, closes #1295 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1296
+
+### 🪄 Improvements
+
+- Add info on `dom/no-string-style-prop` to migration docs by @silverwind in https://github.com/Rel1cx/eslint-react/pull/1293
+
+## New Contributors
+
+- @silverwind made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1293
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.2.3...v2.2.4
+
+## v2.2.3 (2025-10-22)
+
+### 🐞 Fixes
+
+- Re-add missing rule `jsx-key-before-spread` to presets, closes #1290 by @jkbdk in https://github.com/Rel1cx/eslint-react/pull/1291
+
+### 🪄 Improvements
+
+- Add FAQ entry for plugin selection guidance, closes #1280 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1281
+- Simplify "Which one should I use? Unified plugin or individual plugins?" by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1286
+- Add `strict` preset severity to rules overview, closes #1284 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1285
+- Modify `display-name` rule entry in migration docs by @danielrentz in https://github.com/Rel1cx/eslint-react/pull/1287
+
+## New Contributors
+
+- @jkbdk made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1291
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.2.2...v2.2.3
+
+## v2.2.2 (2025-10-14)
+
+### 🐞 Fixes
+
+- Remove remaining code in the unified plugin used for legacy config compatibility by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1277
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.2.1...v2.2.2
+
+## v2.2.1 (2025-10-13)
+
+### 🪄 Improvements
+
+- Unified plugin no longer includes the `eslint-plugin-react-debug` plugin to reduce its deps by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1276
+- Merge `@eslint-react/kit` package into `@eslint-react/shared` package to consolidate shared utilities and reduce package fragmentation by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1275
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.1.1...v2.2.1
+
+## v2.1.1 (2025-10-13)
+
+### ✨ New
+
+- Add `strict`, `strict-typescript`, and `strict-type-checked` presets by @Rel1cx
+- Add `no-deprecated` preset to enable all rules that report deprecated React APIs by @Rel1cx
+
+### 🐞 Fixes
+
+- Disallow extra properties in rule options by @andreww2012 in https://github.com/Rel1cx/eslint-react/pull/1263
+
+### 🪄 Improvements
+
+- Move some rules from `recommended` presets to `strict` presets by @Rel1cx, closes #1262
+  - `no-unstable-context-value`
+  - `no-unstable-default-props`
+  - `no-unused-class-component-members`
+  - `no-unused-state`
+  - `dom/no-missing-button-type`
+  - `dom/no-missing-iframe-sandbox`
+  - `dom/no-unsafe-iframe-sandbox`
+  - `dom/no-unsafe-target-blank`
+- Change `typescript` peer dependency version range from `^5.9.2` to `^5` by @Rel1cx
+
+## New Contributors
+
+- @andreww2012 made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1263
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.6...v2.1.1
+
+## v2.0.6 (2025-10-03)
+
+### 🐞 Fixes
+
+- Fix 'all' preset, closes #1260 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1261
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.5...v2.0.6
+
+## v2.0.5 (2025-10-02)
+
+### 🪄 Improvements
+
+- Move error marker from `dangerouslySetInnerHTML` to children in `dom/no-dangerously-set-innerhtml-with-children` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1256
+- Update default React version in settings from `19.1.0` to `19.2.0` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1259
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.4...v2.0.5
+
+## v2.0.4 (2025-10-01)
+
+### ✨ New
+
+- Enables `naming-convention/use-state` rule in recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1252
+
+### 🐞 Fixes
+
+- Adds `hooks-extra/no-direct-set-state-in-use-effect` rule to recommended presets, closes #1251 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1252
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.3...v2.0.4
+
+## v2.0.3 (2025-09-30)
+
+### 🐞 Fixes
+
+- Fix `dom/prefer-namespace-import` missing in `react-dom` plugin by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1249
+- Fix false positive for `dom/no-missing-button-type` when specifying non-trivial expression as value of `type` attribute, closes #1247 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1250
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.2...v2.0.3
+
+## v2.0.2 (2025-09-29)
+
+### 🪄 Improvements
+
+- Refine migration table from `eslint-plugin-react`, closes #1154 by @outslept in https://github.com/Rel1cx/eslint-react/pull/1242
+- Fix dead link for `hooks-extra/no-direct-set-state-in-use-layout-effect` by @tnir in https://github.com/Rel1cx/eslint-react/pull/1245
+- Cleanup unused deps, closes #1244 by @Rel1cx, @outslept in https://github.com/Rel1cx/eslint-react/pull/1246
+
+## New Contributors
+
+- @outslept made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1242
+- @tnir made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1245
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.1...v2.0.2
+
+## v2.0.1 (2025-09-27)
+
+### 🐞 Fixes
+
+- Add `ts-api-utils` to unified plugin deps, closes #1239 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1240
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v2.0.0...v2.0.1
+
+## v2.0.0 (2025-09-26)
+
+### 💥 Breaking Changes
+
+**Target Environment Updates: Now ESM and ESLint Flat Config Only**
+
+- Drop support for CommonJS (CJS) module format, packages are now distributed only as ECMAScript Modules (ESM)
+- Drop support for ESLint legacy config system, packages now support only ESLint Flat Config (`eslint.config.js`)
+- Drop support for Node.js 18, minimum required version is now Node.js 20
+- Drop support for ESLint 8, minimum required version is now ESLint 9.3.6
+- Drop support for TypeScript 4, minimum required version is now TypeScript 5.9.2
+
+**Removed Rules**
+
+| Rule                                                   | Replaced by                                                                                                    | Reason       |
+| :----------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- | :----------- |
+| `avoid-shorthand-boolean`                              | `jsx-shorthand-boolean`                                                                                        | consolidated |
+| `avoid-shorthand-fragment`                             | `jsx-shorthand-fragment`                                                                                       | consolidated |
+| `ensure-forward-ref-using-ref`                         | [`no-forward-ref`](https://eslint-react.xyz/docs/rules/no-forward-ref)                                         | renamed      |
+| `no-duplicate-props`                                   | `jsx-no-duplicate-props`                                                                                       | renamed      |
+| `no-comment-textnodes`                                 | [`jsx-no-comment-textnodes`](https://eslint-react.xyz/docs/rules/jsx-no-comment-textnodes)                     | renamed      |
+| `no-complicated-conditional-rendering`                 |                                                                                                                | discontinued |
+| `no-nested-components`                                 | [`no-nested-component-definitions`](https://eslint-react.xyz/docs/rules/no-nested-component-definitions)       | renamed      |
+| `prefer-react-namespace-import`                        | [`prefer-namespace-import`](https://eslint-react.xyz/docs/rules/prefer-namespace-import)                       | renamed      |
+| `prefer-shorthand-boolean`                             | `jsx-shorthand-boolean`                                                                                        | consolidated |
+| `prefer-shorthand-fragment`                            | `jsx-shorthand-fragment`                                                                                       | consolidated |
+| `use-jsx-vars`                                         | `jsx-uses-vars`                                                                                                | renamed      |
+| `dom/no-children-in-void-dom-elements`                 | [`dom/no-void-elements-with-children`](https://eslint-react.xyz/docs/rules/dom-no-void-elements-with-children) | renamed      |
+| `hooks-extra/no-direct-set-state-in-use-layout-effect` | `hooks-extra/no-direct-set-state-in-use-effect`                                                                | consolidated |
+| `hooks-extra/no-unnecessary-use-callback`              | [`no-unnecessary-use-callback`](https://eslint-react.xyz/docs/rules/no-unnecessary-use-callback)               | relocated    |
+| `hooks-extra/no-unnecessary-use-memo`                  | [`no-unnecessary-use-memo`](https://eslint-react.xyz/docs/rules/no-unnecessary-use-memo)                       | relocated    |
+| `hooks-extra/no-unnecessary-use-prefix`                | [`no-unnecessary-use-prefix`](https://eslint-react.xyz/docs/rules/no-unnecessary-use-prefix)                   | relocated    |
+| `hooks-extra/prefer-use-state-lazy-initialization`     | [`use-state`](https://eslint-react.xyz/docs/rules/use-state)                                                   | relocated    |
+
+**Removed Presets**
+
+| Preset    | Replaced by   | Reason  |
+| :-------- | :------------ | :------ |
+| `core`    | `x`           | renamed |
+| `off-dom` | `disable-dom` | renamed |
+
+**Removed Settings**
+
+| Setting                | Replaced by | Reason       |
+| :--------------------- | :---------- | :----------- |
+| `additionalComponents` |             | discontinued |
+| `additionalHooks`      |             | discontinued |
+| `skipImportCheck`      |             | discontinued |
+
+Rules previously using these settings have been refactored to use improved heuristics and no longer require manual configuration.
+
+### ✨ New
+
+**Added the following new rules:**
+
+- `jsx-shorthand-boolean`: Enforces a consistent style for boolean attributes by @Rel1cx
+- `jsx-shorthand-fragment`: Enforces a consistent style for React Fragments by @Rel1cx
+- `no-forbidden-props`: Disallows specific props on components by @reteps
+- `no-unnecessary-key`: Reports unnecessary `key` props on elements by @Rel1cx, @kachkaev
+- `no-unused-props`: Reports unused props in components by @ulrichstark
+- `dom/no-string-style-prop`: Disallows string values for the `style` prop by @Rel1cx, @karlhorky
+- `dom/prefer-namespace-import`: Enforces using a namespace import for `react-dom` by @Rel1cx
+
+**Added the following new rule to the `recommended-type-checked` preset:**
+
+- `no-unused-props`: Reports unused props in components
+
+**The following rules now support Codemod features:**
+
+- `no-component-did-update` by @Rel1cx
+- `no-component-will-receive-props` by @Rel1cx
+- `no-component-will-update` by @Rel1cx
+- `no-context-provider` by @Rel1cx
+- `no-forward-ref` by @Rel1cx
+- `no-string-refs` by @Rel1cx
+
+**The following rules now support auto-fix:**
+
+- `no-missing-context-display-name` by @k-yle
+
+**The following rules now support suggestion fixes:**
+
+- `dom/no-missing-button-type` by @Rel1cx
+- `dom/no-missing-iframe-sandbox` by @Rel1cx
+- `dom/no-unsafe-target-blank` by @Rel1cx
+
+**New configuration preset added:**
+
+- `disable-conflict-eslint-plugin-react`: Disable rules in `eslint-plugin-react` that conflict with rules in our plugins by @reteps
+
+### 🐞 Fixes
+
+- fix(no-unnecessary-use-prefix): fix false positive of React Hooks defined within the callback function of `vi.mock(...)` in Vitest test files by @Rel1cx
+- fix(react-web-api/no-leaked-event-listener): fix `useEffect` setup function check to handle `React.useEffect()` calls correctly by @Rel1cx
+- fix(react-naming-convention/filename): fix false positive on well-known filenames like `404.tsx`, `_app.tsx`, `[slug].tsx` by @Rel1cx
+
+### 🪄 Improvements
+
+- refactor: simplify React APIs detection logic by @Rel1cx
+- refactor: cleanup utilities and simplify rule implementations by @Rel1cx
+- docs: add comparison table between `eslint-plugin-react` and `eslint-react` rules by @reteps, @outslept
+- docs: replace `tseslint.config` with `defineConfig` in all examples by @Rel1cx
+- build: migrate build system from `tsup` to `tsdown` for better performance by @Rel1cx
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.53.1...v2.0.0
+
+## v1.53.1 (2025-09-11)
+
+### 🐞 Fixes
+
+- fix: fix useEffect setup function check in `web-api/no-leaked-event-listener`, closes #1228 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1229
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.53.0...v1.53.1
+
+## v1.53.0 (2025-09-04)
+
+### ✨ New
+
+- feat: update naming convention rules default excepts to include common patterns by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1216
+
+### 🪄 Improvements
+
+- build: replace `tsup` with `tsdown` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1213
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.8...v1.53.0
+
+## v1.52.9 (2025-08-31)
+
+### 🐞 Fixes
+
+- fix: issue introduced in version [v1.52.7](https://github.com/Rel1cx/eslint-react/releases/tag/v1.52.7) where the `react-hooks-extra` rules were not exported, closes #1207 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1208
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.8...v1.52.9
+
+## v1.52.8 (2025-08-29)
+
+### 🐞 Fixes
+
+- fix: restore ESLint legacy config compatibility, closes #1203 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1204
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.7...v1.52.8
+
+## v1.52.7 (2025-08-29)
+
+### 🐞 Fixes
+
+- fix: add ESLint compatibility types and update plugins exports, closes #1200 by @Rel1cx in https://github.com/Rel1cx/eslint-react/commit/f3083c78f680d486f8894532b7714d1bdf8f9cd7
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.6...v1.52.7
+
+## v1.52.6 (2025-08-18)
+
+### 🐞 Fixes
+
+- fix: correct logic in `naming-convention/component-name` validation to continue on valid names, closes #1176 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1177>
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.5...v1.52.6
+
+## v1.52.5 (2025-08-15)
+
+### 🐞 Fixes
+
+- fix: refactor `is-from-react` utility in `debug/is-from-react` rule and improve `no-forward-ref` rule autofix handling, closes #1172 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1173
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.4...v1.52.5
+
+## v1.52.4 (2025-08-13)
+
+### 🐞 Fixes
+
+- fix: improve logic for detecting significant children in JSX elements, closes #1163 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1165
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.3...v1.52.4
+
+## v1.52.3 (2025-07-13)
+
+### 🐞 Fixes
+
+- fix: remove `bun` engine requirement from `package.json` files, closes #1157 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1158
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.2...v1.52.3
+
+## v1.52.2 (2025-06-12)
+
+### 🐞 Fixes
+
+- fix: `no-default-props` should report only function components, closes #1131 by @Rel1cx in https://github.com/Rel1cx/eslint-react/commit/681b10a7873e4764336a9e7a49dfd33c8bf1fbef
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.52.1...v1.52.2
+
+## v1.52.1 (2025-06-11)
+
+### ✨ New
+
+- feat: add autofix for `no-missing-context-display-name` by @k-yle in https://github.com/Rel1cx/eslint-react/pull/1128
+
+### New Contributors
+
+- @k-yle made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1128
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.51.3...v1.52.1
+
+## v1.51.3 (2025-06-09)
+
+### 🐞 Fixes
+
+- fix: update messages for `jsx-no-iife` and `jsx-uses-vars` rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1127
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.51.2...v1.51.3
+
+## v1.51.2 (2025-06-08)
+
+### 🐞 Fixes
+
+- fix: skip function components without name in `prefer-read-only-props` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1125
+
+### 🪄 Improvements
+
+- docs: update references from 'Language Config' to 'Project Config' across documentation by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1126
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.51.1...v1.51.2
+
+## v1.51.1 (2025-06-06)
+
+### 🐞 Fixes
+
+- fix: fixed jsx detection method not respect SkipEmptyArray hint, closes #1122 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1124
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.51.0...v1.51.1
+
+## v1.51.0 (2025-06-03)
+
+### ✨ New
+
+- feat(react-x): add `jsx-no-iife` rule, closes #1112 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1113
+
+### 🐞 Fixes
+
+- fix: fixed `no-direct-set-state-in-use-effect` deferred setState calls detection, closes #1117 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1119
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.50.0...v1.51.0
+
+## v1.50.0 (2025-05-25)
+
+### 🐞 Fixes
+
+- fix: `polymorphicPropName` not work with `no-void-elements-with-children` by @huynhducduy in https://github.com/Rel1cx/eslint-react/pull/1108
+- fix: use stable version `zod`, closes #1110
+
+### New Contributors
+
+- @huynhducduy made their first contribution in https://github.com/Rel1cx/eslint-react/pull/1108
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.49.0...v1.50.0
+
+## v1.49.0 (2025-05-05)
+
+### ✨ New
+
+- feat: add `jsx-key-before-spread`, closes #1093, closes #1087 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1105
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.48.5...v1.49.0
+
+## v1.48.5 (2025-04-25)
+
+### 🐞 Fixes
+
+- fix: fixed named export 'JsxEmit' not found, closes #1095 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1096
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.48.4...v1.48.5
+
+## v1.48.4 (2025-04-19)
+
+### 🐞 Fixes
+
+- fix: update fallback react version in settings to "19.1.0"
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.48.3...v1.48.4
+
+## v1.48.3 (2025-04-17)
+
+### 🪄 Improvements
+
+- refactor: improve settings handling by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1080
+- docs: add more examples to `web-api/no-leaked-event-listener` docs by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1082
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.48.2...v1.48.3
+
+## v1.48.2 (2025-04-16)
+
+### 🐞 Fixes
+
+- fix: could not find `hooks-extra/no-direct-set-state-in-use-effect` in plugin `react-hooks-extra`, closes #1077 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1078
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.48.1...v1.48.2
+
+## v1.48.1 (2025-04-16)
+
+### 🐞 Fixes
+
+- fix: rewrite react api detection to better align with `eslint-plugin-react-hook` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1074
+- fix: use preferred loc in error maker in `hooks-extra/no-unnecessary-use-prefix` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1073
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.47.4...v1.48.0
+
+## v1.47.4 (2025-04-15)
+
+### 🐞 Fixes
+
+- fix: update `hooks-extra/no-unnecessary-use-prefix` to skip well-known hooks like `useMDXComponents` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1072
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.47.3...v1.47.4
+
+## v1.47.3 (2025-04-15)
+
+### 🐞 Fixes
+
+- fix: fixed potential false negatives in `no-leaked-conditional-rendering` when logical expressions are wrapped by type expressions by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1068
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.47.2...v1.47.3
+
+## v1.47.2 (2025-04-14)
+
+### 🐞 Fixes
+
+- fix: use smaller error marker range to reduce visual noise by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1064
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.47.1...v1.47.2
+
+## v1.47.1 (2025-04-14)
+
+### 🐞 Fixes
+
+- fix: better debug rules message formatting by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1062
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.47.0...v1.47.1
+
+## v1.47.0 (2025-04-14)
+
+### 🪄 Improvements
+
+- refactor: remove `@eslint-react/jsx` package and move functionality to `@eslint-react/core` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1060
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.46.0...v1.47.0
+
+## v1.46.0 (2025-04-13)
+
+### ✨ New
+
+- feat: use json for diagnostic output format of debug rules by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1058
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.45.3...v1.45.4
+
+## v1.45.4 (2025-04-13)
+
+### 🪄 Improvements
+
+- perf: replace `Map` with `WeakMap` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1057
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.45.3...v1.45.4
+
+## v1.45.3 (2025-04-12)
+
+### 🪄 Improvements
+
+- pref: replace `picomatch.makeRe` with `RE.toRegExp` for pattern matching by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1055
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.45.2...v1.45.3
+
+## v1.45.2 (2025-04-12)
+
+### 🪄 Improvements
+
+- docs: add table of contents to the README by @Rel1cx in https://github.com/Rel1cx/eslint-react/commit/b880cb95d2245f7034f47e883d944c9a8b4ecf5f
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.45.1...v1.45.2
+
+## v1.45.1 (2025-04-12)
+
+### 🐞 Fixes
+
+- fix: fixed `hooks-extra/no-unnecessary-use-prefix` case sensitivity fails, closes #1053 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1054
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.45.0...v1.45.1
+
+## v1.45.0 (2025-04-11)
+
+### ✨ New
+
+- feat: add `no-misused-capture-owner-stack` rule, closes #1049 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1047
+- feat: add `no-nested-lazy-component-declarations` rule, closes #1048 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1052
+- feat: add `no-nested-lazy-component-declarations` rule to recommended presets by @Rel1cx
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.44.0...v1.45.0
+
+## v1.44.0 (2025-04-11)
+
+### ✨ New
+
+- feat: add JSX fragment factory to error message of `avoid-shorthand-fragment` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1051
+
+### 🪄 Improvements
+
+- perf: replace `valibot` with `@zod/mini` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1050
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.43.0...v1.44.0
+
+## v1.43.0 (2025-04-10)
+
+### ✨ New
+
+- feat: add codemod feature to `no-string-refs`, closes #1044 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1045
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.42.1...v1.43.0
+
+## v1.42.1 (2025-04-08)
+
+### ✨ New
+
+- feat: rename `core` preset to `x` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1042
+
+### 📝 Changes you should be aware of
+
+The following presets have been renamed:
+
+- `core` to `x`
+- `core-legacy` to `x-legacy`
+
+The old preset names will still be available until the next major update to avoid breaking changes.
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.41.0...v1.42.1
+
+## v1.41.0 (2025-04-08)
+
+### ✨ New
+
+- feat: add `debug/jsx` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1041
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.40.4...1.41.0
+
+## v1.40.4 (2025-04-07)
+
+### 🐞 Fixes
+
+- fix: refactor JSX runtime annotation handling by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1038
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.40.3...v1.40.4
+
+## v1.40.3 (2025-04-04)
+
+### 🐞 Fixes
+
+- fix: fixed `no-useless-fragment` false positive when using `&nbsp;`, closes #1035 by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1036
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.40.2...v1.40.3
+
+## v1.40.2 (2025-04-03)
+
+### 🐞 Fixes
+
+- fix(react-x): fixed `jsx-uses-react` rule for `preserve` mode by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1031
+- fix: use initial release year and consistent username in LICENSE by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1032
+
+### 🪄 Improvements
+
+- refactor(kit): simplify `LanguagePreferenceSchema` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1033
+- refactor(website): reorganize CSS and improve theme by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1034
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.40.1...v1.40.2
+
+## v1.40.1 (2025-04-01)
+
+### ✨ New
+
+- feat(react-x): enhance `jsx-uses-react` rule to support `@jsx` and `@jsxFrag` annotation comments by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1029
+- feat(kit): add `LanguagePreference` by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1028
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.40.0...v1.40.1
+
+## v1.40.0 (2025-04-01)
+
+### ✨ New
+
+- feat(react-x): add `jsx-uses-react` rule by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1027
+- feat: enable `jsx-uses-react` rule in recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1027
+- feat: enable `naming-convention/context-name` rule in recommended presets by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1024
+- feat(kit): add `JsxRuntime` module by @Rel1cx in https://github.com/Rel1cx/eslint-react/pull/1025
+
+**Full Changelog**: https://github.com/Rel1cx/eslint-react/compare/v1.38.4...v1.40.0
+
+## v1.38.4 (2025-03-29)
+
+### 🪄 Improvements
+
+- chore: update default React version to 19.1.0 in documentation and settings by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1023>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.38.3...v1.38.4>
+
+## v1.38.3 (2025-03-28)
+
+### 🪄 Improvements
+
+- docs: switch back to the original slogan by @Rel1cx in <https://github.com/Rel1cx/eslint-react/commit/e0e4d460c>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.38.2...v1.38.3>
+
+## v1.38.2 (2025-03-27)
+
+### 🐞 Fixes
+
+- fix(eslint-plugin): disable `prefer-shorthand-*` rules in `all` config by @Rel1cx in <https://github.com/Rel1cx/eslint-react/commit/a9e6ef9f97f968bb9366af3e5b40138fb4b6b679>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.38.0...v1.38.2>
+
+## v1.38.0 (2025-03-25)
+
+### ✨ New
+
+- feat: add `jsx-no-undef` rule, closes #1016 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1018>
+- feat: add `hooks-extra/prefer-use-state-lazy-initialization` rule to recommended presets by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1019>
+- docs: add experimental status to rules overview by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1012>
+
+### 🪄 Improvements
+
+- refactor: undeprecate `jsx-uses-vars` and `jsx-no-duplicate-props` rules by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1017>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.37.3...v1.38.0>
+
+## v1.37.3 (2025-03-22)
+
+### 🐞 Fixes
+
+- fix: the requested module `ts-api-utils` does not provide an export named `unionConstituents`, closes #1009 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1010>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.37.2...v1.37.3>
+
+## v1.37.2 (2025-03-22)
+
+### 🐞 Fixes
+
+- fix: `prefer-read-only-props` false positive using React types, closes #962 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1008>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.37.1...v1.37.2>
+
+## v1.37.1 (2025-03-22)
+
+### 🐞 Fixes
+
+- fix: enhance `hooks-extra/prefer-use-state-lazy-initialization` to correctly detect other hooks called within `useState(...)` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1006>
+
+### 🪄 Improvements
+
+- docs: improve rule description and error message by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1003> and <https://github.com/Rel1cx/eslint-react/pull/1007>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.37.0...v1.37.1>
+
+## v1.37.0 (2025-03-20)
+
+### 🪄 Improvements
+
+- refactor: remove `hooks-extra/prefer-use-state-lazy-initialization` from recommended presets by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1001>
+  > Based on feedback of this rule, the current implementation produces more false positives than expected, so to ensure the overall quality of the rules in the recommended presets we provide, I'm removing it from the presets for now, and should add it back after we implement a better heuristic for deciding which function calls should be allowed.
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.36.3...v1.37.0>
+
+## v1.36.3 (2025-03-20)
+
+### 🐞 Fixes
+
+- fix: `hooks-extra/prefer-use-state-lazy-initialization` false positive on `useState(use(promise))` closes #999 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/1000>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.36.2...v1.36.3>
+
+## v1.36.2 (2025-03-20)
+
+No notable changes have been made in this release.
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.36.1...v1.36.2>
+
+## v1.36.1 (2025-03-19)
+
+### 🪄 Improvements
+
+- refactor(naming-convention/use-state): enhance error messaging and docs, closes #980 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/997>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.35.0...v1.36.1>
+
+## v1.35.0 (2025-03-18)
+
+### ✨ New
+
+- feat(plugins/dom): add `no-render` rule to replace `ReactDOM.render()` with `createRoot(node).render()`, closes #972 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/993>
+- feat(plugins/dom): add `no-hydrate` rule to replace `ReactDOM.hydrate()` with `hydrateRoot()`, closes #973 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/995>
+
+### 🪄 Improvements
+
+- refactor: rename `hooks-extra/no-useless-custom-hooks` to `hooks-extra/no-unnecessary-use-prefix` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/996>
+
+### 📝 Changes you should be aware of
+
+The following rules have been renamed:
+
+- `hooks-extra/no-useless-custom-hooks` to `hooks-extra/no-unnecessary-use-prefix`
+- `@eslint-react/hooks-extra/no-useless-custom-hooks` to `@eslint-react/hooks-extra/no-unnecessary-use-prefix`
+
+The old rule names will still be available until the next major update to avoid breaking changes.
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.34.1...v1.35.0>
+
+## v1.34.1 (2025-03-15)
+
+### 🐞 Fixes
+
+- fix: false positive in `no-context-provider` on symbols named `Provider` which are imported from third-party libs, closes #991 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/992>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.34.0...v1.34.1>
+
+## v1.34.0 (2025-03-15)
+
+### 🪄 Improvements
+
+- refactor: export the create function of each rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/989>
+- refactor(plugins/x): rename `no-nested-components` rule to `no-nested-component-definitions` and update related docs by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/990>
+
+### 📝 Changes you should be aware of
+
+The following rules have been renamed:
+
+- `no-nested-components` to `no-nested-component-definitions`
+- `@eslint-react/no-nested-components` to `@eslint-react/no-nested-component-definitions`
+
+The old rule names will still be available until the next major update to avoid breaking changes.
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.33.0...v1.34.0>
+
+## v1.33.0 (2025-03-14)
+
+### 🐞 Fixes
+
+- fix: update rule severity for `no-flush-sync` and `no-void-elements-with-children` in recommended presets by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/988>
+
+### 🪄 Improvements
+
+- refactor(plugins/x): rename `ensure-forward-ref-using-ref` to `no-useless-forward-ref` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/987>
+
+### 📝 Changes you should be aware of
+
+The following rules have been renamed:
+
+- `ensure-forward-ref-using-ref` to `no-useless-forward-ref`
+- `@eslint-react/ensure-forward-ref-using-ref` to `@eslint-react/no-useless-forward-ref`
+
+The old rule names will still be available until the next major update to avoid breaking changes.
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.32.1...v1.33.0>
+
+## v1.32.1 (2025-03-13)
+
+### 🐞 Fixes
+
+- fix: fixed `no-context-provider` replaces `<Provider>` with `<>`, closes #984 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/985>
+
+## v1.32.0 (2025-03-12)
+
+### ✨ New
+
+- feat: revert 'feat: add naming-convention/use-state and naming-convention/context-name to recommended presets by @Rel1cx in #956' by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/982>
+
+### 🪄 Improvements
+
+- docs: update eslint configs in examples to use extends by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/978>
+- docs: update ts configs in examples to use project references by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/979>
+
+## v1.31.0 (2025-03-07)
+
+### ✨ New
+
+- feat: enhance regex handling in naming convention rules by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/969>
+
+### 🪄 Improvements
+
+- docs: improve rules descriptions by @Rel1cx
+
+## v1.30.2 (2025-03-05)
+
+### 🐞 Fixes
+
+- fix(plugins/hooks-extra): misidentification of `set` function in IIFE inside of hooks as its inside of `useEffect`, `useLayoutEffect`, closes [#967](https://github.com/Rel1cx/eslint-react/issues/967) by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/968>
+
+## v1.30.1 (2025-03-04)
+
+### 🐞 Fixes
+
+- fix(utilities/var): fix variable init node retrieval, fixes [#964](https://github.com/Rel1cx/eslint-react/pull/964) by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/965>
+
+### 🪄 Improvements
+
+- refactor(plugins/hooks-extra): improve code reusability by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/963>
+
+### New Contributors
+
+- @mrginglymus made their first contribution in <https://github.com/Rel1cx/eslint-react/pull/964>
+
+## v1.30.0 (2025-03-03)
+
+### ✨ New
+
+- feat: add `naming-convention/use-state` and `naming-convention/context-name` to recommended presets by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/956>
+
+### 🐞 Fixes
+
+- fix: correct readonly checks and test cases in `prefer-read-only-props` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/957>
+- fix: rework `naming-convention/component-name` rule to follow [eslint-plugin-react-hooks@5.0](https://github.com/facebook/react/releases/tag/eslint-plugin-react-hooks%405.0.0) by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/959>
+  > Component names now need to start with an uppercase letter instead of a non-lowercase letter. This means `_Button` or `_component` are no longer valid.
+- fix: `naming-convention/use-state` fails with multiple words, closes #960 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/961>
+
+## v1.29.0 (2025-03-01)
+
+### ✨ New
+
+- feat(plugins/naming-convention): add `context-name` rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/952>
+
+### 🐞 Fixes
+
+- fix: fixed `naming-convention/use-state` works in components only, closes #953 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/954>
+
+### 🪄 Improvements
+
+- docs: use `recommended-typescript` for typescript files by @bluwy in <https://github.com/Rel1cx/eslint-react/pull/949>
+
+### New Contributors
+
+- @bluwy made their first contribution in <https://github.com/Rel1cx/eslint-react/pull/949>
+
+## v1.28.0 (2025-02-26)
+
+### ✨ New
+
+- feat(plugins/dom): add `no-flush-sync` rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/942>
+- feat: add [`skipImportCheck`](https://eslint-react.xyz/docs/configurations#skipimportcheck) setting by @Rel1cx
+
+### 🪄 Improvements
+
+- refactor: code optimization by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/945>
+- refactor: consistent ordering of arguments to context-aware utility functions by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/946>
+
+## v1.27.0 (2025-02-21)
+
+### ✨ New
+
+- feat: add presets exports to modular plugins by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/940>
+- feat: add `no-missing-context-display-name` rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/941>
+
+### 🪄 Improvements
+
+- refactor: improve error messages by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/936> and <https://github.com/Rel1cx/eslint-react/pull/937>
+- refactor: add `useEffect` to `additionalHooks` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/938>
+- refactor: change severity of `no-duplicate-key` rule from `error` to `warn` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/939>
+
+## v1.26.2 (2025-02-06)
+
+### 🐞 Fixes
+
+- fix(plugins/x): enhance `no-context-provider` rule to include context name in error messages by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/935>
+
+## v1.26.1 (2025-02-03)
+
+No notable changes have been made in this release.
+
+## v1.26.0 (2025-01-31)
+
+### ✨ New
+
+- feat(plugins/x): add 'no-use-context', closes #930 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/931>
+
+## v1.25.0 (2025-01-27)
+
+### ✨ New
+
+- feat(no-useless-fragment): auto fix support, closes #899 by @hyoban in <https://github.com/Rel1cx/eslint-react/pull/926>
+- docs: add [setup guide](https://eslint-react.xyz/docs/getting-started/typescript-with-alternative-parser) for `ts-blank-eslint-parser` by @Rel1cx
+- docs: add [setup example](https://github.com/Rel1cx/eslint-react/blob/98f3a6ccc83132c2e0a82c0f500dc88dcd1dcfc7/examples/vite-react-dom-with-ts-blank-eslint-parser-app/eslint.config.js) for `ts-blank-eslint-parser` by @Rel1cx
+
+### 🐞 Fixes
+
+- fix(no-forward-ref): loose fix by @hyoban in <https://github.com/Rel1cx/eslint-react/pull/925>
+
+### 🪄 Improvements
+
+- refactor(website): switch from nextra to fumadocs by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/928>
+
+## v1.24.1 (2025-01-22)
+
+### 🐞 Fixes
+
+- fix: fixed invalid rules for `disable-debug`, `disable-dom`, and `disable-web-apis` configs, closes <https://github.com/Rel1cx/eslint-react/issues/923> by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/924>
+
+## v1.24.0 (2025-01-21)
+
+### 🪄 Improvements
+
+- perf: overhaul performance optimizations
+
+## v1.23.2 (2025-01-07)
+
+### ✨ New
+
+- feat(plugins/x): add auto-fix to `prefer-shorthand-fragment`, closes #898 (#902)
+
+## v1.23.1 (2025-01-03)
+
+### 🐞 Fixes
+
+- fix(plugins/x): fixed false positives in `no-unstable-context-value` and `no-unstable-default-props` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/896>
+
+## v1.23.0 (2024-12-31)
+
+### 🪄 Improvements
+
+- refactor: JSX fragments related rules no longer rely on `jsxPragma` and `jsxPragmaFrag` settings to perform their checks by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/893>
+- refactor: improve applicability of the `no-useless-fragment` and `prefer-shorthand-fragment` rules
+- refactor: deprecate `settings["react-x"].jsxPragma` and `settings["react-x"].jsxPragmaFrag` as they are no longer needed by any rules
+- refactor: replace `short-unique-id` w/ `uid` by @SukkaW in <https://github.com/Rel1cx/eslint-react/pull/894>
+
+### 🐞 Fixes
+
+- fix(plugins/hooks-extra): fix `call` and `new` expression related false positives in `no-unnecessary-use-memo` and `no-unnecessary-use-callback` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/895>
+
+## v1.22.2 (2024-12-30)
+
+### 🪄 Improvements
+
+- perf: re-implement `no-duplicate-key` rule to improve its performance @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/891> and [33ab3cc](https://github.com/Rel1cx/eslint-react/commit/33ab3cc6ca11bf8412e07efa35f640dfbad77f6e)
+- refactor: prevent potential interference from TypeScript's `as`, `satisfies`, and non-null assertion operator in various rules
+
+## v1.22.1 (2024-12-24)
+
+### 🪄 Improvements
+
+- docs: add getting started guides for JavaScript, TypeScript, and JavaScript with Babel
+- docs: improve code samples in rules docs
+- docs: improve `eslint.config.js` examples in README.md, docs and the examples folder
+- docs: improve the error message and description of various rules
+- refactor(website): better website layout and navigation experience
+
+### 📝 Changes in examples
+
+The `eslint.config.js` in the examples now uses `tsconfig`'s `includes` and `excludes` as the SSoT glob patterns for ESLint's `files` and `ignores` fields.
+
+This approach can fundamentally avoid the errors[[1](https://typescript-eslint.io/troubleshooting/typed-linting/#i-get-errors-telling-me-the-file-must-be-included-in-at-least-one-of-the-projects-provided), [2](https://typescript-eslint.io/troubleshooting/typed-linting/#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file), [3](https://typescript-eslint.io/troubleshooting/typed-linting/#i-get-errors-telling-me--was-not-found-by-the-project-service-consider-either-including-it-in-the-tsconfigjson-or-including-it-in-allowdefaultproject)] caused by mismatched config scopes between `tsconfig.json` and `eslint.config.js` when using type-checked rules.
+
+## v1.22.0 (2024-12-22)
+
+### 🪄 Improvements
+
+- refactor(plugins/x): rename `jsx-use-vars` to `use-jsx-vars`
+- refactor(plugins/x): rename `jsx-no-duplicate-props` to `no-duplicate-jsx-props`
+- refactor(plugins/dom): rename `no-children-in-void-dom-elements` to `no-void-elements-with-children`
+
+### 📝 Changes you should be aware of
+
+The following rules have been renamed:
+
+- `jsx-uses-vars` to `use-jsx-vars`
+- `jsx-no-duplicate-props` to `no-duplicate-jsx-props`
+- `dom/no-children-in-void-dom-elements` to `dom/no-void-elements-with-children`
+
+The new rule names are aligned with the same rules in the [biomejs/rules-sources/#eslint-plugin-react](https://biomejs.dev/linter/rules-sources/#eslint-plugin-react) (if any) to enhance consistency. The old rule names will still be available until the next major update to avoid breaking changes.
+
+## v1.21.0 (2024-12-20)
+
+### ✨ New
+
+- feat(plugins/hooks-extra): add `no-useless-custom-hooks` rule by @Rel1cx
+
+### 🪄 Improvements
+
+- refactor(plugins/hooks-extra): deprecate rule `no-redundant-custom-hook` in favor of `no-useless-custom-hooks` (the previous rule will still be available until the next major update to avoid breaking changes)
+
+### 📝 Changes in Rule implementation
+
+`no-useless-custom-hooks` now detects Hook calls within comments and the following code no longer triggers a warning:
+
+```tsx
+// ✅ Good: A Hook that will likely use some other Hooks later
+function useAuth() {
+  // TODO: Replace with this line when authentication is implemented:
+  // return useContext(Auth);
+  return TEST_USER;
+}
+```
+
+## v1.20.1 (2024-12-18)
+
+### 🪄 Improvements
+
+- refactor(shared): replace `local-pkg` package with node built-in API by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/881>
+
+## v1.20.0 (2024-12-16)
+
+### ✨ New
+
+- feat(plugins/x): add codemod-autofix to `no-component-will-*` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/879>
+
+### 🪄 Improvements
+
+- refactor: use default settings when no settings are provided in `settings["react-x"]` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/commit/40ca3bd1cd7adc44f40841b5b4635e0200b73a54>
+- docs: update `no-context-provider.mdx` by @danielrentz in <https://github.com/Rel1cx/eslint-react/pull/877>
+- docs: add 'Min. React' column to rules overview page by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/880>
+- docs: add features section to rules overview page by @Rel1cx
+
+### New Contributors
+
+- @danielrentz made their first contribution in <https://github.com/Rel1cx/eslint-react/pull/877>
+
+## v1.19.0 (2024-12-10)
+
+### ✨ New
+
+- feat(plugins/x): add `no-context-provider` rule by @Rel1cx
+- feat(plugins/x): add autofix for `no-forward-ref` rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/874>
+- feat(plugins/eslint-plugin): add `no-forward-ref` and `no-context-provider` to recommended presets by @Rel1cx
+
+### 🪄 Improvements
+
+- refactor(plugins/eslint-plugin): remove `prefer-read-only-props` from `recommended-type-checked` preset by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/872>
+- refactor(plugins/eslint-plugin): hide `avoid-shorthand-boolean` and `avoid-shorthand-fragment` from presets and docs by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/876>
+- Update `@typescript-eslint`'s packages to `^8.18.0`
+
+## v1.18.0 (2024-12-08)
+
+### ✨ New
+
+- feat(plugins/x): add `no-forward-ref` rule by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/870>
+
+### 🪄 Improvements
+
+- perf(plugins/dom): improve performance of `no-void-elements-with-children` by @Rel1cx
+
+## v1.17.3 (2024-12-03)
+
+### 🐞 Fixes
+
+- fix(plugins/web-api): add 'forEach' support to 'no-leaked-event-listener', closes #842 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/867>
+- fix(plugins/web-api): add 'for of' support to 'no-leaked-event-listener', closes #842 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/869>
+- fix(plugins/x): 'no-array-index-key' mistaking 'foo.bar.map' for 'Rea… by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/868>
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.17.0`
+
+## v1.17.2 (2024-12-01)
+
+### 🪄 Improvements
+
+- Update `eslint`'s packages to `^9.16.0`
+- Update `@typescript-eslint`'s packages to `^8.16.0`
+- Update `ts-api-utils` to `^2.0.0`
+
+## v1.17.1 (2024-11-22)
+
+### ✨ New
+
+- feat(shared): add version detection logic;
+
+### 🐞 Fixes
+
+- fix(plugins/x): 'no-leaked-conditional-rendering' should also warn 'anyStringVar' when react version is lower than 18, closes #853 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/864>
+- fix(plugins/dom): add popover api props to 'no-unknown-property', closes #855 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/865>
+- fix(plugins/debug): 'is-from-react' use correct settings when calling 'isInitializedFromReact', by @Rel1cx
+
+## v1.17.0 (2024-11-21)
+
+### ✨ New
+
+- feat(plugins/naming-convention): add 'ignoreFilesWithoutCode' option to 'filename-extension'
+
+### 🐞 Fixes
+
+- refactor(plugins/x): xhtml entities should be allowed inside of 'no-useless-fragment', closes: #850
+- fix(plugins/eslint-plugin): unexpected top-level property 'name' in legacy presets, closes #863
+- fix(plugins/eslint-plugin): rules list in 'debug' and 'disable-debug' presets
+
+## v1.16.2 (2024-11-20)
+
+### 🐞 Fixes
+
+- fix(plugins/x): 'no-leaked-conditional-rendering' report empty string, closes #853 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/857>
+
+### 🪄 Improvements
+
+- refactor: update the default behavior of import check, closes #858 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/860>
+
+## v1.16.1 (2024-11-10)
+
+### ✨ New
+
+- feat(plugins/x): add `jsx-no-duplicate-props` by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/851>
+
+### 🪄 Improvements
+
+- docs: use correct link for `prefer-react-namespace-import` in rule list by @rakleed in <https://github.com/Rel1cx/eslint-react/pull/849>
+
+## v1.16.0 (2024-11-01)
+
+### ✨ New
+
+- feat(plugins/react-x): add `jsx-uses-vars`, closes #834 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/845>
+- feat(plugins/react-dom): add `no-unknown-property`, closes #846 by @Rel1cx
+- feat: add `recommended-typescript` and `recommended-typescript-legacy` presets by @Rel1cx
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.12.2`
+
+## v1.15.2 (2024-10-29)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.12.1`
+
+## v1.15.1 (2024-10-26)
+
+### ✨ New
+
+- feat: added code fixer to `avoid-shorthand-boolean` and `prefer-shorthand-fragment` by @Rel1cx
+
+### 🐞 Fixes
+
+- fix(plugins/react-x): respect semicolon by @hyoban in <https://github.com/Rel1cx/eslint-react/pull/841>
+- fix(utilities/ast): added missing ts `as` and `satisfies` expressions handling to `getFunctionIdentifier` by @Rel1cx , closes <https://github.com/Rel1cx/eslint-react/issues/843>
+
+## v1.15.0 (2024-10-12)
+
+### ✨ New
+
+- feat: add support for constructors in `hooks-extra/prefer-use-state-lazy-initialization` by @imjordanxd in <https://github.com/Rel1cx/eslint-react/pull/829>
+- feat: add `prefer-react-namespace-import`, closes #803 by @imjordanxd in <https://github.com/Rel1cx/eslint-react/pull/832>
+- feat: add support for `allowExpressions` in `no-useless-fragment` by @imjordanxd in <https://github.com/Rel1cx/eslint-react/pull/836>
+
+### 🐞 Fixes
+
+- fix: Fix false positives when 'web-api/no-leaked-event-listener' passes a signal to an intermediate variable, closes #838
+
+### 🪄 Improvements
+
+- docs: Update `hooks-extra-no-direct-set-state-in-use-effect.mdx` by @neovov in <https://github.com/Rel1cx/eslint-react/pull/831>
+- docs: use a standard mono-width font for the docs, closes #835 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/837>
+- Undeprecate `hooks-extra-no-direct-set-state-in-use-layout-effect` and remove it from recommended presets, closes #839 by @Rel1cx in <https://github.com/Rel1cx/eslint-react/pull/840>
+
+### New Contributors
+
+- @imjordanxd made their first contribution in <https://github.com/Rel1cx/eslint-react/pull/829>
+- @neovov made their first contribution in <https://github.com/Rel1cx/eslint-react/pull/831>
+
+**Full Changelog**: <https://github.com/Rel1cx/eslint-react/compare/v1.14.3...v1.15.0>
+
+## v1.14.3 (2024-09-29)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.7.0`
+
+## v1.14.2 (2024-09-20)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.6.0`
+
+## v1.14.1 (2024-09-12)
+
+### 🐞 Fixes
+
+- Fixed false positives in rule `web-api/no-leaked-resize-observer`
+
+## v1.14.0 (2024-09-10)
+
+### 🐞 Fixes
+
+- Fixed modular plugins missing default export
+- Fixed component name detection when the component name starts with a underscore
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `^8.5.0`
+
+## v1.13.1 (2024-09-09)
+
+### 🐞 Fixes
+
+- Fixed `hooks-extra/no-unnecessary-use-callback` and `hooks-extra/no-unnecessary-use-memo` false positives when there are references from nested scopes
+
+## v1.13.0 (2024-09-04)
+
+### ✨ New
+
+- Added `web-api/no-leaked-resize-observer` rule to prevent leaked `ResizeObserver`
+
+### 🐞 Fixes
+
+- `hooks-extra/no-redundant-custom-hook` should allow custom Hooks with empty body
+
+### 🪄 Improvements
+
+- Rename `debug/react-hooks` to `debug/hook`
+- Rename `hooks-extra/ensure-custom-using-hooks` to `hooks-extra/no-redundant-custom-hook`
+- Rename `hooks-extra/ensure-use-memo-has-non-empty-deps` to `hooks-extra/no-unnecessary-use-memo`
+- Rename `hooks-extra/ensure-use-callback-has-non-empty-deps` to `hooks-extra/no-unnecessary-use-callback`
+- Upgrade `@typescript-eslint`'s packages to `^8.4.0`
+
+(The rules that were renamed in this release will still be available until the next major update to avoid breaking changes.)
+
+## v1.12.4 (2024-08-31)
+
+### ✨ New
+
+- Added `useLayoutEffect` and `useInsertionEffect` support to `hooks-extra/no-direct-set-state-in-use-effect`
+
+### 🪄 Improvements
+
+- Deprecate rule `hooks-extra/no-direct-set-state-in-use-layout-effect` in favor of `hooks-extra/no-direct-set-state-in-use-effect` (the previous rule will still be available until the next major update to avoid breaking changes)
+
+## v1.12.3 (2024-08-29)
+
+### ✨ New
+
+- Added support for detecting event listeners removed by abort signal in rule `web-api/no-leaked-event-listener`
+
+### 🐞 Fixes
+
+- Fixed `no-duplicate-key` rule false positives when the key is a variable
+- Fixed `web-api/no-leaked-set-timeout` and `web-api/no-leaked-set-interval` false positives when a timer is assigned to a variable declared by `let` but not initialized
+
+## v1.12.3 (2024-08-29)
+
+### ✨ New
+
+- Added support for detecting event listeners removed by abort signal in rule `web-api/no-leaked-event-listener`
+
+### 🐞 Fixes
+
+- Fixed `no-duplicate-key` rule false positives when the key is an variable
+- Fixed `web-api/no-leaked-set-timeout` and `web-api/no-leaked-set-interval` false positives when a timer is assigned to a variable declared by `let` but not initialized
+
+### 🪄 Improvements
+
+- Allow upper case letters in the rule `naming-convention/component-name` when the component name is less than 4 characters, e.g., `UI`, `CSS`, `SVG`
+
+## v1.12.2 (2024-08-27)
+
+### ✨ New
+
+- Added type declarations for `react-x` settings to the `@typescript-eslint/utils/ts-eslint` module via the `SharedConfigurationSettings` interface
+
+### 🪄 Improvements
+
+- Improve the performance of the `no-missing-key` and `no-duplicate-key` rules
+- Upgrade `@typescript-eslint`'s packages to `^8.3.0`
+
+## v1.12.1 (2024-08-22)
+
+### ✨ New
+
+- Add the options `allowAllCaps`, `allowNamespace`, `allowLeadingUnderscore` to `naming-convention/component-name` and set their default values to `false`
+
+### 🪄 Improvements
+
+- Normalize the component name in rule `naming-convention/component-name` before checking it against the pattern
+
+## v1.12.0 (2024-08-21)
+
+### ✨ New
+
+- Added `hooks-extra` rules to `recommended` and `recommended-legacy` presets
+
+## v1.11.0 (2024-08-20)
+
+### ✨ New
+
+- Added `eslint-plugin-react-web-api` - A plugin that provides rules for interacting with Web APIs in React applications
+- Added `web-api/no-leaked-timeout` rule to prevent leaked `setTimeout`
+- Added `web-api/no-leaked-interval` rule to prevent leaked `setInterval`
+- Added `web-api/no-leaked-event-listener` rule to prevent leaked `addEventListener`
+- Added `web-api` and `web-api-legacy` presets to enable all rules provided by `eslint-plugin-react-web-api`
+- Added `web-api/no-leaked-event-listener` to `recommended` and `recommended-legacy` presets
+
+### 🪄 Improvements
+
+- Improve performance by skipping unnecessary checks when possible
+- Improve dts generation of the `@eslint-react/eslint-plugin` package
+- Improve website and documentation
+- Upgrade `@typescript-eslint`'s packages to `^8.2.0`
+
+## v1.10.1 (2024-08-13)
+
+### 🐞 Fixes
+
+- Fixed `hooks-extra/prefer-use-state-lazy-initialization` false positive when using an initializer function
+
+### 🪄 Improvements
+
+- Improve rule `no-implicit-key` error marker position and range
+- Upgrade `@typescript-eslint`'s packages to `^8.1.0`
+- Improve website and documentation
+
+## v1.10.0 (2024-08-11)
+
+### ✨ New
+
+- Added `disable-type-checked` and `disable-type-checked-legacy` presets to disable all type-checked rules
+
+### 🪄 Improvements
+
+- Rename `off-dom` and `off-dom-legacy` presets to `disable-dom` and `disable-dom-legacy` (the old names will still be available until the next major update to avoid breaking changes)
+
+## v1.9.1 (2024-08-08)
+
+### 🐞 Fixes
+
+- Fixed `dom/no-missing-iframe-sandbox` false positive when the `sandbox` attribute is set to `sandbox=""`
+- Fixed `all` and `all-legacy` presets not including `hooks-extra` rules
+
+## v1.9.0 (2024-08-06)
+
+### ✨ New
+
+- Add `core` preset that includes the most essential rules
+
+### 🪄 Improvements
+
+- Upgrade `@typescript-eslint`'s packages to `8.0.1`
+
+## v1.8.2 (2024-08-03)
+
+### 🐞 Fixes
+
+- Fixed legacy presets not being exported correctly in `@eslint-react/eslint-plugin`
+
+## v1.8.1 (2024-08-03)
+
+### 🪄 Improvements
+
+- Enhance rule `hooks-extra/no-direct-set-state-in-use-effect` and `hooks-extra/no-direct-set-state-in-use-layout-effect` to support `set` function directly passed to `useCallback` and `useMemo` without explicitly calling it
+- Improve website and documentation
+
+## v1.8.0 (2024-08-02)
+
+### 🐞 Fixes
+
+- Fixed `ESLintReactSettings` type not being exported correctly
+- Fixed the `set` function calls that are wrapped in a `useMemo` or `useCallback` like hook not being detected by `hooks-extra/no-direct-set-state-in-use-effect` and `hooks-extra/no-direct-set-state-in-use-layout-effect`
+
+### 🪄 Improvements
+
+- Upgrade `@typescript-eslint`'s packages to `8.0.0`
+- Improve website and documentation
+
+## v1.7.1 (2024-07-31)
+
+### 🐞 Fixes
+
+- Fixed the spread attributes support for dom related rules
+- Fixed the issue where the overridden value was retrieved when there were duplicate attributes on a JSX element
+
+### 🪄 Improvements
+
+- Rule `no-leaked-conditional-rendering` now allows a falsy boolean literal to be used on the left side of the logical expression
+- Tweaked the default settings shipped with various presets
+- Overall performance improvements
+
+## v1.7.0 (2024-07-30)
+
+### ✨ New
+
+- Add `settings["react-x"].polymorphicPropName` setting to specify the name of the prop that is used to determine the component type
+
+### 🪄 Improvements
+
+- Dropped the current incomplete lint support for `React.createElement` to improve performance and subsequent code maintainability
+
+## v1.6.0 (2024-07-27)
+
+### ✨ New
+
+- Add `controlled` setting to `settings["react-x"].additionalComponents`' `attributes` object to set whether it is controlled or not
+- Add glob support to `settings["react-x"].additionalComponents`' `name` setting
+- Add default settings for `react-x` settings to presets
+- Undeprecate rule `no-implicit-key` and improve its usefulness
+- Undeprecate rule `no-complicated-conditional-rendering` and rename it to `no-complex-conditional-rendering` (the previous rule will still be available until the next major update to avoid breaking changes)
+
+### 🐞 Fixes
+
+- `no-direct-set-state-in-use-(layout?)-effect` should warn only for the `set` function
+
+### 🪄 Improvements
+
+- Remove `no-direct-set-state-in-use-(layout?)-effect` from recommended presets
+
+## v1.5.30 (2024-07-22)
+
+### 🐞 Fixes
+
+- Revert ~~change `@typescript-eslint`'s packages in `dependencies` to `"^7.16.1 || ^rc-v8"`~~ as this format is not supported by all package managers
+
+## v1.5.29 (2024-07-22)
+
+### ✨ New
+
+- Add rule `no-prop-types`
+- Add rule `no-default-props`
+- Add experimental `settings["react-x"].additionalComponents` settings (currently only the `no-unsafe-target-blank` rule uses it, but more rules will use it in the future)
+
+### 🪄 Improvements
+
+- Add rule `no-prop-types` to recommended presets
+- Add rule `no-default-props` to recommended presets
+- Remove rule `no-useless-fragment` from recommended presets
+- Optimize performance of rule `no-create-ref`
+- Change `@typescript-eslint`' packages in `dependencies` to `"^7.16.1 || ^rc-v8"`
+
+## v1.5.28 (2024-07-20)
+
+### 🐞 Fixes
+
+- Fix false positives and negatives in rule `hooks-extra/no-direct-set-state-in-use-effect`
+- Fix false positives and negatives in rule `hooks-extra/no-direct-set-state-in-use-layout-effect`
+- Fix rule `prefer-read-only-props` reports only the first component in a file
+
+### 🪄 Improvements
+
+- Improve website and documentation
+
+## v1.5.27 (2024-07-16)
+
+### 🐞 Fixes
+
+- Fix rule `prefer-read-only-props` that was accidentally added to the recommended type-checked presets
+- Fix false negatives in rule `hooks-extra/no-direct-set-state-in-use-effect` when call `set` function inside a non-function scope
+- Fix false negatives in rule `hooks-extra/no-direct-set-state-in-use-layout-effect` when call `set` function inside a non-function scope
+
+### 🪄 Improvements
+
+- Rule `no-leaked-conditional-rendering` now supports BigInt literals on the left side of the logical expression
+- Rule `no-leaked-conditional-rendering` now allows a truthy number literal to be used on the left side of the logical expression
+- Optimize bundle size
+
+## v1.5.26 (2024-07-15)
+
+### ✨ New
+
+- Add rule `hooks-extra/no-direct-set-state-in-use-effect`
+- Add rule `hooks-extra/no-direct-set-state-in-use-layout-effect`
+
+### 🐞 Fixes
+
+- Fix false positives in rule `hooks-extra/ensure-use-memo-has-non-empty-deps` when referencing component block scope
+- Fix false positives in rule `hooks-extra/no-unnecessary-use-callback` when referencing component block scope
+
+### 🪄 Improvements
+
+- Add rule `hooks-extra/no-direct-set-state-in-use-effect` to recommended presets
+- Add rule `hooks-extra/no-direct-set-state-in-use-layout-effect` to recommended presets
+- Add rule `hooks-extra/prefer-use-state-lazy-initialization` to recommended presets
+
+## v1.5.25 (2024-07-13)
+
+### 🪄 Improvements
+
+- Optimize bundle size
+
+## v1.5.24 (2024-07-11)
+
+### 🐞 Fixes
+
+- Fix rule `prefer-read-only-props` false positive when using `ObjectPattern` in function arguments
+
+### 🪄 Improvements
+
+- Change `typescript` version in `peerDependencies` to `"^4.9.5 || ^5.3.3"`
+
+## v1.5.23 (2024-07-07)
+
+### 🐞 Fixes
+
+- Fix rule `prefer-read-only-props` false negative when using `ObjectPattern` in function arguments
+
+### 🪄 Improvements
+
+- Improve website and documentation
+
+## v1.5.22 (2024-07-05)
+
+### ✨ New
+
+- Add rule `prefer-read-only-props`
+
+### 🪄 Improvements
+
+- Downgrade `@typescript-eslint`'s packages to v7, due to stability issues with v8
+
+## v1.5.21 (2024-07-03)
+
+### 🐞 Fixes
+
+- Add missing dependencies to `@eslint-react/eslint-plugin`
+- Fix rule `no-nested-components` false negative when placing components inside JSX props
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to v8
+- Improve rule `no-leaked-conditional-rendering` compatibility with different versions of `typescript-eslint`
+
+## v1.5.20 (2024-07-02)
+
+### 🐞 Fixes
+
+- Fix rule `prefer-destructuring-assignment` false positive when the function looks like a component
+
+### 🪄 Improvements
+
+- Improve `utilities/jsx/is-jsx-value` to better distinguish between normal values and JSX values
+- Improve `core/component-collector` to better distinguish between normal functions and components
+- Prevent potential function component detection related false positives
+- Switch to a more appropriate value for `DEFAULT_COMPONENT_DETECTION_HINT`
+
+## v1.5.19 (30 Sun Jun 2024)
+
+### 🪄 Improvements
+
+- Reduce the number of dependencies by inlining tree-shaking optimized code while bundling
+- Deprecate `reactOptions` in favor of `react-x` in [ESLint Shared Settings](https://eslint.org/docs/latest/use/configure/configuration-files#configuring-shared-settings)
+
+## v1.5.18 (28 Fri Jun 2024)
+
+### 🐞 Fixes
+
+- Fix rule `no-useless-fragment` not respecting `jsxPragma` settings
+
+### 🪄 Improvements
+
+- Update documentation for rule `no-useless-fragment` to reflect the actual behavior of the rule
+
+## v1.5.17 (2024-06-26)
+
+### 🪄 Improvements
+
+- Remove rule `no-children-prop` from recommended presets
+- Improve documentation for rule `no-useless-fragment`
+
+## v1.5.16 (2024-06-17)
+
+### 🐞 Fixes
+
+- Fix debug rules not exporting correctly in `@eslint-react/eslint-plugin`
+
+### 🪄 Improvements
+
+- Remove rule `prefer-shorthand-boolean` from recommended presets
+- Remove rule `prefer-shorthand-fragment` from recommended presets
+- Remove rule `prefer-destructuring-assignment` from recommended presets
+
+## v1.5.15 (2024-06-08)
+
+### 🐞 Fixes
+
+- Remove `languageOptions.parser` from presets
+- Remove `@typescript-eslint/parser` from peer dependencies
+- Rule `no-leaked-conditional-rendering`: object should be considered as valid left-hand type
+
+## v1.5.14 (2024-05-30)
+
+### ✨ New
+
+- Add rule `avoid-shorthand-boolean`
+- Add rule `avoid-shorthand-fragment`
+
+### 🐞 Fixes
+
+- Fix rule `dom/no-missing-button-type` false positive when using `type` attribute in a JSX expression
+
+## v1.5.13 (2024-05-28)
+
+### 🐞 Fixes
+
+- Fix components that use `getDerivedStateFromError` should not be warned by rule `no-class-component`
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `7.11.0`
+
+## v1.5.12 (2024-05-17)
+
+### 🐞 Fixes
+
+- Fix ESLint peer dependency range in `package.json`
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `7.9.0`
+- Minor improvements
+
+## v1.5.11 (2024-05-08)
+
+### ✨ New
+
+- Rule `no-class-component` rule now allows class components with a `componentDidCatch` method
+- Settings `reactOptions` now supports `importSource` to specify the import source for React
+
+### 🗑️ Deprecations
+
+- Deprecate rule `no-implicit-key` because it is stylistic and opinionated
+- Deprecate rule `no-complicated-conditional-rendering` because it is stylistic and opinionated
+
+### 🪄 Improvements
+
+- Refactor React pragma and import name retrieval utils to support custom import source
+- Update `@typescript-eslint`'s packages to `7.8.0`
+
+## v1.5.10 (2024-04-28)
+
+### 🪄 Improvements
+
+- Update `react` to `18.3.1`
+- Update `@typescript-eslint`'s packages to `7.7.1`
+- Use a wider range of peerDependencies
+
+## v1.5.9 (2024-04-19)
+
+### 🪄 Improvements
+
+- Optimize error messages of rules
+- Update `@typescript-eslint`'s packages to `7.7.0`
+
+## v1.5.8 (2024-04-11)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `7.6.0`
+
+## v1.5.7 (2024-03-28)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `7.4.0`
+
+## v1.5.6 (2024-03-12)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `7.2.0`
+
+## v1.5.5 (2024-02-18)
+
+### 🐞 Fixes
+
+- Fix rule `no-component-will-receive-props` not working as expected
+
+### 🪄 Improvements
+
+- Improve error messages and code samples in rule docs
+
+## v1.5.4 (2024-02-16)
+
+### 🐞 Fixes
+
+- Fix rule `dom/no-render-return-value` not renamed in v1.0.0
+
+### 🪄 Improvements
+
+- Improve code samples in rule docs
+- Update `effect` to `2.3.5`
+- Update `@typescript-eslint`'s packages to `7.0.1`
+
+## v1.5.3 (2024-02-10)
+
+### 🪄 Improvements
+
+- Improve diagnostic messages
+- Remove needless deps from `peerDependencies`
+- Update `@typescript-eslint`'s packages to `6.21.0`
+
+## v1.5.2 (2024-01-31)
+
+### 🪄 Improvements
+
+- Remove needless deps from `peerDependencies`
+- Update `@typescript-eslint`'s packages to `6.20.0`
+- Update `effect` to `2.2.3`
+
+## v1.5.2-beta.2 (2024-01-31)
+
+### 🪄 Improvements
+
+- Update `effect` to `2.2.3`
+- Remove needless deps from `peerDependencies`
+
+## v1.5.2-beta.0 (2024-01-30)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.20.0`
+
+## v1.5.1 (2024-01-29)
+
+### ✨ New
+
+- Add `off-dom` and `off-dom-legacy` presets to disable all DOM related rules
+
+### 🪄 Improvements
+
+- Reduce dependencies size
+
+## v1.5.0 (2024-01-29)
+
+### 💥 Breaking Changes
+
+- Remove rule `max-depth`
+- Rename rule `no-spreading-key` to `no-implicit-key`
+- Rename rule `no-constructed-context-value` to `no-unstable-context-value`
+- Rename rule `no-unstable-nested-components` to `no-nested-components`
+- Switch to new name prefix of rules in `@eslint-react/eslint-plugin`
+  - Replace `jsx/` with `` in rule names
+  - Replace `react/` with `` in rule names
+  - Replace `react-dom/` with `dom/` in rule names
+  - Replace `react-hooks/` with `hooks-extra/` in rule names
+- Switch to new settings schema
+  - Put settings under `reactOptions` instead of `eslintReact`
+  - Replace `jsx.pragma` with `jsxPragma`
+  - Replace `jsx.fragment` with `jsxPragmaFrag`
+  - Replace `react.version` with `version`
+  - Remove `jsx.extensions`
+
+## v1.0.2 (2024-01-27)
+
+### 🐞 Fixes
+
+- Fix rule `dom/no-namespace` not renamed in v1.0.0
+- Fix rule `dom/no-void-elements-with-children` not renamed in v1.0.0
+
+### 🪄 Improvements
+
+- Improve rules overview page on website
+- Remove `jsx` and `hooks` presets from documentation
+
+## v1.0.1 (2024-01-27)
+
+### 🪄 Improvements
+
+- Improve `jsx` and `jsx-legacy` presets
+- Improve `core` and `core-legacy` presets
+- Improve `recommended` and `recommended-legacy` presets
+- Improve `recommended-type-checked` and `recommended-type-checked-legacy` presets
+
+## v1.0.0 (2024-01-27)
+
+### 💥 Breaking Changes
+
+#### All DOM related rules are moved to `react-dom` namespace
+
+- Rename rule `react/no-void-elements-with-children` to `dom/no-void-elements-with-children`
+- Rename rule `react/no-dangerously-set-innerhtml-with-children` to `dom/no-dangerously-set-innerhtml-with-children`
+- Rename rule `react/no-dangerously-set-innerhtml` to `dom/no-dangerously-set-innerhtml`
+- Rename rule `react/no-find-dom-node` to `dom/no-find-dom-node`
+- Rename rule `react/no-missing-button-type` to `dom/no-missing-button-type`
+- Rename rule `react/no-missing-iframe-sandbox` to `dom/no-missing-iframe-sandbox`
+- Rename rule `react/no-namespace` to `dom/no-namespace`
+- Rename rule `react/no-render-return-value` to `dom/no-render-return-value`
+- Rename rule `react/no-script-url` to `dom/no-script-url`
+- Rename rule `react/no-unsafe-iframe-sandbox` to `dom/no-unsafe-iframe-sandbox`
+- Rename rule `react/no-unsafe-target-blank` to `dom/no-unsafe-target-blank`
+
+### ✨ New
+
+- Make `dom` an alias of `react-dom` preset
+- Make `hooks` an alias of `react-hooks` preset
+- Add preset `jsx` and `jsx-legacy`
+- Add preset `react-dom` and `dom-legacy`
+- Add preset `core` and `core-legacy`
+- Add preset `react-hooks` and `hooks-legacy`
+
+### 🐞 Fixes
+
+- Fix the lint message for rule `dom/no-dangerously-set-innerhtml`
+
+## v1.0.0-beta.3 (2024-01-26)
+
+### 🐞 Fixes
+
+- Fix the name prefix for react-dom rules
+
+## v1.0.0-beta.2 (2024-01-26)
+
+### ✨ New
+
+- Make `dom` an alias of `react-dom` preset
+- Make `hooks` an alias of `react-hooks` preset
+
+## v1.0.0-beta.1 (2024-01-26)
+
+### ✨ New
+
+- Add preset `jsx` and `jsx-legacy`
+- Add preset `dom` and `dom-legacy`
+- Add preset `core` and `core-legacy`
+- Add preset `hooks` and `hooks-legacy`
+
+## v1.0.0-beta.0 (2024-01-26)
+
+### 💥 Breaking Changes
+
+#### All DOM related rules are moved to `react-dom` namespace
+
+- Rename rule `react/no-dangerously-set-innerhtml` to `dom/no-dangerously-set-innerhtml`
+- Rename rule `react/no-dangerously-set-innerhtml-with-children` to `dom/no-dangerously-set-innerhtml-with-children`
+- Rename rule `react/no-find-dom-node` to `dom/no-find-dom-node`
+- Rename rule `react/no-missing-button-type` to `dom/no-missing-button-type`
+- Rename rule `react/no-missing-iframe-sandbox` to `dom/no-missing-iframe-sandbox`
+- Rename rule `react/no-script-url` to `dom/no-script-url`
+- Rename rule `react/no-unsafe-iframe-sandbox` to `dom/no-unsafe-iframe-sandbox`
+- Rename rule `react/no-unsafe-target-blank` to `dom/no-unsafe-target-blank`
+
+## v0.10.12 (2024-01-21)
+
+### 🪄 Improvements
+
+- Remove unnecessary `parserOptions` fields from presets
+
+## v0.10.12-beta.0 (2024-01-21)
+
+### 🪄 Improvements
+
+- Remove unnecessary `parserOptions` fields from presets
+
+## v0.10.11 (2024-01-20)
+
+### ✨ New
+
+- Add rule `react/no-access-state-in-setstate`
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unused-state` to respect the usage of `getDerivedStateFromProps`
+- Update `@typescript-eslint`'s packages to `6.19.0`
+
+## v0.10.11-beta.2 (2024-01-19)
+
+### ✨ New
+
+- Add rule `react/no-access-state-in-setstate`
+
+## v0.10.11-beta.1 (2024-01-16)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.19.0`
+
+## v0.10.11-beta.0 (2024-01-15)
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unused-state` to respect the usage of `getDerivedStateFromProps`
+
+## v0.10.10 (2024-01-14)
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unused-state` to support checking for more cases
+- Improve rule `react/no-direct-mutation-state` to support checking for more cases
+- Improve rule `react/no-unused-class-component-members` to support checking for more cases
+
+## v0.10.10-beta.0 (2024-01-14)
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unused-state` to support checking for more cases
+- Improve rule `react/no-direct-mutation-state` to support checking for more cases
+- Improve rule `react/no-unused-class-component-members` to support checking for more cases
+
+## v0.10.9 (2024-01-12)
+
+### 🐞 Fixes
+
+- Fix bundle size is larger than expected
+
+## v0.10.8 (2024-01-11)
+
+### 🐞 Fixes
+
+- Fix version format in v0.10.7's package.json
+
+## v0.10.7 (2024-01-11)
+
+### ✨ New
+
+- Add rule `react/no-unused-state`
+
+## v0.10.6 (2024-01-09)
+
+### 🐞 Fixes
+
+- Fix an issue where `react/no-constructed-context-value` and `react/no-unstable-default-props` would report false negatives when using LogicalExpression and ConditionalExpression
+
+## v0.10.6-beta.0 (2024-01-08)
+
+### 🐞 Fixes
+
+- Fix an issue where `react/no-constructed-context-value` and `react/no-unstable-default-props` would report false negatives when using LogicalExpression and ConditionalExpression
+
+## v0.10.5 (2024-01-08)
+
+### ✨ New
+
+- Add rule `react/no-unused-class-component-members`
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.18.0`
+
+## v0.10.5-beta.0 (2024-01-07)
+
+### ✨ New
+
+- Add rule `react/no-unused-class-component-members`
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.18.0`
+
+## v0.10.4 (2024-01-06)
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unstable-default-props` to support checking for ObjectPatterns within VariableDeclarators that occur on props
+- Improve function component detection in rule `react/no-unstable-nested-components` and `debug/function-component`
+
+### 🐞 Fixes
+
+- Fix same kind of error inside a component should not only be reported once in rule `react/no-create-ref` and `react/no-constructed-context-value`
+- Fix an issue where render functions wrapped in `useCallback` were accidentally detected as function components in rules `react/no-unstable-nested-components` and `debug/function-component`
+
+## v0.10.4-beta.1 (2024-01-06)
+
+### 🪄 Improvements
+
+- Improve function component detection in rule `react/no-unstable-nested-components` and `debug/function-component`
+
+### 🐞 Fixes
+
+- Fix an issue where render functions wrapped in `useCallback` were accidentally detected as function components in rules `react/no-unstable-nested-components` and `debug/function-component`
+
+## v0.10.4-beta.0 (2024-01-06)
+
+### 🪄 Improvements
+
+- Improve rule `react/no-unstable-default-props` to support checking for ObjectPatterns within VariableDeclarators that occur on props
+
+### 🐞 Fixes
+
+- Fix same kind of error inside a component should not only be reported once in rule `react/no-create-ref` and `react/no-constructed-context-value`
+
+## v0.10.3 (2024-01-05)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.17.0`
+
+## v0.10.3-beta.0 (2024-01-02)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.17.0`
+
+## v0.10.2 (2023-12-30)
+
+### ✨ New
+
+- Add [`reactHooks.alias`](https://eslint-react.xyz/docs/configuration#reacthooksalias) setting support
+
+## v0.10.2-beta.0 (2023-12-30)
+
+### ✨ New
+
+- Add [`reactHooks.alias`](https://eslint-react.xyz/docs/configuration#reacthooksalias) setting support
+
+## v0.10.1 (2023-12-27)
+
+### 🪄 Improvements
+
+- Add `react/no-clone-element` to `recommended` and `recommended-legacy` presets
+- Improve rule `react/no-unstable-nested-components`, make its behavior closer to [react-hooks/no-nested-components](https://github.com/facebook/react/pull/25360)
+- Update `@typescript-eslint`'s packages to `6.16.0`
+
+## v0.10.1-beta.1 (2023-12-26)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.16.0`
+
+## v0.10.1-beta.0 (2023-12-25)
+
+### 🪄 Improvements
+
+- Add `react/no-clone-element` to `recommended` and `recommended-legacy` presets
+- Improve rule `react/no-unstable-nested-components`, make its behavior closer to [react-hooks/no-nested-components](https://github.com/facebook/react/pull/25360)
+
+## v0.10.0 (2023-12-21)
+
+### ✨ New
+
+- Add rule `jsx/max-depth`
+
+### 🪄 Improvements
+
+- Improve `recommended` and `recommended-legacy` presets
+
+## v0.10.0-beta.0 (2023-12-21)
+
+### ✨ New
+
+- Add rule `jsx/max-depth`
+
+### 🪄 Improvements
+
+- Improve `recommended` and `recommended-legacy` presets
+
+## v0.9.8 (2023-12-19)
+
+### ✨ New
+
+- Add rule `react/ensure-forward-ref-using-ref`
+
+### 🪄 Improvements
+
+- Reduce false positives in rule `react/no-unstable-nested-components`
+- Reduce false positives in rule `debug/function-component`
+- Optimize `recommended` and `recommended-legacy` presets
+- Update `@typescript-eslint`'s packages to `6.15.0`
+
+## v0.9.8-beta.2 (2023-12-19)
+
+### 🪄 Improvements
+
+- Optimize `recommended` and `recommended-legacy` presets
+
+## v0.9.8-beta.1 (2023-12-19)
+
+### 🪄 Improvements
+
+- Minor improvements
+
+## v0.9.8-beta.0 (2023-12-17)
+
+### ✨ New
+
+- Add rule `react/ensure-forward-ref-using-ref`
+
+### 🪄 Improvements
+
+- Reduce false positives in rule `react/no-unstable-nested-components`
+
+- Reduce false positives in rule `debug/function-component`
+
+## v0.9.7 (2023-12-17)
+
+### 💥 Breaking Changes
+
+- Rule `named-convention/filename-extension` rename `rule` option to `allow`
+
+### 🐞 Fixes
+
+- Fix where functions in `<Component footer={() => <div />} />` or `<Component Footer={() => <div />} />` are treated as components
+- Fix false positive in rule `react/no-unstable-nested-components`
+- Fix false positive in rule `debug/function-component`
+
+### 🪄 Improvements
+
+- Rules now support reading JSX extensions from `settings.eslintReact.jsx.extensions`
+
+- Replace ❌ Incorrect and ✅ Correct with Failing and Passing in rule docs
+
+## v0.9.7-beta.2 (2023-12-16)
+
+### 🐞 Fixes
+
+- Update default rule option in `named-convention/filename` to `PascalCase`
+
+## v0.9.7-beta.1 (2023-12-14)
+
+### 🪄 Improvements
+
+- Minor improvements
+
+## v0.9.7-beta.0 (2023-12-14)
+
+### 💥 Breaking Changes
+
+- Rule `named-convention/filename-extension` rename `rule` option to `allow`
+
+✨ New
+
+- Rule `named-convention/filename` add `extensions` option
+- Rule `named-convention/filename-extension` add `extensions` option
+
+## v0.9.6 (2023-12-12)
+
+### ✨ New
+
+- Add rule `react-hooks/prefer-use-state-lazy-initialization`
+
+### 🪄 Improvements
+
+- Rule `named-convention/component-name` add both `string` and `object` options support
+- Rule `named-convention/filename` add both `string` and `object` options support
+- Rule `named-convention/filename-extension` add both `string` and `object` options support
+- Rule `debug/react-hooks` reports `hookCalls.length` instead of `cost`
+- Update `@typescript-eslint`'s packages to `6.14.0`
+
+## v0.9.6-beta.5 (2023-12-12)
+
+### 🪄 Improvements
+
+- Update `@typescript-eslint`'s packages to `6.14.0`
+
+## v0.9.6-beta.4 (2023-12-11)
+
+### 🪄 Improvements
+
+- Rule `named-convention/component-name` add both `string` and `object` options support
+- Rule `named-convention/filename` add both `string` and `object` options support
+- Rule `named-convention/filename-extension` add both `string` and `object` options support
+
+## v0.9.6-beta.3 (2023-12-11)
+
+### 🪄 Improvements
+
+- Remove rule `react-hooks/prefer-use-state-lazy-initialization` from `recommended` and `recommended-legacy` presets
+
+## v0.9.6-beta.2 (2023-12-11)
+
+### ✨ New
+
+- Add rule `react-hooks/prefer-use-state-lazy-initialization`
+
+### 🪄 Improvements
+
+- Rule `named-convention/filename-extension` switch options format from object to string
+
+## v0.9.6-beta.1 (2023-12-11)
+
+### 🪄 Improvements
+
+- Rule `debug/react-hooks` reports `hookCalls.length` instead of `cost`
+
+## v0.9.5 (2023-12-11)
+
+### 🪄 Improvements
+
+- Improve rule `jsx/no-leaked-conditional-rendering` error marker position and range
+- Improve rule `react/no-missing-button-type` error marker position and range
+- Improve rule `react/no-missing-iframe-sandbox` error marker position and range
+- Improve rule `react/no-unsafe-iframe-sandbox` error marker position and range
+
+## v0.9.4 (2023-12-08)
+
+### 🪄 Improvements
+
+- Improve rule docs
+
+## v0.9.3 (2023-12-08)
+
+### ✨ New
+
+- Add rule `react/no-direct-mutation-state`
+- Add rule `naming-convention/use-state`
+
+### 🪄 Improvements
+
+- Update `recommended` and `recommended-legacy` presets
+- Improve rules overview page
+
+## v0.9.2 (2023-12-06)
+
+### ✨ New
+
+- Add rule `react/no-component-will-update`
+- Add rule `react/no-unsafe-component-will-update`
+- Add rule `react/no-component-will-receive-props`
+- Add rule `react/no-unsafe-component-will-receive-props`
+- Add rule `react/no-set-state-in-component-did-mount`
+- Add rule `react/no-set-state-in-component-did-update`
+- Add rule `react/no-set-state-in-component-will-update`
+
+## v0.9.1 (2023-12-05)
+
+### ✨ New
+
+- Add rule `react/no-component-will-mount`
+- Add rule `react/no-unsafe-component-will-mount`
+
+## v0.9.0 (2023-12-01)
+
+### 💥 Breaking Changes
+
+- `@eslint-react/eslint-plugin-jsx`
+  - Remove `allowExpressions` option from rule `jsx/no-useless-fragment`
+- `@eslint-react/jsx`
+  - Remove `isFragmentWithOnlyTextAndIsNotChild`, `isFragmentHasLessThanTwoChildren`, `isFragmentWithSingleExpression` from `@eslint-react/jsx`'s API
+
+### ✨ New
+
+- Add rule `react/no-redundant-should-component-update`
+
+### 🪄 Improvements
+
+- Update Options of rule `jsx/no-useless-fragment`
+- Optimize bundle size

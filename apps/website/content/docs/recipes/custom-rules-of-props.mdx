@@ -1,0 +1,438 @@
+---
+title: Custom Rules Of Props
+description: Validates JSX props. Includes checks for duplicate props, mixing controlled and uncontrolled props, explicit spread props, and direct props access
+---
+
+## Overview
+
+This recipe contains four custom rules for validating JSX props:
+
+1. **[`noDuplicateProps`](#noduplicateprops)**: Reports duplicate props on a JSX element.
+2. **[`noDirectAccessProps`](#nodirectaccessprops)**: Reports direct member expression access of component props (e.g., `props.children`) and enforces destructuring assignment instead.
+3. **[`noExplicitSpreadProps`](#noexplicitspreadprops)**: Reports spreading object literals onto a JSX element instead of writing separate props. Includes auto-fix.
+4. **[`noMixingControlledAndUncontrolledProps`](#nomixingcontrolledanduncontrolledprops)**: Reports mixing a controlled prop and its uncontrolled counterpart on the same element.
+
+## noDuplicateProps
+
+### Rule
+
+Copy the following into your project (e.g. `.config/noDuplicateProps.ts`):
+
+```ts title=".config/noDuplicateProps.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+
+/** Options for {@link noDuplicateProps}. */
+export type noDuplicatePropsOptions = {
+  /** Whether to ignore case when checking for duplicate props. */
+  ignoreCase?: boolean;
+};
+
+/** Disallow duplicate properties in JSX. */
+export function noDuplicateProps(options: noDuplicatePropsOptions = {}): RuleFunction {
+  const { ignoreCase = false } = options;
+  return (context) => ({
+    JSXOpeningElement(node) {
+      const seen = new Map<string, string>();
+
+      // ─── Check each attribute ──────────────────────
+      for (const attr of node.attributes) {
+        if (attr.type !== "JSXAttribute") continue;
+        if (attr.name.type !== "JSXIdentifier") continue;
+
+        const name = ignoreCase ? attr.name.name.toLowerCase() : attr.name.name;
+
+        // Report duplicate
+        if (seen.has(name)) {
+          context.report({
+            node: attr,
+            message: `Duplicate prop "${attr.name.name}" found.`,
+          });
+        } else {
+          seen.set(name, attr.name.name);
+        }
+      }
+    },
+  });
+}
+```
+
+### Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { noDuplicateProps } from "./.config/noDuplicateProps";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noDuplicateProps, { ignoreCase: true })
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+### Examples
+
+#### Duplicate props on a JSX element
+
+```tsx
+// 🔴 Problem: duplicate props silently discard earlier values.
+<div id="a" id="b" />;
+```
+
+```tsx
+// 🔴 Problem: duplicate props silently discard earlier values.
+<div onClick={handleA} onClick={handleB} />;
+```
+
+#### Unique props or conditional spreads
+
+```tsx
+// 🟢 Recommended: each prop appears only once.
+<div id="a" className="b" />;
+```
+
+```tsx
+// 🔵 OK: spreading a variable is a common and valid pattern.
+<div id="a" {...props} />;
+```
+
+Reports when a prop appears multiple times on a JSX element. Only the last occurrence takes effect, silently discarding earlier values. This is typically a copy-paste error or a merge conflict leftover.
+
+Spread attributes are ignored because overriding them with explicit props is a common and valid pattern.
+
+## noDirectAccessProps
+
+### Rule
+
+Copy the following into your project (e.g. `.config/noDirectAccessProps.ts`):
+
+```ts title=".config/noDirectAccessProps.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+import { merge } from "@eslint-react/kit";
+
+/** Enforce destructuring assignment for component props. */
+export function noDirectAccessProps(): RuleFunction {
+  return (context, { collect }) => {
+    const { query, visitor } = collect.components(context);
+
+    return merge(visitor, {
+      "Program:exit"(program) {
+        for (const { node } of query.all(program)) {
+          const [props] = node.params;
+          if (props == null) continue;
+          if (props.type !== "Identifier") continue;
+          const propName = props.name;
+          const propVariable = context.sourceCode.getScope(node).variables.find((v) => v.name === propName);
+          const propReferences = propVariable?.references ?? [];
+          for (const ref of propReferences) {
+            const { parent } = ref.identifier;
+            if (parent.type !== "MemberExpression") continue;
+            context.report({
+              message: "Use destructuring assignment for component props.",
+              node: parent,
+            });
+          }
+        }
+      },
+    });
+  };
+}
+```
+
+### Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { noDirectAccessProps } from "./.config/noDirectAccessProps";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noDirectAccessProps)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+### Examples
+
+#### Accessing props via member expression
+
+```tsx
+import React from "react";
+
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+// 🔴 Problem: accessing props via member expression.
+function Button(props: ButtonProps) {
+  // 🔴 Problem: Use destructuring assignment for component props.
+  return <button type="button" onClick={props.onClick}>{props.children}</button>;
+}
+```
+
+```tsx
+import React from "react";
+
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+// 🔴 Problem: accessing props via member expression.
+const Button = (props: ButtonProps) => {
+  // 🔴 Problem: Use destructuring assignment for component props.
+  return <button type="button" onClick={props.onClick}>{props.children}</button>;
+};
+```
+
+#### Destructured props
+
+```tsx
+import React from "react";
+
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+// 🟢 Recommended: destructure props in the function signature.
+function Button({ children, onClick }: ButtonProps) {
+  return <button type="button" onClick={onClick}>{children}</button>;
+}
+```
+
+```tsx
+import React from "react";
+
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+// 🟢 Recommended: destructure props in the function signature.
+const Button = ({ children, onClick }: ButtonProps) => {
+  return <button type="button" onClick={onClick}>{children}</button>;
+};
+```
+
+Reports when component props are accessed via member expressions (e.g., `props.children`).
+
+This rule uses the `collect.components` collector from `@eslint-react/kit` to find all function component definitions in the file. For each component, it checks if the first parameter (`props`) is an `Identifier`, then finds all references to the `props` variable and reports any that are used as the object of a `MemberExpression`.
+
+This encourages consistent destructuring patterns which improve code readability and make it easier to track which props a component uses.
+
+## noExplicitSpreadProps
+
+### Rule
+
+Copy the following into your project (e.g. `.config/noExplicitSpreadProps.ts`):
+
+```ts title=".config/noExplicitSpreadProps.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+
+/** Disallow spreading object literals in JSX. Write each property as a separate prop. */
+export function noExplicitSpreadProps(): RuleFunction {
+  return (context) => ({
+    JSXSpreadAttribute(node) {
+      if (node.argument.type === "ObjectExpression") {
+        context.report({
+          node,
+          message: "Don't spread an object literal in JSX. Write each property as a separate prop instead.",
+        });
+      }
+    },
+  });
+}
+```
+
+### Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { noExplicitSpreadProps } from "./.config/noExplicitSpreadProps";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noExplicitSpreadProps)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+### Examples
+
+#### Spreading object literals in JSX
+
+```tsx
+// 🔴 Problem: spreading an object literal hides props from view.
+<Button {...{ children, onClick }} />;
+```
+
+```tsx
+// 🔴 Problem: spreading an object literal hides props from view.
+<input {...{ disabled: true, readOnly: true }} />;
+```
+
+#### Spreading variables or conditional expressions
+
+```tsx
+// 🔵 OK: spreading a variable is a common and valid pattern.
+<div {...props} />;
+```
+
+```tsx
+// 🔵 OK: conditional expressions serve legitimate purposes.
+<Comp {...(cond ? { a: "b" } : {})} />;
+```
+
+Reports when an object literal is spread directly onto a JSX element. This is unnecessary. Writing each property as a separate JSX attribute improves readability and makes props visible at a glance.
+
+Only plain object literals are flagged. Conditional expressions, variables, and other non-literal spreads serve legitimate purposes and remain untouched.
+
+## noMixingControlledAndUncontrolledProps
+
+### Rule
+
+Copy the following into your project (e.g. `.config/noMixingControlledAndUncontrolledProps.ts`):
+
+```ts title=".config/noMixingControlledAndUncontrolledProps.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+
+const CONTROLLED_PAIRS: [controlled: string, uncontrolled: string][] = [
+  ["value", "defaultValue"],
+  ["checked", "defaultChecked"],
+];
+
+/** Disallow using controlled and uncontrolled props on the same element. */
+export function noMixingControlledAndUncontrolledProps(): RuleFunction {
+  return (context) => ({
+    JSXOpeningElement(node) {
+      const props = new Set<string>();
+
+      for (const attr of node.attributes) {
+        if (attr.type === "JSXSpreadAttribute") continue;
+        if (attr.name.type === "JSXNamespacedName") continue;
+        props.add(attr.name.name);
+      }
+
+      for (const [controlled, uncontrolled] of CONTROLLED_PAIRS) {
+        if (!props.has(controlled) || !props.has(uncontrolled)) continue;
+
+        const attrNode = node.attributes.find(
+          (a) =>
+            a.type === "JSXAttribute"
+            && a.name.type !== "JSXNamespacedName"
+            && a.name.name === uncontrolled,
+        )!;
+
+        context.report({
+          node: attrNode,
+          message:
+            `'${controlled}' and '${uncontrolled}' should not be used together. Use either controlled or uncontrolled mode, not both.`,
+        });
+      }
+    },
+  });
+}
+```
+
+### Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { noMixingControlledAndUncontrolledProps } from "./.config/noMixingControlledAndUncontrolledProps";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noMixingControlledAndUncontrolledProps)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+### Examples
+
+#### Mixing controlled and uncontrolled props
+
+```tsx
+// 🔴 Problem: mixing controlled and uncontrolled props causes confusing bugs.
+<input value={name} defaultValue="World" />;
+```
+
+```tsx
+// 🔴 Problem: mixing controlled and uncontrolled props causes confusing bugs.
+<input type="checkbox" checked={isChecked} defaultChecked />;
+```
+
+#### Using either controlled or uncontrolled mode
+
+```tsx
+// 🟢 Recommended: controlled mode with explicit handler.
+<input value={name} onChange={handleChange} />;
+```
+
+```tsx
+// 🟢 Recommended: uncontrolled mode with default value.
+<input defaultValue="World" />;
+```
+
+Reports when both a controlled prop and its uncontrolled counterpart appear on the same JSX element. Mixing modes is a mistake. React will silently ignore the `default*` prop and might emit a console warning, leading to confusing bugs.
+
+Only well-known React prop pairs are checked:
+
+| Controlled | Uncontrolled     |
+| ---------- | ---------------- |
+| `value`    | `defaultValue`   |
+| `checked`  | `defaultChecked` |
+
+## Using All Rules
+
+To use all four rules together:
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import {
+  noDuplicateProps,
+  noDirectAccessProps,
+  noExplicitSpreadProps,
+  noMixingControlledAndUncontrolledProps,
+} from "./.config";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noDuplicateProps)
+      .use(noDirectAccessProps)
+      .use(noExplicitSpreadProps)
+      .use(noMixingControlledAndUncontrolledProps)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+## Further Reading
+
+- [React Docs: Passing Props to a Component](https://react.dev/learn/passing-props-to-a-component)
+- [React Docs: Controlled and uncontrolled components](https://react.dev/learn/sharing-state-between-components#controlled-and-uncontrolled-components)
+
+## Resources
+
+- [AST Explorer](https://ast-explorer.dev/#eNpNkE9PwzAMxb+K5dMmDbiXrQeQOCIEEqdcQuqJjDSpEncCVf3u2Al/donk3/Pzi71gwA5P9myLy35i3OEkgL8mauCKSvBRuRPuxyllhmeyjuGY0wgGsxYGb000UX1wNzOn+JTTVOAAi4kA7t2HIVPsmvW6vo9pIHEBpHgfvPvoYLOFQw/n5Afha514nKNjn+LP1M3yNwvW7jJq25Iy8Zwj7N+qAvqhg8FWGeyXX/e6v2mw1ygTZcEkC9YZBsmN9pVykWCDnYBgmYpsufvXH8hKFBVtqDYVTuVTa84z1VZlcrTgaXjh7PVQTVVRYldcvwGs9YT5) - A tool for exploring the abstract syntax tree (AST) of JavaScript code, which is essential for writing custom rules.
+- [ESLint Developer Guide](https://eslint.org/docs/latest/extend/custom-rules) - Official ESLint documentation for creating custom rules.
+- [Using the TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#type-checker-apis) - TypeScript compiler API documentation for working with type information in custom rules.

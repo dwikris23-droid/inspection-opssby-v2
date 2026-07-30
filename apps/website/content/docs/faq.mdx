@@ -1,0 +1,109 @@
+---
+title: FAQ
+description: Frequently asked questions about ESLint React.
+---
+
+## Why?
+
+**ESLint React supports modern React ecosystems across multiple renderers.** While `eslint-plugin-react` focuses primarily on React DOM, ESLint React is designed to work with alternative renderers like React Native, React Three Fiber, and custom renderers by treating DOM as one of many supported targets.
+
+Our solution treats DOM as one of many supported targets rather than the default assumption. This paradigm shift enables:
+
+- **Context-aware linting**: Adapting to different runtime environments
+- **Future-proof architecture**: Compatibility with emerging React platforms
+- **Unified code quality standards**: Consistent linting across diverse projects
+
+## What's included?
+
+Currently, it includes the following:
+
+**Local Packages**
+
+- `.pkgs/configs`: Workspace config bases
+- `.pkgs/eff`: JavaScript and TypeScript utilities
+
+**Internal Packages**
+
+- **Utilities**
+  - `packages/ast`: TSESTree AST utility module for static analysis
+  - `packages/var`: TSESTree AST utility module for static analysis of variables
+  - `packages/jsx`: TSESTree JSX utility module for static analysis of JSX patterns
+- **Core & Shared**
+  - `packages/core`: Utility module for static analysis of React core APIs and patterns
+  - `packages/shared`: Shared constants, types and functions
+
+**Public Packages**
+
+- **Utilities**
+  - `packages/kit`: Utility module for building custom React rules with JavaScript functions
+- **ESLint Plugins**
+  - [`eslint-plugin-react-x`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x) - Core React rules.
+  - [`eslint-plugin-react-jsx`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx) - React Flavored JSX rules.
+  - [`eslint-plugin-react-rsc`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-rsc) - React Server Components rules.
+  - [`eslint-plugin-react-dom`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom) - React DOM rules.
+  - [`eslint-plugin-react-web-api`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api) - Web API interaction rules.
+  - [`eslint-plugin-react-naming-convention`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention) - Naming convention rules.
+  - [`eslint-plugin-react-debug`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-debug) - Debugging rules for inspecting React patterns in code.
+  - [`@eslint-react/eslint-plugin`](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin) - A unified plugin that combines all individual plugins into one.
+
+**Documentation**
+
+- `apps/website`: Documentation website
+- `apps/playground`: Interactive playground (placeholder)
+
+You can view our long-term plans on the [roadmap](/docs/roadmap).
+
+## Why isn't there a 'jsx-runtime' preset?
+
+ESLint React automatically detects your JSX runtime type from the compiler options in your `tsconfig.json` or `jsconfig.json` file, as well as from JSX pragma comments (e.g., `/** @jsxRuntime automatic */`) in each file. This means you don't need to set a preset for the JSX runtime.
+
+For more information, see the [JSX Transform](/docs/configuration/configure-project-config#jsx-transform) section on the [Configure Project Config](/docs/configuration/configure-project-config) page.
+
+## Which one should I use? Unified plugin or individual plugins?
+
+For users who use the presets we provide (such as `recommended` or `strict`), it is recommended to use the unified plugin `@eslint-react/eslint-plugin`. This simplifies configuration and ensures that all relevant rules are enabled correctly.
+
+For users who need more fine-grained control or build and maintain an ESLint configuration for themselves or their organization, it is recommended to use individual plugins. This allows you to freely select plugins and compose rules as needed, without being limited by presets.
+
+<Callout type="warn">
+  The unified plugin (`@eslint-react/eslint-plugin`) contains some historical decisions and internal behaviors that were originally made to be compatible with both [Legacy Config](https://eslint.org/docs/v8.x/use/configure/configuration-files) and [Flat Config](https://eslint.org/docs/v8.x/use/configure/configuration-files-new). Reducing external package dependencies on it is better in the long run.
+</Callout>
+
+## Is there anything to note about migrating from 'eslint-plugin-react'?
+
+Please be aware that some rules may behave differently when transitioning to ESLint React. The rules in ESLint React are more closely aligned with the guidelines provided by [react.dev](https://react.dev). This alignment is due to ESLint React adopting [react.dev](https://react.dev) as its primary reference, rather than `eslint-plugin-react`.
+
+For a comprehensive migration guide with a complete rule comparison table, see our [Migration Guide](/docs/migrating-from-eslint-plugin-react). This guide covers all rules from `eslint-plugin-react`, their ESLint React equivalents, missing functionality, and migration tips.
+
+To smoothly transition, we suggest reviewing the rules in ESLint React and running a comprehensive linting check on your codebase to identify and address any discrepancies introduced by the migration.
+
+## How can I help ESLint React analyze my code more accurately?
+
+ESLint React performs static analysis on your source code, so it can only reason about values and calls that are visible at compile time. Computed property access such as `obj["foo"]()` or `React["createElement"]()` hides the actual member name from the analyzer, which may cause rules to miss calls they would otherwise detect.
+
+To keep code analyzer-friendly, we recommend enabling the following TypeScript ESLint rules alongside ESLint React:
+
+- [`@typescript-eslint/dot-notation`](https://typescript-eslint.io/rules/dot-notation/) — prefers `obj.foo` over `obj["foo"]` when the property name is a valid identifier, making method calls easier for rules to resolve.
+- [`@typescript-eslint/no-unnecessary-template-expression`](https://typescript-eslint.io/rules/no-unnecessary-template-expression/) — removes unnecessary template literals such as `` `foo` ``, keeping callee names plain strings where possible.
+
+Using these rules together reduces reliance on computed member expressions and helps ESLint React rules match calls consistently.
+
+Additionally, configuring ESLint React and your project settings correctly ensures the analyzer understands your specific environment:
+
+- **Configure Analyzer Settings**: Customize static analysis behavior via the `react-x` key in your ESLint `settings` object:
+  - **React Version**: Set `version` (e.g., `"detect"` or `"19.2.7"`) to ensure semantic analysis matches your available React features.
+  - **React Compiler**: Align `compilationMode` with your React Compiler configuration so rules respect its optimization strategies.
+  - **Custom Hooks**: Use `additionalRefHooks`, `additionalStateHooks` and `additionalEffectHooks` regex patterns to help the analyzer recognize and validate your custom hooks as standard ref, state or effect hooks.
+  - **Polymorphic Components**: Define `polymorphicPropName` (e.g., `"as"`) so rules can correctly infer the rendered underlying element type.
+  - **Custom Import Sources**: Specify `importSource` if you use non-standard distributions (like `"@pika/react"`).
+
+  See [Configure Analyzer](/docs/configuration/configure-analyzer) for more details.
+
+- **Leverage Type Information**:
+  - Set up `parserOptions.project` or `parserOptions.projectService` in your ESLint config to enable powerful type-aware rules (like `react-x/no-leaked-conditional-rendering` and `react-x/no-implicit-children`).
+  - Enable `strictNullChecks` in your `tsconfig.json` or `jsconfig.json` to significantly improve the accuracy of these type-aware rules.
+  - Ensure your JSX transform options (`jsx`, `jsxImportSource`, etc.) are properly defined in your TypeScript config so ESLint React can automatically detect them.
+
+## What does 90% human-written mean?
+
+Of every 100 rules, 10 are written or ported by LLMs and reviewed by humans, while 90 are written or ported by humans and reviewed by LLMs.

@@ -1,0 +1,117 @@
+---
+title: no-context-provider
+description: Replaces usage of '<Context.Provider>' with '<Context>'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-context-provider
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-context-provider
+```
+
+**Features**
+
+`🔄`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+In React 19, you can render `<Context>` as a provider instead of `<Context.Provider>`.
+
+<Callout type="info">
+  This rule works best in codebases that follow the [`naming-convention/context-name`](./naming-convention-context-name) rule.
+</Callout>
+
+## Examples
+
+### Using a Context Provider in React 19
+
+Starting from React 19, Context itself can be used directly as a provider, so you no longer need to write `.Provider`.
+
+```tsx
+import ThemeContext from "./ThemeContext";
+
+// 🔴 Problem: Continuing to use the legacy `<Context.Provider>` syntax
+function App({ children }) {
+  return (
+    <ThemeContext.Provider value="light">
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+```
+
+```tsx
+import ThemeContext from "./ThemeContext";
+
+// 🟢 Recommended: Use `<Context>` directly as a provider
+function App({ children }) {
+  return (
+    <ThemeContext value="dark">
+      {children}
+    </ThemeContext>
+  );
+}
+```
+
+### Nesting multiple context providers
+
+When multiple contexts are provided to the same subtree, the legacy `.Provider` syntax adds unnecessary noise. React 19 allows each context to be used directly.
+
+```tsx
+// 🔴 Problem: Nested legacy providers
+import ThemeContext from "./ThemeContext";
+import AuthContext from "./AuthContext";
+
+function App({ children }) {
+  return (
+    <ThemeContext.Provider value="dark">
+      <AuthContext.Provider value={currentUser}>
+        {children}
+      </AuthContext.Provider>
+    </ThemeContext.Provider>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Use contexts directly as providers
+import ThemeContext from "./ThemeContext";
+import AuthContext from "./AuthContext";
+
+function App({ children }) {
+  return (
+    <ThemeContext value="dark">
+      <AuthContext value={currentUser}>
+        {children}
+      </AuthContext>
+    </ThemeContext>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-context-provider/no-context-provider.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-context-provider/no-context-provider.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-context-provider/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Blog: `<Context>` as a provider](https://react.dev/blog/2024/12/05/react-19#context-as-a-provider)
+- [React Docs: `createContext`](https://react.dev/reference/react/createContext)

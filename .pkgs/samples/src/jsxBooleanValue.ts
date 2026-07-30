@@ -1,0 +1,24 @@
+import type { RuleFunction } from "@eslint-react/kit";
+
+/** Enforce shorthand for boolean JSX attributes. */
+export function jsxBooleanValue(): RuleFunction {
+  return (context, { ast }) => ({
+    JSXAttribute(node) {
+      const { value } = node;
+
+      // Guard: must have expression value
+      if (value?.type !== "JSXExpressionContainer") return;
+
+      // Guard: must be literal true
+      const expression = ast.unwrap(value.expression);
+      if (expression.type !== "Literal" || expression.value !== true) return;
+
+      // Report: prefer shorthand form
+      context.report({
+        fix: (fixer) => fixer.removeRange([node.name.range[1], value.range[1]]),
+        message: "Omit the value for boolean attributes.",
+        node,
+      });
+    },
+  });
+}

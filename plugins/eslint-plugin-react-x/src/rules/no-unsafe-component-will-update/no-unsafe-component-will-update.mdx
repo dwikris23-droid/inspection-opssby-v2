@@ -1,0 +1,71 @@
+---
+title: no-unsafe-component-will-update
+description: Warns about the use of 'UNSAFE_componentWillUpdate' in class components.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unsafe-component-will-update
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unsafe-component-will-update
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using unsafe lifecycle methods like `UNSAFE_componentWillUpdate` makes your component's behavior less predictable and is more likely to cause bugs. Consider using `componentDidUpdate` instead.
+
+## Examples
+
+### Using `UNSAFE_componentWillUpdate` in class components
+
+`UNSAFE_componentWillUpdate` is a deprecated lifecycle method. If you need to perform side effects or DOM operations after an update, use `componentDidUpdate`.
+
+```tsx
+// 🔴 Problem: Uses an unsafe lifecycle method
+import React from "react";
+
+class MyComponent extends React.Component {
+  UNSAFE_componentWillUpdate() {
+    // ...
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: use componentDidUpdate for side effects after an update
+import React from "react";
+
+class MyComponent extends React.Component {
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.value !== prevProps.value) {
+      // Perform side effects here
+    }
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-update/no-unsafe-component-will-update.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-update/no-unsafe-component-will-update.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-update/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `UNSAFE_componentWillUpdate`](https://react.dev/reference/react/Component#unsafe_componentwillupdate)
+- [React Docs: Updating to Async Rendering](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html)

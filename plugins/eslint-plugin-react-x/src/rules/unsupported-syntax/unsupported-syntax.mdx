@@ -1,0 +1,124 @@
+---
+title: unsupported-syntax
+description: Validates against syntax that React Compiler does not support.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/unsupported-syntax
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/unsupported-syntax
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+React Compiler needs to statically analyze your code to apply optimizations. Features like `eval` and `with` make it impossible or impractical for the compiler to statically understand what the code does at compile time, so the compiler can't optimize components that use them.
+
+This rule checks for the following unsupported patterns:
+
+- **`eval`** — Dynamic code evaluation cannot be statically analyzed.
+- **`with` statements** — Dynamically changes scope, preventing static analysis.
+
+## Examples
+
+### Using `eval` in components
+
+`eval` executes code dynamically at runtime, making it impossible for any static analysis tool to understand what variables are accessed or modified.
+
+```tsx
+// 🔴 Problem: using eval in a component
+function Component({ code }) {
+  const result = eval(code); // cannot be statically analyzed
+  return <div>{result}</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: use analyzable property access
+function Component({ propName, props }) {
+  const value = props[propName]; // statically analyzable
+  return <div>{value}</div>;
+}
+```
+
+```tsx
+// 🔵 OK: using eval outside components and hooks is fine
+function notAComponent() {
+  const result = eval("1 + 2");
+  return result;
+}
+```
+
+### Using `with` statements
+
+The `with` statement dynamically modifies the scope chain at runtime. Static analysis tools cannot predict which identifiers refer to which objects inside a `with` block.
+
+```tsx
+// 🔴 Problem: using with in a component
+function Component() {
+  with (Math) { // dynamically changes scope
+    return <div>{sin(PI / 2)}</div>;
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: use standard method calls
+function Component() {
+  return <div>{Math.sin(Math.PI / 2)}</div>;
+}
+```
+
+### Evaluating dynamic expressions safely
+
+If you need to evaluate user-provided code, use a safe expression parser instead of `eval`.
+
+```tsx
+// 🟢 Recommended: use a safe parsing library
+import { evaluate } from 'mathjs';
+
+function Calculator({ expression }) {
+  const [result, setResult] = useState(null);
+  const calculate = () => {
+    try {
+      setResult(evaluate(expression));
+    } catch (error) {
+      setResult('Invalid expression');
+    }
+  };
+  return (
+    <div>
+      <button onClick={calculate}>Calculate</button>
+      {result && <div>Result: {result}</div>}
+    </div>
+  );
+}
+```
+
+> **Note:** Never use `eval` with user input — it's a security risk. Use dedicated parsing libraries for specific use cases like mathematical expressions, JSON parsing, or template evaluation.
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/unsupported-syntax/unsupported-syntax.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/unsupported-syntax/unsupported-syntax.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/unsupported-syntax/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `unsupported-syntax` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/unsupported-syntax)
+- [React Compiler: Directives](https://react.dev/reference/react-compiler/directives)

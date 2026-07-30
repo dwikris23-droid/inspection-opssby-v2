@@ -1,0 +1,8 @@
+{
+  "title": "Configuration",
+  "pages": [
+    "configure-analyzer",
+    "configure-project-rules",
+    "configure-project-config"
+  ]
+}

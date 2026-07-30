@@ -1,0 +1,315 @@
+---
+title: No Circular Effect
+description: Detects circular dependencies between useEffect hooks. Prevents infinite update loops caused by effects that set state they also depend on
+---
+
+<Callout type="warn">
+  In most cases, use the built-in [`set-state-in-effect`](/docs/rules/set-state-in-effect) rule instead. It's also part of [React's official lints](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect). Use this custom recipe only when you need to detect circular dependencies across multiple effects.
+</Callout>
+
+## Overview
+
+This rule detects when `useEffect`-like hooks form a cycle through state variables. For example, if an effect depends on state A and sets state B, while another effect depends on state B and sets state A, it creates an infinite update loop. It builds a directed graph of state dependencies across all effects in a component or hook and reports any effect that participates in a cycle.
+
+## Rule
+
+Copy the following code into your project (e.g. `.config/noCircularEffect.ts`):
+
+```ts title=".config/noCircularEffect.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+import { merge } from "@eslint-react/kit";
+import type { TSESTree } from "@typescript-eslint/types";
+import { simpleTraverse } from "@typescript-eslint/typescript-estree";
+
+interface EffectNode {
+  call: TSESTree.CallExpression;
+  reads: Set<string>;
+  writes: Set<string>;
+}
+
+/** Maps each state setter name to the state variable it updates, from `const [x, setX] = useState(...)` declarations. */
+function collectStateSetters(hookCalls: TSESTree.CallExpression[], isStateCall: (node: TSESTree.Node) => boolean): Map<string, string> {
+  const setters = new Map<string, string>();
+  for (const call of hookCalls) {
+    if (!isStateCall(call)) continue;
+    const declarator = call.parent;
+    if (declarator.type !== "VariableDeclarator" || declarator.id.type !== "ArrayPattern") continue;
+    const [state, setter] = declarator.id.elements;
+    if (state?.type === "Identifier" && setter?.type === "Identifier") {
+      setters.set(setter.name, state.name);
+    }
+  }
+  return setters;
+}
+
+/** Builds the "reads" (dependency array) and "writes" (setter calls) state footprint of each `useEffect`-like call. */
+function collectEffects(hookCalls: TSESTree.CallExpression[], isEffectCall: (node: TSESTree.Node) => boolean, setters: Map<string, string>): EffectNode[] {
+  const effects: EffectNode[] = [];
+  for (const call of hookCalls) {
+    if (!isEffectCall(call)) continue;
+    const [setup, deps] = call.arguments;
+
+    const writes = new Set<string>();
+    if (setup?.type === "ArrowFunctionExpression" || setup?.type === "FunctionExpression") {
+      simpleTraverse(setup, {
+        enter(node) {
+          if (node.type !== "CallExpression" || node.callee.type !== "Identifier") return;
+          const state = setters.get(node.callee.name);
+          if (state != null) writes.add(state);
+        },
+      });
+    }
+
+    const reads = new Set<string>();
+    if (deps?.type === "ArrayExpression") {
+      for (const element of deps.elements) {
+        if (element?.type === "Identifier") reads.add(element.name);
+      }
+    }
+
+    effects.push({ call, reads, writes });
+  }
+  return effects;
+}
+
+/** Finds cycles in the "effect A's setter feeds effect B's dependency array" graph via DFS. */
+function findCycles(effects: EffectNode[]): number[][] {
+  const adjacency: number[][] = effects.map((from) =>
+    effects.reduce<number[]>((acc, to, j) => {
+      if ([...from.writes].some((state) => to.reads.has(state))) acc.push(j);
+      return acc;
+    }, [])
+  );
+
+  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const color = new Array<number>(effects.length).fill(WHITE);
+  const stack: number[] = [];
+  const seen = new Set<string>();
+  const cycles: number[][] = [];
+
+  function visit(u: number): void {
+    color[u] = GRAY;
+    stack.push(u);
+    for (const v of adjacency[u] ?? []) {
+      if (color[v] === WHITE) {
+        visit(v);
+        continue;
+      }
+      if (color[v] !== GRAY) continue;
+      const start = stack.indexOf(v);
+      const cycle = stack.slice(start);
+      const key = [...cycle].sort((a, b) => a - b).join(",");
+      if (!seen.has(key)) {
+        seen.add(key);
+        cycles.push(cycle);
+      }
+    }
+    stack.pop();
+    color[u] = BLACK;
+  }
+
+  for (let i = 0; i < effects.length; i++) {
+    if (color[i] === WHITE) visit(i);
+  }
+
+  return cycles;
+}
+
+/** Describes a cycle as the chain of state names that connect each effect to the next. */
+function describeCycle(effects: EffectNode[], cycle: number[]): string {
+  const names = cycle.map((index, position) => {
+    const from = effects[index]!;
+    const to = effects[cycle[(position + 1) % cycle.length]!]!;
+    return [...from.writes].find((state) => to.reads.has(state)) ?? "?";
+  });
+  return [...names, names[0]].join(" → ");
+}
+
+/** Detect circular `set` function and dependency patterns across `useEffect`-like hooks in the same component or hook. */
+export function noCircularEffect(): RuleFunction {
+  return (context, { collect, is, settings }) => {
+    const fc = collect.components(context);
+    const hk = collect.hooks(context);
+
+    function check(hookCalls: TSESTree.CallExpression[]) {
+      const setters = collectStateSetters(hookCalls, (node) => is.useStateLikeCall(node, settings.additionalStateHooks));
+      const effects = collectEffects(hookCalls, (node) => is.useEffectLikeCall(node, settings.additionalEffectHooks), setters);
+      if (effects.length === 0) return;
+
+      const reported = new Set<TSESTree.CallExpression>();
+      for (const cycle of findCycles(effects)) {
+        const description = describeCycle(effects, cycle);
+        for (const index of cycle) {
+          const { call } = effects[index]!;
+          if (reported.has(call)) continue;
+          reported.add(call);
+          context.report({
+            node: call,
+            message: `This effect is part of a circular update chain that may cause an infinite render loop: ${description}.`,
+          });
+        }
+      }
+    }
+
+    return merge(
+      fc.visitor,
+      hk.visitor,
+      {
+        "Program:exit"(program) {
+          for (const { hookCalls } of fc.query.all(program)) check(hookCalls);
+          for (const { hookCalls } of hk.query.all(program)) check(hookCalls);
+        },
+      },
+    );
+  };
+}
+```
+
+## Config
+
+```ts title="eslint.config.ts"
+import eslintReactKit from "@eslint-react/kit";
+import { noCircularEffect } from "./.config/noCircularEffect";
+
+export default [
+  // ... other configs
+  {
+    ...eslintReactKit()
+      .use(noCircularEffect)
+      .getConfig(),
+    files: ["src/**/*.tsx"],
+  },
+];
+```
+
+## Examples
+
+### Circular effect dependencies
+
+Circular effect with depth 1. An effect depends on `items` and also sets `items`:
+
+```tsx
+import { useEffect, useState } from "react";
+
+function CircularEffect1() {
+  const [items, setItems] = useState([0, 1, 2, 3, 4]);
+
+  useEffect(() => {
+    setItems(x => [...x].reverse());
+  }, [items]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → items.
+
+  return null;
+}
+```
+
+Circular effect with depth 2. Two effects form a cycle: one depends on `limit` and sets `items`, and another depends on `items` and sets `limit`:
+
+```tsx
+import { useEffect, useState } from "react";
+
+function CircularEffect2() {
+  const [items, setItems] = useState([0, 1, 2, 3, 4]);
+  const [limit, setLimit] = useState(false);
+
+  useEffect(() => {
+    setItems(x => [...x].reverse());
+  }, [limit]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → limit → items.
+
+  useEffect(() => {
+    setLimit(x => !x);
+  }, [items]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → limit → items.
+
+  return null;
+}
+```
+
+Circular effect with depth 3. Three effects form a cycle through `items → count → limit → items`:
+
+```tsx
+import { useEffect, useState } from "react";
+
+function CircularEffect3() {
+  const [items, setItems] = useState([0, 1, 2, 3, 4]);
+  const [limit, setLimit] = useState(false);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    setItems(x => [...x].reverse());
+  }, [limit]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → count → limit → items.
+
+  useEffect(() => {
+    setCount(x => x + 1);
+  }, [items]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → count → limit → items.
+
+  useEffect(() => {
+    setLimit(x => !x);
+  }, [count]);
+  // ^^^^^^^ This effect is part of a circular update chain that may cause an infinite render loop: items → count → limit → items.
+
+  return null;
+}
+```
+
+### Non-circular effect dependencies
+
+Effects without circular dependencies:
+
+```tsx
+import { useEffect, useState } from "react";
+
+function ValidComponent() {
+  const [count, setCount] = useState(0);
+  const [label, setLabel] = useState("");
+
+  // 🟢 Recommended: Depends on `count`, sets `label`. No cycle.
+  useEffect(() => {
+    setLabel(`Count is ${count}`);
+  }, [count]);
+
+  return null;
+}
+```
+
+Effects with no dependency array:
+
+```tsx
+import { useEffect, useState } from "react";
+
+function ValidComponent2() {
+  const [count, setCount] = useState(0);
+
+  // 🔵 OK: No dependency array. Not a circular pattern.
+  useEffect(() => {
+    setCount(0);
+  });
+
+  return null;
+}
+```
+
+## How It Works
+
+This rule uses both the `collect.components` and `collect.hooks` collectors from `@eslint-react/kit`, so cycles are detected whether the effects live in a component or in a custom hook. For each collected function it inspects the pre-computed `hookCalls`:
+
+1. **`collectStateSetters`** finds every `useState`-like call destructured as `const [state, setState] = useState(...)` and records the `setState → state` mapping.
+2. **`collectEffects`** walks each `useEffect`-like call's setup function with `simpleTraverse` to find which state setters it calls (the effect's "writes"), and reads the identifiers in its dependency array (the effect's "reads").
+3. **`findCycles`** builds a directed graph where effect A points to effect B when A's writes intersect B's reads, then runs a DFS to find cycles — including a single effect pointing back to itself.
+4. **`describeCycle`** renders the matched state names along each edge of a cycle (e.g. `items → limit → items`) for the reported message.
+
+Every effect that participates in a detected cycle is reported once, with the message describing the full chain of state names that form the loop.
+
+## Further Reading
+
+- [React Docs: Synchronizing with Effects](https://react.dev/learn/synchronizing-with-effects)
+- [React Docs: You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
+
+## Resources
+
+- [AST Explorer](https://ast-explorer.dev/#eNpNkE9PwzAMxb+K5dMmDbiXrQeQOCIEEqdcQuqJjDSpEncCVf3u2Al/donk3/Pzi71gwA5P9myLy35i3OEkgL8mauCKSvBRuRPuxyllhmeyjuGY0wgGsxYGb000UX1wNzOn+JTTVOAAi4kA7t2HIVPsmvW6vo9pIHEBpHgfvPvoYLOFQw/n5Afha514nKNjn+LP1M3yNwvW7jJq25Iy8Zwj7N+qAvqhg8FWGeyXX/e6v2mw1ygTZcEkC9YZBsmN9pVykWCDnYBgmYpsufvXH8hKFBVtqDYVTuVTa84z1VZlcrTgaXjh7PVQTVVRYldcvwGs9YT5) - A tool for exploring the abstract syntax tree (AST) of JavaScript code, which is essential for writing custom rules.
+- [ESLint Developer Guide](https://eslint.org/docs/latest/extend/custom-rules) - Official ESLint documentation for creating custom rules.
+- [Using the TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#type-checker-apis) - TypeScript compiler API documentation for working with type information in custom rules.

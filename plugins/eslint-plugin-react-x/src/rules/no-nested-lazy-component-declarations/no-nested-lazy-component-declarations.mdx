@@ -1,0 +1,79 @@
+---
+title: no-nested-lazy-component-declarations
+description: Disallows nesting lazy component declarations inside other components or hooks.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-nested-lazy-component-declarations
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-nested-lazy-component-declarations
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Lazy component declarations inside other components cause them to be recreated on every render, which can lead to performance issues and unexpected behavior.
+
+When a lazy component is declared inside another component:
+
+- It gets recreated on every render of the parent component
+- It loses its internal state when the parent re-renders
+- It defeats props memoization and optimization techniques
+- It creates new function references on every render
+
+Just like regular components, lazy components should be declared at the top level of your module so that React can properly track their identity across renders. When a lazy component is recreated, React treats it as a different component type, causing the old one to unmount and the new one to mount — discarding all state and DOM nodes in the process.
+
+## Examples
+
+### Declaring lazy components inside a component
+
+```tsx
+// 🔴 Problem: Declaring MarkdownPreview inside Editor causes the lazy component to be recreated on every render, resetting its state unexpectedly
+import { lazy } from "react";
+
+function Editor() {
+  const MarkdownPreview = lazy(() => import("./MarkdownPreview.js"));
+  //    ^^^ Do not declare lazy components inside other components. Instead, always declare them at the top level of your module.
+  // ...
+}
+```
+
+### Declaring lazy components at the module level
+
+```tsx
+// 🟢 Recommended: Declare lazy components at the module level to keep references stable and state persistent
+import { lazy } from "react";
+
+const MarkdownPreview = lazy(() => import("./MarkdownPreview.js"));
+
+function Editor() {
+  // ...
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-lazy-component-declarations/no-nested-lazy-component-declarations.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-lazy-component-declarations/no-nested-lazy-component-declarations.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-lazy-component-declarations/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `Lazy`](https://react.dev/reference/react/lazy)
+  - [My lazy component’s state gets reset unexpectedly](https://react.dev/reference/react/lazy#my-lazy-components-state-gets-reset-unexpectedly)
+- [React Docs: React calls Components and Hooks](https://react.dev/reference/rules/react-calls-components-and-hooks)

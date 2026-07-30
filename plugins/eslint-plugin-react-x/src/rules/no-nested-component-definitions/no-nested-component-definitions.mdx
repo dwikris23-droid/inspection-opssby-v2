@@ -1,0 +1,107 @@
+---
+title: no-nested-component-definitions
+description: Disallows nesting component definitions inside other components.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-nested-component-definitions
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-nested-component-definitions
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Component definitions inside other components cause them to be recreated on every render, which can lead to performance issues and unexpected behavior.
+
+When a component is defined inside another component:
+
+- It gets recreated on every render of the parent component
+- It loses its internal state when the parent re-renders
+- It defeats prop memoization and optimization techniques
+- It creates new function references on every render
+
+React is responsible for rendering components when necessary to optimize the user experience. It is declarative: you tell React what to render in your component's logic, and React will figure out how best to display it to your user. Components should only be used in JSX. Don't call them as regular functions — React should call them.
+
+Instead, define every component at the top level.
+
+## Examples
+
+### Nesting a child component definition inside another component
+
+```tsx
+// 🔴 Problem: Profile is recreated on every render of Gallery, causing child component state loss and preventing memo optimization
+function Gallery() {
+  // 🔴 Never define a component inside another component!
+  function Profile() {
+    /* ... */
+  }
+  // ...
+}
+```
+
+### Defining components at the top level of the module and passing data via props
+
+```tsx
+// 🟢 Recommended: Define all components at the top level; pass data via props when needed
+// 🟢 Declare components at the top level
+function Gallery() {
+  // ...
+}
+function Profile() {
+  /* ... */
+}
+```
+
+When a child component needs data from a parent, [pass it by props](https://react.dev/learn/passing-props-to-a-component) instead of nesting definitions.
+
+### Calling components as regular functions
+
+Components should only be used in JSX. Don't call them as regular functions. React must decide when your component function is called during rendering. In React, you do this using JSX.
+
+```tsx
+// 🔴 Problem: calling a component as a regular function
+function BlogPost() {
+  return <Layout>{Article()}</Layout>;
+  //                        ^^^ Never call component functions directly.
+}
+```
+
+```tsx
+// 🟢 Recommended: use components in JSX
+function BlogPost() {
+  return (
+    <Layout>
+      <Article />
+    </Layout>
+  );
+}
+```
+
+If a component contains Hooks, calling it directly can easily violate the Rules of Hooks when called in a loop or conditionally. Letting React orchestrate rendering also allows components to participate in reconciliation, enables local state through Hooks, and allows React to skip over components that don't need re-rendering.
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-component-definitions/no-nested-component-definitions.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-component-definitions/no-nested-component-definitions.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-nested-component-definitions/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `static-components` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/static-components)
+- [React Docs: React calls Components and Hooks](https://react.dev/reference/rules/react-calls-components-and-hooks)

@@ -1,0 +1,206 @@
+---
+title: no-direct-mutation-state
+description: Disallows direct mutation of 'this.state'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-direct-mutation-state
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-direct-mutation-state
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Never mutate `this.state` directly, as calling `setState()` afterward may replace the mutation you made. Treat `this.state` as if it were immutable.
+
+The only place it's acceptable to assign `this.state` is in a class component's `constructor`.
+
+## Examples
+
+### Mutating this.state directly in an event handler
+
+Mutating `this.state` directly does not trigger a re-render, and a subsequent `setState` may overwrite the change.
+
+```tsx
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  foo: string;
+}
+
+// 🔴 Problem: Assigning to this.state directly
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    foo: "bar",
+  };
+
+  render() {
+    return (
+      <div
+        onClick={() => {
+          this.state.foo = "baz";
+          //   ^^^ Do not mutate state directly. Use 'setState()' instead.
+        }}
+      >
+        {this.state.foo}
+      </div>
+    );
+  }
+}
+```
+
+```tsx
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  foo: string;
+}
+
+// 🟢 Recommended: Update state via setState
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    foo: "bar",
+  };
+
+  render() {
+    return (
+      <div
+        onClick={() => {
+          this.setState({ foo: "baz" });
+        }}
+      >
+        {this.state.foo}
+      </div>
+    );
+  }
+}
+```
+
+### Mutating state in function components
+
+Directly mutating a state object or array in a function component does not trigger a re-render and breaks React's state management.
+
+```tsx
+// 🔴 Problem: Mutating a state object directly instead of using the setter
+import { useState } from "react";
+
+function UserProfile() {
+  const [user, setUser] = useState({ name: "Taylor", age: 25 });
+
+  function handleClick() {
+    user.age = user.age + 1; // Mutates state directly — won't re-render!
+  }
+
+  return (
+    <button onClick={handleClick}>
+      {user.name} is {user.age} years old
+    </button>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Always use the setter function with a new object
+import { useState } from "react";
+
+function UserProfile() {
+  const [user, setUser] = useState({ name: "Taylor", age: 25 });
+
+  function handleClick() {
+    setUser({ ...user, age: user.age + 1 });
+  }
+
+  return (
+    <button onClick={handleClick}>
+      {user.name} is {user.age} years old
+    </button>
+  );
+}
+```
+
+### Mutating arrays in state
+
+Directly mutating an array in state (for example, with `push`, `pop`, or direct index assignment) does not trigger a re-render. Use immutable array methods instead.
+
+```tsx
+// 🔴 Problem: Mutating a state array directly
+import { useState } from "react";
+
+function TodoList() {
+  const [todos, setTodos] = useState(["Buy milk", "Walk the dog"]);
+
+  function handleAdd() {
+    todos.push("New task"); // Mutates state directly — won't re-render!
+  }
+
+  return (
+    <>
+      <ul>{todos.map((todo) => <li key={todo}>{todo}</li>)}</ul>
+      <button onClick={handleAdd}>Add task</button>
+    </>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Use immutable array methods like concat or the spread syntax
+import { useState } from "react";
+
+function TodoList() {
+  const [todos, setTodos] = useState(["Buy milk", "Walk the dog"]);
+
+  function handleAdd() {
+    setTodos([...todos, "New task"]);
+  }
+
+  function handleRemove(index: number) {
+    setTodos(todos.filter((_, i) => i !== index));
+  }
+
+  return (
+    <>
+      <ul>
+        {todos.map((todo, index) => (
+          <li key={todo}>
+            {todo}{" "}
+            <button onClick={() => handleRemove(index)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+      <button onClick={handleAdd}>Add task</button>
+    </>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-direct-mutation-state/no-direct-mutation-state.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-direct-mutation-state/no-direct-mutation-state.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-direct-mutation-state/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `setState`](https://react.dev/reference/react/Component#setstate)
+- [React Docs: Updating objects in state](https://react.dev/learn/updating-objects-in-state)
+- [React Docs: Updating arrays in state](https://react.dev/learn/updating-arrays-in-state)

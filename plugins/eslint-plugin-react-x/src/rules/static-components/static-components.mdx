@@ -1,0 +1,140 @@
+---
+title: static-components
+description: Validates that components are static, not recreated every render.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/static-components
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/static-components
+```
+
+**Features**
+
+`🧪`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Validates that components are static, not recreated every render. Components that are recreated dynamically can reset state and trigger excessive re-rendering.
+
+Components defined inside other components are recreated on every render. React sees each as a brand new component type, unmounting the old one and mounting the new one, discarding all state and DOM nodes in the process.
+
+If you find yourself wanting to define components inside other components to access local variables, that's a sign you should be passing props instead. This makes components more reusable and testable.
+
+## Examples
+
+### Nesting component definitions
+
+Defining a component inside another component causes it to be recreated on every parent render. React treats each definition as a distinct component type, causing the child to unmount and remount every time.
+
+```tsx
+// 🔴 Problem: defining a component inside another component
+function Parent() {
+  const Child = () => <div />;
+
+  return <Child />; // resets state on every render
+}
+```
+
+```tsx
+// 🟢 Recommended: declare components at the top level
+function Parent() {
+  return <Child />;
+}
+
+function Child() {
+  return <div />;
+}
+```
+
+### Dynamically creating component types
+
+Creating different component types based on props or state during render has the same problem — React cannot reconcile between different component types.
+
+```tsx
+// 🔴 Problem: dynamically creating components based on props
+function Parent({ type }) {
+  const Component = type === "button"
+    ? () => <button>Click</button>
+    : () => <div>Text</div>;
+
+  return <Component />;
+}
+```
+
+```tsx
+// 🟢 Recommended: pass props instead of dynamically creating components
+function Parent({ type }) {
+  return type === "button"
+    ? <Button>Click</Button>
+    : <TextBox>Text</TextBox>;
+}
+
+function Button({ children }) {
+  return <button>{children}</button>;
+}
+
+function TextBox({ children }) {
+  return <div>{children}</div>;
+}
+```
+
+### Accessing parent variables in nested components
+
+A common motivation for nesting components is to capture local variables from the parent scope. This should be solved with props instead.
+
+```tsx
+// 🔴 Problem: nesting components to access parent variables
+function Parent({ items }) {
+  const ItemList = () => (
+    <ul>{items.map(item => <li key={item.id}>{item.name}</li>)}</ul>
+  );
+
+  return <ItemList />;
+}
+```
+
+```tsx
+// 🟢 Recommended: pass data via props
+function Parent({ items }) {
+  return <ItemList items={items} />;
+}
+
+function ItemList({ items }) {
+  return (
+    <ul>{items.map(item => <li key={item.id}>{item.name}</li>)}</ul>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/static-components/static-components.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/static-components/static-components.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/static-components/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `static-components` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/static-components)
+- [React Docs: React calls Components and Hooks](https://react.dev/reference/rules/react-calls-components-and-hooks)
+- [React Docs: Nesting and organizing components](https://react.dev/learn/your-first-component#nesting-and-organizing-components)

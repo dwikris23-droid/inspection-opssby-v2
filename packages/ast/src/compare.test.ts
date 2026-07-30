@@ -1,0 +1,162 @@
+import { collectNodes } from "@local/testkit";
+import { AST_NODE_TYPES as AST, type TSESTree } from "@typescript-eslint/types";
+import { describe, expect, it } from "vitest";
+
+import { isEqual } from "./compare";
+
+function collectJSXAttributes(code: string): TSESTree.JSXAttribute[] {
+  return collectNodes<TSESTree.JSXAttribute>(code, AST.JSXAttribute);
+}
+
+describe("isEqual", () => {
+  describe("basic node equality", () => {
+    it("should return true for identifiers with the same name", () => {
+      const nodes1 = collectNodes<TSESTree.Identifier>("const a = 1;", AST.Identifier);
+      const nodes2 = collectNodes<TSESTree.Identifier>("const a = 2;", AST.Identifier);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(true);
+    });
+
+    it("should return false for identifiers with different names", () => {
+      const nodes1 = collectNodes<TSESTree.Identifier>("const a = 1;", AST.Identifier);
+      const nodes2 = collectNodes<TSESTree.Identifier>("const b = 1;", AST.Identifier);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+
+    it("should return true for literals with the same value", () => {
+      const nodes1 = collectNodes<TSESTree.Literal>("const a = 42;", AST.Literal);
+      const nodes2 = collectNodes<TSESTree.Literal>("const b = 42;", AST.Literal);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(true);
+    });
+
+    it("should return false for literals with different values", () => {
+      const nodes1 = collectNodes<TSESTree.Literal>("const a = 42;", AST.Literal);
+      const nodes2 = collectNodes<TSESTree.Literal>("const b = 99;", AST.Literal);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+  });
+
+  describe("JSXAttribute equality with JSXIdentifier names", () => {
+    it("should return true for attributes with same name and value", () => {
+      const attrs1 = collectJSXAttributes('<div className="a" />');
+      const attrs2 = collectJSXAttributes('<div className="a" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(true);
+    });
+
+    it("should return false for attributes with different names", () => {
+      const attrs1 = collectJSXAttributes('<div className="a" />');
+      const attrs2 = collectJSXAttributes('<div id="a" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+
+    it("should return false for attributes with same name but different values", () => {
+      const attrs1 = collectJSXAttributes('<div className="a" />');
+      const attrs2 = collectJSXAttributes('<div className="b" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+
+    it("should return true for boolean attributes (no value)", () => {
+      const attrs1 = collectJSXAttributes("<input disabled />");
+      const attrs2 = collectJSXAttributes("<input disabled />");
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(true);
+    });
+  });
+
+  describe("JSXAttribute equality with JSXNamespacedName (PR #1662 bugfix)", () => {
+    it("should return true for identical namespaced attributes", () => {
+      const attrs1 = collectJSXAttributes('<svg xmlns:xlink="http://www.w3.org/1999/xlink" />');
+      const attrs2 = collectJSXAttributes('<svg xmlns:xlink="http://www.w3.org/1999/xlink" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(true);
+    });
+
+    it("should return true for identical xlink:href attributes", () => {
+      const attrs1 = collectJSXAttributes('<svg xlink:href="#icon" />');
+      const attrs2 = collectJSXAttributes('<svg xlink:href="#icon" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(true);
+    });
+
+    it("should return false for namespaced attributes with different values", () => {
+      const attrs1 = collectJSXAttributes('<svg xmlns:xlink="http://www.w3.org/1999/xlink" />');
+      const attrs2 = collectJSXAttributes('<svg xmlns:xlink="http://other-url" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+
+    it("should return false for namespaced attributes with different names", () => {
+      const attrs1 = collectJSXAttributes('<svg xlink:href="#icon" />');
+      const attrs2 = collectJSXAttributes('<svg xlink:title="icon" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+
+    it("should return false for namespaced and simple attributes", () => {
+      const attrs1 = collectJSXAttributes('<svg xmlns:xlink="url" />');
+      const attrs2 = collectJSXAttributes('<svg className="foo" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+
+    it("should return false for different namespace prefixes", () => {
+      const attrs1 = collectJSXAttributes('<svg xmlns:xlink="url" />');
+      const attrs2 = collectJSXAttributes('<svg xmlns:href="url" />');
+      expect(isEqual(attrs1[0]!, attrs2[0]!)).toBe(false);
+    });
+  });
+
+  describe("CallExpression equality", () => {
+    it("should return true for identical calls with no arguments", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo();", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("foo();", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(true);
+    });
+
+    it("should return true for identical calls with literal arguments", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo('a', 1);", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("foo('a', 1);", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(true);
+    });
+
+    it("should return true for identical member-expression calls", () => {
+      const code = "window.matchMedia('(prefers-color-scheme: dark)');";
+      const nodes1 = collectNodes<TSESTree.CallExpression>(code, AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>(code, AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(true);
+    });
+
+    it("should return false for calls with different callees", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo();", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("bar();", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+
+    it("should return false for calls with different arguments", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo('a');", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("foo('b');", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+
+    it("should return false for calls with different argument counts", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo('a');", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("foo('a', 'b');", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+
+    it("should return false for optional vs non-optional calls", () => {
+      const nodes1 = collectNodes<TSESTree.CallExpression>("foo();", AST.CallExpression);
+      const nodes2 = collectNodes<TSESTree.CallExpression>("foo?.();", AST.CallExpression);
+      expect(isEqual(nodes1[0]!, nodes2[0]!)).toBe(false);
+    });
+  });
+
+  describe("dual form (curried)", () => {
+    it("should work in curried form for JSXAttributes", () => {
+      const attrs1 = collectJSXAttributes('<div className="a" />');
+      const attrs2 = collectJSXAttributes('<div className="a" />');
+      const check = isEqual(attrs1[0]!);
+      expect(check(attrs2[0]!)).toBe(true);
+    });
+
+    it("should work in curried form for namespaced JSXAttributes", () => {
+      const attrs1 = collectJSXAttributes('<svg xlink:href="#icon" />');
+      const attrs2 = collectJSXAttributes('<svg xlink:href="#icon" />');
+      const check = isEqual(attrs1[0]!);
+      expect(check(attrs2[0]!)).toBe(true);
+    });
+  });
+});

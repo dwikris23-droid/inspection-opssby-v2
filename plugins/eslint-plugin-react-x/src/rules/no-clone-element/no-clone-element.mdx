@@ -1,0 +1,166 @@
+---
+title: no-clone-element
+description: Disallows 'cloneElement'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-clone-element
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-clone-element
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using `cloneElement` to inject props into children is a form of React child introspection. It creates fragile coupling between parent and child components:
+
+- Breaks when children are wrapped in HOCs, `forwardRef`, or `memo`.
+- Prevents React from optimizing rendering.
+- Creates implicit contracts that types can't enforce.
+- Makes composition unpredictable with fragments, portals, and other React features.
+
+Prefer these alternatives:
+
+- Compound components with context
+- Render props or slot props
+- Data-driven APIs (array of config objects)
+- CSS-based solutions (grid, flexbox, `:nth-child`, etc.)
+
+Try the [alternatives to `cloneElement`](https://react.dev/reference/react/cloneElement#alternatives) instead.
+
+## Examples
+
+### Augmenting an element's props dynamically
+
+Using `cloneElement` to inject props into a child element hides the data flow and breaks component encapsulation. Prefer passing props explicitly through render props or composition patterns.
+
+```tsx
+// 🔴 Problem: Using cloneElement to dynamically inject props into a child element
+import { cloneElement } from "react";
+
+const clonedElement = cloneElement(
+  <Row title="Cabbage">Hello</Row>,
+  { isHighlighted: true },
+  "Goodbye",
+);
+
+console.log(clonedElement); // <Row title="Cabbage" isHighlighted={true}>Goodbye</Row>
+```
+
+### Wrapping children with injected props
+
+Using `cloneElement` inside `Children.map` hides which props a child receives and breaks encapsulation. Prefer passing data explicitly via render props or by restructuring your component API.
+
+```tsx
+// 🔴 Problem: Using cloneElement to inject props into each child
+import { Children, cloneElement, useState } from "react";
+
+function List({ children }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  return (
+    <div className="List">
+      {Children.map(children, (child, index) =>
+        cloneElement(child, {
+          isHighlighted: index === selectedIndex,
+        }),
+      )}
+      <button onClick={() => setSelectedIndex((i) => (i + 1) % Children.count(children))}>
+        Next
+      </button>
+    </div>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Pass isHighlighted explicitly via render props
+import { useState } from "react";
+
+function List({ items, renderItem }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  return (
+    <div className="List">
+      {items.map((item, index) => {
+        const isHighlighted = index === selectedIndex;
+        return renderItem(item, isHighlighted);
+      })}
+      <button onClick={() => setSelectedIndex((i) => (i + 1) % items.length)}>
+        Next
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <List
+      items={products}
+      renderItem={(product, isHighlighted) => (
+        <Row key={product.id} title={product.title} isHighlighted={isHighlighted} />
+      )}
+    />
+  );
+}
+```
+
+### Using component composition instead of cloneElement
+
+Instead of injecting props into children with `cloneElement`, compose components so that the parent controls the layout and passes props explicitly.
+
+```tsx
+// 🟢 Recommended: Use component composition to wrap and configure items
+interface RowProps {
+  title: string;
+  isHighlighted?: boolean;
+  children: React.ReactNode;
+}
+
+function Row({ title, isHighlighted, children }: RowProps) {
+  return (
+    <div className={isHighlighted ? "Row highlighted" : "Row"}>
+      <h3>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="List">
+      <Row title="First" isHighlighted>
+        <p>First item content</p>
+      </Row>
+      <Row title="Second">
+        <p>Second item content</p>
+      </Row>
+    </div>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-clone-element/no-clone-element.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-clone-element/no-clone-element.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-clone-element/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `cloneElement` Alternatives](https://react.dev/reference/react/cloneElement#alternatives)
+- [Legacy React APIs: `cloneElement`](https://react.dev/reference/react/cloneElement)
+- [Astryx `no-react-introspection` Rule](https://github.com/facebook/astryx/blob/main/internal/eslint-plugin-astryx/no-react-introspection.js)

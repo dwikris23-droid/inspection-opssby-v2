@@ -1,0 +1,67 @@
+import { createRule } from "@/utils/create-rule";
+import { stringify } from "@/utils/stringify";
+import type { TSESTreeJSXElementLike } from "@eslint-react/ast";
+import * as core from "@eslint-react/core";
+import { type RuleContext, type RuleFeature, type RuleListener } from "@eslint-react/eslint";
+import { getElementFullType, isFragmentElement } from "@eslint-react/jsx";
+import { AST_NODE_TYPES as AST } from "@typescript-eslint/types";
+import { P, match } from "ts-pattern";
+import ts from "typescript";
+
+export const RULE_NAME = "jsx";
+
+export const RULE_FEATURES = [
+  "DBG",
+] as const satisfies RuleFeature[];
+
+export type MessageID = "default";
+
+export default createRule<[], MessageID>({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Reports all JSX elements and fragments in JSON format.",
+    },
+    messages: {
+      default: "{{json}}",
+    },
+    schema: [],
+  },
+  name: RULE_NAME,
+  create,
+  defaultOptions: [],
+});
+
+export function create(context: RuleContext<MessageID, []>): RuleListener {
+  const jsxConfig = core.getJsxConfig(context);
+  function visit(node: TSESTreeJSXElementLike) {
+    context.report({
+      data: {
+        json: stringify({
+          kind: match(node)
+            .with({ type: AST.JSXElement }, (n) => isFragmentElement(n, jsxConfig.jsxFragmentFactory) ? "fragment" : "element")
+            .with({ type: AST.JSXFragment }, () => "fragment")
+            .exhaustive(),
+          type: getElementFullType(node),
+          jsx: match(jsxConfig.jsx)
+            .with(ts.JsxEmit.None, () => "none")
+            .with(ts.JsxEmit.ReactJSX, () => "react-jsx")
+            .with(ts.JsxEmit.ReactJSXDev, () => "react-jsx-dev")
+            .with(ts.JsxEmit.React, () => "react")
+            .with(ts.JsxEmit.ReactNative, () => "react-native")
+            .with(ts.JsxEmit.Preserve, () => "preserve")
+            .otherwise(() => "unknown"),
+          jsxFactory: jsxConfig.jsxFactory,
+          jsxFragmentFactory: jsxConfig.jsxFragmentFactory,
+          jsxImportSource: jsxConfig.jsxImportSource,
+          jsxRuntime: match(jsxConfig.jsx)
+            .with(P.union(ts.JsxEmit.None, ts.JsxEmit.ReactJSX, ts.JsxEmit.ReactJSXDev), () => "automatic")
+            .otherwise(() => "classic"),
+        }),
+      },
+      messageId: "default",
+      node,
+    });
+  }
+  return { JSXElement: visit, JSXFragment: visit };
+}

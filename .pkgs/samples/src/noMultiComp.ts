@@ -1,0 +1,21 @@
+import type { RuleFunction } from "@eslint-react/kit";
+import { merge } from "@eslint-react/kit";
+
+/** Prevent defining more than one component per file. */
+export function noMultiComp(): RuleFunction {
+  return (context, { collect }) => {
+    const { query, visitor } = collect.components(context);
+    return merge(visitor, {
+      "Program:exit"(program) {
+        const components = query.all(program);
+
+        for (const { name, node } of components.slice(1)) {
+          context.report({
+            message: `Declare only one component per file. Found extra component "${name ?? "anonymous"}".`,
+            node,
+          });
+        }
+      },
+    });
+  };
+}

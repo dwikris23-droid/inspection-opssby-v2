@@ -1,0 +1,101 @@
+---
+title: no-set-state-in-component-did-mount
+description: Disallows calling 'this.setState' in 'componentDidMount' outside functions such as callbacks.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-set-state-in-component-did-mount
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-set-state-in-component-did-mount
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Updating the state after a component mounts will trigger a second `render()` call and can lead to property/layout thrashing.
+
+For class components, prefer setting the initial state in the constructor or via a class field initializer. If you need to perform side effects, consider using `useEffect` after migrating to function components.
+
+## Examples
+
+### Calling setState directly in componentDidMount
+
+```tsx
+// 🔴 Problem: Calling setState directly in componentDidMount triggers an extra render and can cause performance issues and layout thrashing
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  name: string;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  componentDidMount() {
+    this.setState({ name: "John" });
+    //   ^^^ Do not call `this.setState` in `componentDidMount` outside functions such as callbacks.
+  }
+
+  render() {
+    return <div>Hello {this.state.name}</div>;
+  }
+}
+```
+
+### Setting initial state correctly
+
+Set the initial state in the constructor or via a class field. Use `componentDidMount` only for side effects like subscriptions or data fetching, and only call `setState` inside callbacks (e.g., event handlers or network responses).
+
+```tsx
+// 🟢 Recommended: Initialize state in the constructor or as a class field
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  name: string;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    name: "John",
+  };
+
+  componentDidMount() {
+    // Side effects like fetching data are fine here
+    fetchData().then((data) => {
+      this.setState({ name: data.name }); // OK inside a callback
+    });
+  }
+
+  render() {
+    return <div>Hello {this.state.name}</div>;
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-mount/no-set-state-in-component-did-mount.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-mount/no-set-state-in-component-did-mount.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-mount/CHANGELOG.md)
+
+## Further Reading
+
+- [Legacy React APIs: `setState`](https://react.dev/reference/react/Component#setstate)
+- [Legacy React APIs: `componentDidMount`](https://react.dev/reference/react/Component#componentdidmount)

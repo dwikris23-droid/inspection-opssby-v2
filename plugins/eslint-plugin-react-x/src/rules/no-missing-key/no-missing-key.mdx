@@ -1,0 +1,177 @@
+---
+title: no-missing-key
+description: Disallows missing 'key' on items in list rendering.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-missing-key
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-missing-key
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+React needs keys to identify items in the list. If you don’t specify a key, React will use the array index as a key, which often leads to subtle and confusing bugs.
+
+## Examples
+
+### Missing key in list rendering
+
+The rule checks the values produced by iterator callbacks of `map`, `flatMap`, and `Array.from`.
+
+```tsx
+// 🔴 Problem: When a key is missing, React uses the array index as the default key, which can lead to state mismatch or performance issues
+interface MyComponentProps {
+  items: { id: number; name: string }[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  return (
+    <ul>
+      {items.map((todo) => <Todo {...todo} />)}
+    </ul>
+  );
+}
+```
+
+### Using a unique key in list rendering
+
+```tsx
+// 🟢 Recommended: Provide a stable and unique key for each item in the list to help React correctly track element identity
+interface MyComponentProps {
+  items: { id: number; name: string }[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  return (
+    <ul>
+      {items.map((todo) => <Todo key={todo.id} {...todo} />)}
+    </ul>
+  );
+}
+```
+
+### Missing key in conditionally rendered items
+
+When a list item is rendered conditionally, every branch that produces an element needs a key. The rule checks all branches an item may evaluate to, including `? :`, `&&`, `||`, and `??` expressions.
+
+```tsx
+// 🔴 Problem: Each branch of the conditional produces a list item without a key
+interface MyComponentProps {
+  items: { id: number; name: string; pinned: boolean }[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  return (
+    <ul>
+      {items.map((item) => (
+        item.pinned
+          ? <PinnedItem {...item} />
+          : <Item {...item} />
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Provide a key in every branch
+interface MyComponentProps {
+  items: { id: number; name: string; pinned: boolean }[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  return (
+    <ul>
+      {items.map((item) => (
+        item.pinned
+          ? <PinnedItem key={item.id} {...item} />
+          : <Item key={item.id} {...item} />
+      ))}
+    </ul>
+  );
+}
+```
+
+### Missing key on elements in an array literal
+
+Elements placed directly in an array literal become list items just like elements returned from `map`, so each of them needs a key as well.
+
+```tsx
+// 🔴 Problem: Elements in an array literal are rendered as a list
+function MyComponent() {
+  return [
+    <Header />,
+    <Content />,
+    <Footer />,
+  ];
+}
+```
+
+```tsx
+// 🟢 Recommended: Give each element in the array a stable key
+function MyComponent() {
+  return [
+    <Header key="header" />,
+    <Content key="content" />,
+    <Footer key="footer" />,
+  ];
+}
+```
+
+### Missing key when returning multiple elements per iteration
+
+When you map over data and return multiple sibling elements, wrapping them in `<></>` loses the ability to assign a key. You must use the explicit `Fragment` syntax.
+
+```tsx
+// 🔴 Problem: Fragment shorthand (<>) does not support keys
+function Blog({ posts }) {
+  return posts.map((post) => (
+    <>
+      <PostTitle title={post.title} />
+      <PostBody body={post.body} />
+    </>
+  ));
+}
+```
+
+```tsx
+// 🟢 Recommended: Use explicit Fragment with a key
+import { Fragment } from "react";
+
+function Blog({ posts }) {
+  return posts.map((post) => (
+    <Fragment key={post.id}>
+      <PostTitle title={post.title} />
+      <PostBody body={post.body} />
+    </Fragment>
+  ));
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-key/no-missing-key.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-key/no-missing-key.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-missing-key/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Why does React need keys?](https://react.dev/learn/rendering-lists#why-does-react-need-keys)
+- [React Docs: Rendering Lists](https://react.dev/learn/rendering-lists)

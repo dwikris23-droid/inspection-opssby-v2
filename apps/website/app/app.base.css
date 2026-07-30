@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "../lib/theme.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-twoslash/twoslash.css";
+@plugin "tailwindcss-animate";
+
+@source inline("{hover:,focus:,focus-within:,focus-visible:,active:,visited:,target:}");
+@source "../node_modules/fumadocs-ui/dist";
+@source ".";
+@source "../components";
+@source "../content";
+@source "./components/**/*.{js,ts,jsx,tsx,mdx}";

@@ -1,0 +1,99 @@
+---
+title: no-use-context
+description: Replaces usage of 'useContext' with 'use'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-use-context
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-use-context
+```
+
+**Features**
+
+`🔄`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+In React 19, `use` is preferred over `useContext` because it is more flexible.
+
+In addition, enable the [`naming-convention/context-name`](./naming-convention-context-name) rule to enforce consistent naming conventions for contexts.
+
+## Examples
+
+### Still using useContext in React 19
+
+React 19 introduced the more general `use` API, which can replace `useContext` and supports being called in conditional statements and loops. New code should prefer `use`.
+
+```tsx
+// 🔴 Problem: use should be preferred over useContext in React 19
+import { useContext } from "react";
+
+function Button() {
+  const theme = useContext(ThemeContext);
+  // ...
+}
+```
+
+```tsx
+// 🟢 Recommended: use the React 19 use API
+import { use } from "react";
+
+function Button() {
+  const theme = use(ThemeContext);
+  // ...
+}
+```
+
+### Calling context reads conditionally
+
+Unlike `useContext`, `use` can be called inside conditions and loops. This lets you read context only when needed.
+
+```tsx
+// 🔴 Problem: useContext must be called at the top level, even when not needed
+import { useContext } from "react";
+
+function Toolbar({ showTooltip, tooltipContext }) {
+  const tooltip = useContext(tooltipContext); // Always called
+  if (!showTooltip) return null;
+  return <Tooltip content={tooltip} />;
+}
+```
+
+```tsx
+// 🟢 Recommended: use can be called conditionally
+import { use } from "react";
+
+function Toolbar({ showTooltip, tooltipContext }) {
+  if (!showTooltip) return null;
+  const tooltip = use(tooltipContext); // Called only when needed
+  return <Tooltip content={tooltip} />;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-use-context/no-use-context.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-use-context/no-use-context.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-use-context/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Reading context with `use`](https://react.dev/reference/react/use#reading-context-with-use)
+- [React Docs: Blog: New feature `use`](https://react.dev/blog/2024/12/05/react-19#new-feature-use)

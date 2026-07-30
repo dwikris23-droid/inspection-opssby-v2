@@ -1,0 +1,202 @@
+---
+title: no-create-ref
+description: Disallows 'createRef' in function components and Hooks.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-create-ref
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-create-ref
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+`createRef()` is a legacy API that is not recommended for use in new code. Instead, prefer using `useRef()` with function components.
+
+This rule only reports `createRef` calls located inside a **function component** or a **Hook**. Calls in other locations, such as at the module top-level or inside plain utility functions and class components, are not reported.
+
+## Examples
+
+### Using createRef in function components
+
+In function components, prefer the Hook `useRef` over `createRef`, which was designed for class components.
+
+```tsx
+import React, { createRef } from "react";
+
+// 🔴 Problem: Using createRef in a function component
+function MyComponent() {
+  const ref = React.createRef<HTMLDivElement>();
+  //          ^^^ [Deprecated] Use 'useRef' instead.
+
+  return <div ref={ref} />;
+}
+```
+
+```tsx
+import React, { useRef } from "react";
+
+// 🟢 Recommended: Use useRef in function components
+function MyComponent() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  return <div ref={ref} />;
+}
+```
+
+### Migrating from createRef to useRef
+
+When migrating a class component to a function component, replace `createRef` with `useRef`.
+
+```tsx
+// 🔴 Problem: createRef inside a function component creates a new ref on every render
+import { createRef } from "react";
+
+function Form() {
+  const inputRef = createRef(); // Does not persist across renders
+
+  function handleClick() {
+    inputRef.current.focus();
+  }
+
+  return (
+    <>
+      <input ref={inputRef} />
+      <button onClick={handleClick}>Focus the input</button>
+    </>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: useRef persists the same ref object across renders
+import { useRef } from "react";
+
+function Form() {
+  const inputRef = useRef(null);
+
+  function handleClick() {
+    inputRef.current.focus();
+  }
+
+  return (
+    <>
+      <input ref={inputRef} />
+      <button onClick={handleClick}>Focus the input</button>
+    </>
+  );
+}
+```
+
+### Using a typed ref with useRef
+
+When you need a strongly typed ref in a function component, use `useRef` with an explicit generic parameter instead of `createRef`.
+
+```tsx
+// 🟢 Recommended: Use useRef with an explicit type parameter
+import { useRef } from "react";
+
+function VideoPlayer() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  function handlePlay() {
+    videoRef.current?.play();
+  }
+
+  function handlePause() {
+    videoRef.current?.pause();
+  }
+
+  return (
+    <>
+      <video ref={videoRef} src="/video.mp4" />
+      <button onClick={handlePlay}>Play</button>
+      <button onClick={handlePause}>Pause</button>
+    </>
+  );
+}
+```
+
+### Using createRef in Hooks
+
+The rule also applies inside custom Hooks. Prefer `useRef` so the ref persists across renders.
+
+```tsx
+import { createRef } from "react";
+
+// 🔴 Problem: Using createRef inside a custom Hook
+function useInputRef() {
+  const ref = createRef<HTMLInputElement>();
+  //          ^^^ [Deprecated] Use 'useRef' instead.
+
+  return ref;
+}
+```
+
+```tsx
+import { useRef } from "react";
+
+// 🟢 Recommended: Use useRef inside a custom Hook
+function useInputRef() {
+  const ref = useRef<HTMLInputElement>(null);
+
+  return ref;
+}
+```
+
+### Using createRef in class components
+
+`createRef` can still be used in class components, which is the intended use of this API.
+
+```tsx
+import React, { createRef } from "react";
+
+// 🔵 OK: Using createRef in a class component is the intended use
+class MyComponent extends React.Component {
+  inputRef = createRef();
+  // ...
+}
+```
+
+### Using createRef outside components and Hooks
+
+Calls outside of function components and Hooks are not reported, since `useRef` cannot be used there.
+
+```tsx
+import { createRef } from "react";
+
+// 🔵 OK: Module top-level is not a function component or Hook
+const ref = createRef<HTMLDivElement>();
+
+// 🔵 OK: Plain utility functions are not function components or Hooks
+function createRefHolder() {
+  return createRef();
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-create-ref/no-create-ref.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-create-ref/no-create-ref.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-create-ref/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `useRef`](https://react.dev/reference/react/useRef)
+- [Legacy React APIs: `createRef`](https://react.dev/reference/react/createRef)

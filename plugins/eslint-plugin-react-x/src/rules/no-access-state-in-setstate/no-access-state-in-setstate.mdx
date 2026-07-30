@@ -1,0 +1,119 @@
+---
+title: no-access-state-in-setstate
+description: Disallows accessing 'this.state' inside 'setState' calls.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-access-state-in-setstate
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-access-state-in-setstate
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using `this.state` inside `setState` calls might result in errors when two state updates are batched, causing references to the old state rather than the current state.
+
+## Examples
+
+### Reading this.state inside setState may return a stale value
+
+React batches state updates. When you read `this.state` immediately after calling `setState`, it still holds the old value. This demonstrates why the updater function is safer.
+
+```tsx
+// 🔴 Problem: this.state is not updated immediately after setState
+import React from "react";
+
+class MyComponent extends React.Component {
+  state = { name: "Taylor" };
+
+  handleClick = () => {
+    console.log(this.state.name); // "Taylor"
+    this.setState({ name: "Robin" });
+    console.log(this.state.name); // Still "Taylor"!
+  };
+
+  render() {
+    return <button onClick={this.handleClick}>Change name</button>;
+  }
+}
+```
+
+### Incrementing state based on the previous value
+
+When multiple `setState` calls are batched together, reading `this.state` directly may give you a stale value. The updater function receives the latest state as an argument, ensuring correctness even with batching.
+
+```tsx
+// 🔴 Problem: Reading this.state directly inside setState may get a stale value when batched
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  foo: number;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    foo: 1,
+  };
+
+  render() {
+    return (
+      <button onClick={() => this.setState({ foo: this.state.foo + 1 })} />
+      //                                          ^^^ Do not access 'this.state' within 'setState'. Use the update function instead.
+    );
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: Use an updater function; React passes the latest state
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  foo: number;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    foo: 1,
+  };
+
+  render() {
+    return (
+      <button
+        onClick={() => this.setState((state) => ({ foo: state.foo + 1 }))}
+      />
+    );
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-access-state-in-setstate/no-access-state-in-setstate.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-access-state-in-setstate/no-access-state-in-setstate.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-access-state-in-setstate/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `setState`](https://react.dev/reference/react/Component#setstate)
+- [React Docs: How to migrate to a function component](https://react.dev/reference/react/Component#alternatives)

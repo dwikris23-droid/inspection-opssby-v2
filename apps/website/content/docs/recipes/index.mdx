@@ -1,0 +1,111 @@
+---
+title: Recipes
+description: Ready-to-use custom ESLint rule definitions built with @eslint-react/kit
+---
+
+import { Card, Cards } from "fumadocs-ui/components/card";
+
+<Callout type="warn" title="Under Construction">
+  This page is under construction.
+</Callout>
+
+Recipes are ready-to-use custom ESLint rule definitions built with [`@eslint-react/kit`](/docs/packages/kit). They are **not** part of the core plugin. Instead, they are designed to be **copied and pasted** directly into your project. Each recipe contains one or more custom rules.
+
+## Why Recipes?
+
+Some lint rules are inherently **opinionated**. They enforce a specific code style or convention that not every team agrees on. Rather than shipping these as built-in rules with fixed behavior, we provide them as recipes so you can:
+
+- **Copy** the rule definition into your project.
+- **Customize** the implementation to match your team's conventions.
+- **Own** the code with no dependency on upstream changes you didn't ask for.
+
+## Prerequisites
+
+Recipes require the `@eslint-react/kit` package:
+
+```package-install copy
+npm install --save-dev @eslint-react/kit
+```
+
+## Usage
+
+Each recipe page provides:
+
+1. **Rule**: A self-contained function you copy into your project (e.g. into a `.config/noForwardRef.ts` file).
+2. **Config**: How to wire it up in your `eslint.config.ts` using `eslintReactKit().use(...)`.
+3. **Examples**: Code snippets demonstrating valid and invalid patterns to show what the rule catches and how to resolve it.
+
+Here's the general pattern:
+
+```ts title=".config/noForwardRef.ts"
+import type { RuleFunction } from "@eslint-react/kit";
+
+function noForwardRef(): RuleFunction {
+  return (context, { is }) => ({
+    CallExpression(node) {
+      if (is.forwardRefCall(node)) {
+        context.report({ node, message: "The 'forwardRef' is deprecated in React 19. Pass 'ref' as a prop instead." });
+      }
+    },
+  });
+}
+```
+
+```ts title="eslint.config.ts"
+import eslintReact from "@eslint-react/eslint-plugin";
+import eslintReactKit from "@eslint-react/kit";
+import eslintJs from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
+
+import { noForwardRef } from "./.config/noForwardRef";
+
+export default defineConfig(
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      eslintJs.configs.recommended,
+      tseslint.configs.recommended,
+      eslintReact.configs["recommended-typescript"],
+      eslintReactKit()
+        .use(noForwardRef)
+        .getConfig(),
+    ],
+    rules: {
+      "@eslint-react/kit/no-forward-ref": "error",
+    },
+  },
+);
+```
+
+## Available Recipes
+
+### Simple
+
+Single-purpose recipes containing one custom rule for a specific linting need.
+
+<Cards>
+  <Card title="Function Component Definition" description="Enforces arrow function style for function component definitions." href="/docs/recipes/function-component-definition" />
+
+  <Card title="No Circular Effect" description="Detects circular dependencies between useEffect hooks. Prevents infinite update loops caused by effects that set state they also depend on." href="/docs/recipes/no-circular-effect" />
+
+  <Card title="Prefer Namespace Import" description="Enforces importing React via a namespace import instead of default import." href="/docs/recipes/prefer-namespace-import" />
+</Cards>
+
+### Compound
+
+Multi-rule recipes that bundle related rules around a specific domain (props, state, children, context).
+
+<Cards>
+  <Card title="Custom Rules Of Props" description="Validates JSX props. Includes checks for duplicate props, mixing controlled and uncontrolled props, explicit spread props, and direct props access." href="/docs/recipes/custom-rules-of-props" />
+
+  <Card title="Custom Rules Of State" description="Validates state usage. Prefer the updater function form in useState setters." href="/docs/recipes/custom-rules-of-state" />
+
+  <Card title="Custom Rules Of Context" description="Validates React Context API usage. Includes checks for `useContext` and other context-related patterns." href="/docs/recipes/custom-rules-of-context" />
+</Cards>
+
+## Resources
+
+- [AST Explorer](https://ast-explorer.dev/#eNpNkE9PwzAMxb+K5dMmDbiXrQeQOCIEEqdcQuqJjDSpEncCVf3u2Al/donk3/Pzi71gwA5P9myLy35i3OEkgL8mauCKSvBRuRPuxyllhmeyjuGY0wgGsxYGb000UX1wNzOn+JTTVOAAi4kA7t2HIVPsmvW6vo9pIHEBpHgfvPvoYLOFQw/n5Afha514nKNjn+LP1M3yNwvW7jJq25Iy8Zwj7N+qAvqhg8FWGeyXX/e6v2mw1ygTZcEkC9YZBsmN9pVykWCDnYBgmYpsufvXH8hKFBVtqDYVTuVTa84z1VZlcrTgaXjh7PVQTVVRYldcvwGs9YT5) - A tool for exploring the abstract syntax tree (AST) of JavaScript code, which is essential for writing custom rules.
+- [ESLint Developer Guide](https://eslint.org/docs/latest/extend/custom-rules) - Official ESLint documentation for creating custom rules.
+- [Using the TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#type-checker-apis) - TypeScript compiler API documentation for working with type information in custom rules.

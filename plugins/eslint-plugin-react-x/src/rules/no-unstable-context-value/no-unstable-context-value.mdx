@@ -1,0 +1,140 @@
+---
+title: no-unstable-context-value
+description: Prevents non-stable values (i.e., object literals) from being used as a value for 'Context.Provider'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unstable-context-value
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unstable-context-value
+```
+
+**Presets**
+
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+React will re-render all consumers of a context whenever the context value changes, and if the value is not stable this can lead to unnecessary re-renders.
+
+## Examples
+
+### Creating a new object as the Context value on every render
+
+JavaScript objects and functions get a new reference every time they are recreated. If you pass an object literal directly in JSX, the Provider will think the value has changed on every render, causing all consumers to re-render unnecessarily.
+
+```tsx
+// 🔴 Problem: Object literals create a new reference on every render
+import React from "react";
+
+const MyContext = React.createContext({});
+
+function MyComponentProvider() {
+  return (
+    <MyContext.Provider value={{ foo: "bar" }}>
+      {/*                      ^^^^^^^^^^^^^^ */}
+      {/*                      - An 'Object literal' passed as the value prop to the context provider should not be constructed. It will change on every render. Consider wrapping it in a useMemo hook. */}
+      <ExampleConsumer />
+    </MyContext.Provider>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Lift the value to module scope or use useMemo to keep the reference stable
+import React, { useMemo } from "react";
+
+const MyContext = React.createContext({});
+
+const value = { foo: "bar" };
+
+function MyComponentProvider() {
+  return (
+    <MyContext.Provider value={value}>
+      <ExampleConsumer />
+    </MyContext.Provider>
+  );
+}
+```
+
+### Stabilizing context value with `useMemo`
+
+When a context value depends on state or props, wrap it in `useMemo` so the reference stays stable across renders. This prevents unnecessary re-renders in all consumers.
+
+```tsx
+// 🟢 Recommended: use useMemo to keep the context value reference stable
+import { useState, useCallback, useMemo, createContext } from "react";
+
+interface AuthContextType {
+  currentUser: string | null;
+  login: (user: string) => void;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+function App() {
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
+  const login = useCallback((user: string) => {
+    setCurrentUser(user);
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    currentUser,
+    login,
+  }), [currentUser, login]);
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      <Page />
+    </AuthContext.Provider>
+  );
+}
+```
+
+### Using the React 19 `use memo` directive
+
+In React 19, if a component uses the `"use memo"` directive, the compiler automatically keeps object references stable, so passing object literals directly is acceptable.
+
+```tsx
+// 🔵 OK: With the use memo directive, the compiler automatically optimizes references
+import React from "react";
+
+const MyContext = React.createContext({});
+
+function MyComponentProvider() {
+  "use memo";
+  return (
+    <MyContext.Provider value={{ foo: "bar" }}>
+      <ExampleConsumer />
+    </MyContext.Provider>
+  );
+}
+```
+
+## Legitimate Uses
+
+React Context and all its child nodes and consumers are re-rendered whenever the value prop changes. Because each JavaScript object carries its own identity, things like object expressions (`{foo: 'bar'}`) or function expressions get a new identity on every run through the component. This makes the context think it has received a new object and can cause needless re-renders and unintended consequences.
+
+This can be a large performance hit because not only will it cause the context providers and consumers to re-render with all the elements in their subtree, the processing for the tree scan React does to render the provider and find consumers is also wasted.
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-context-value/no-unstable-context-value.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-context-value/no-unstable-context-value.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-context-value/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `createContext`](https://react.dev/reference/react/createContext)
+- [React Docs: Context](https://react.dev/learn/passing-data-deeply-with-context)
+- [React Docs: `useMemo`](https://react.dev/reference/react/useMemo)
+- [React Compiler: `compilationMode`](https://react.dev/reference/react-compiler/compilationMode)

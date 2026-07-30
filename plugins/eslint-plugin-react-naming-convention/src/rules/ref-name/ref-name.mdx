@@ -1,0 +1,94 @@
+---
+title: ref-name
+description: Enforces identifier names assigned from 'useRef' calls to be either 'ref' or end with 'Ref'.
+---
+
+**Full Name in `eslint-plugin-react-naming-convention`**
+
+```plain copy
+react-naming-convention/ref-name
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/naming-convention-ref-name
+```
+
+**Presets**
+
+`naming-convention`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Enforces identifier names assigned from `useRef` calls to be either `ref` or end with `Ref`.
+
+## Examples
+
+```tsx
+// 🔴 Problem: Identifier 'myId' does not end with 'Ref'
+const myId = useRef(null);
+```
+
+```tsx
+// 🔴 Problem: Identifier 'node' does not end with 'Ref'
+const node = useRef(null);
+```
+
+```tsx
+// 🟢 Recommended: Name ends with 'Ref'
+const myRef = useRef(null);
+```
+
+```tsx
+// 🟢 Recommended: Name is exactly 'ref'
+const ref = useRef(null);
+```
+
+```tsx
+// 🔵 OK: Name ends with 'Ref' (MemberExpression)
+obj.nested.myRef = useRef(null);
+```
+
+```tsx
+// 🔵 OK: The result is immediately accessed via a member expression instead of being stored in a ref variable
+const value = useRef(null).current.value;
+```
+
+```tsx
+// 🔵 OK: The result is immediately accessed via a member expression instead of being stored in a ref variable (same as above)
+const useOnce = <T,>(fn: () => T) => (useRef<{ value: T }>().current ??= { value: fn() }).value;
+```
+
+## Options
+
+### Shared Settings
+
+Custom ref hooks can also be configured via shared ESLint settings, which apply consistently across all rules in the plugin:
+
+```json
+{
+  "settings": {
+    "react-x": {
+      "additionalRefHooks": "(useMyRef|useCustomRef)"
+    }
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/ref-name/ref-name.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/ref-name/ref-name.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/ref-name/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `useRef`](https://react.dev/reference/react/useRef)
+- [React Docs: Plain Object `.current`](https://react.dev/reference/eslint-plugin-react-hooks/lints/refs#plain-object-current)

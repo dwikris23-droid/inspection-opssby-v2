@@ -1,0 +1,315 @@
+import tsx from "dedent";
+
+import { ruleTester } from "#/testing/helpers";
+import { stringify } from "@/utils/stringify";
+import rule, { RULE_NAME } from "./hook";
+
+ruleTester.run(RULE_NAME, rule, {
+  invalid: [
+    {
+      code: tsx`
+        function useToggle() {
+            const [value, setValue] = useState(false);
+            return [value, () => setValue(x => !x)];
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useToggle",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        // 🔴 Avoid: A Hook that doesn't use Hooks
+        function useSorted(items) {
+          return items.slice().sort();
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useSorted",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function useToggle() {
+            const [value, setValue] = useState(false);
+            return [value, () => setValue(x => !x)];
+        }
+
+        // 🔴 Avoid: A Hook that doesn't use Hooks
+        function useSorted(items) {
+          return items.slice().sort();
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useToggle",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+        {
+          data: {
+            json: stringify({
+              name: "useSorted",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        const useClassnames = (obj) => {
+            // Invalid, because useClassnames doesn't use any other React Hooks.
+            var k, cls='';
+            for (k in obj) {
+              if (obj[k]) {
+                cls && (cls += ' ');
+                cls += k;
+              }
+            }
+            return cls;
+          }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useClassnames",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function useClassnames(obj) {
+            // Invalid, because useClassnames doesn't use any other React Hooks.
+            var k, cls='';
+            for (k in obj) {
+              if (obj[k]) {
+                cls && (cls += ' ');
+                cls += k;
+              }
+            }
+            return cls;
+          }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useClassnames",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        export function useNestedHook() {
+            const [state, setState] = useState("state");
+            const useInnerHook = () => {
+                return "inner hook";
+            };
+
+            return [state, setState, useInnerHook] as const;
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useNestedHook",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+        {
+          data: {
+            json: stringify({
+              name: "useInnerHook",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        export function useNestedHook() {
+            const useInnerHook = () => {
+                const [state, setState] = useState("state");
+                return state;
+            };
+
+            return [state, setState, useInnerHook] as const;
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useNestedHook",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+        {
+          data: {
+            json: stringify({
+              name: "useInnerHook",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        export function useNestedHook() {
+            const fn = () => {
+                const [state, setState] = useState("state");
+                return state;
+            };
+
+            return [state, setState, useInnerHook] as const;
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useNestedHook",
+              hookCalls: 0,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        const useExpressionBody = () => useState(0);
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useExpressionBody",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function useMultipleHooks() {
+          const [state] = useState(0);
+          useEffect(() => {});
+          useCallback(() => {}, []);
+          return state;
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useMultipleHooks",
+              hookCalls: 3,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function useData(promise) {
+          return use(promise);
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useData",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        const useExpressionHook = function() {
+          return useState(0);
+        };
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useExpressionHook",
+              hookCalls: 1,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function useMotionStyle() {
+          const shadowX = useSpring(0);
+          const shadowY = useMotionValue(0);
+          const shadow = useMotionTemplate\`drop-shadow(\${shadowX}px \${shadowY}px 20px rgba(0,0,0,0.3))\`;
+          return shadow;
+        }
+      `,
+      errors: [
+        {
+          data: {
+            json: stringify({
+              name: "useMotionStyle",
+              hookCalls: 3,
+            }),
+          },
+          messageId: "default",
+        },
+      ],
+    },
+  ],
+  valid: [],
+});
