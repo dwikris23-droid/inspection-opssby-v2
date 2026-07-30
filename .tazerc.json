@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/antfu-collective/taze/refs/heads/main/schema.json",
+  "exclude": ["zod"],
+  "ignorePaths": ["testing"],
+  "includeLocked": true,
+  "install": false,
+  "maturityPeriod": 1,
+  "mode": "default",
+  "recursive": true,
+  "update": false,
+  "write": true
+}

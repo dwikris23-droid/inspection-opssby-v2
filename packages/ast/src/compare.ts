@@ -1,0 +1,115 @@
+import { dual } from "@local/eff";
+import { AST_NODE_TYPES as AST, type TSESTree } from "@typescript-eslint/types";
+import * as Check from "./check";
+import * as Extract from "./extract";
+
+/**
+ * Check if two nodes are structurally equal.
+ * @param a The first node to compare.
+ * @param b The second node to compare.
+ * @returns `true` if the nodes are equal.
+ * @see https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/util/isNodeEqual.ts
+ */
+export const isEqual: {
+  (a: TSESTree.Node): (b: TSESTree.Node) => boolean;
+  (a: TSESTree.Node, b: TSESTree.Node): boolean;
+} = dual(2, (a: TSESTree.Node, b: TSESTree.Node): boolean => {
+  a = Check.isTypeExpression(a) ? Extract.unwrap(a) : a;
+  b = Check.isTypeExpression(b) ? Extract.unwrap(b) : b;
+  switch (true) {
+    case a === b:
+      return true;
+    case a.type !== b.type:
+      return false;
+    case a.type === AST.Literal
+      && b.type === AST.Literal:
+      return a.value === b.value;
+    case a.type === AST.TemplateElement
+      && b.type === AST.TemplateElement:
+      return a.value.raw === b.value.raw;
+    case a.type === AST.TemplateLiteral
+      && b.type === AST.TemplateLiteral: {
+      if (a.quasis.length !== b.quasis.length || a.expressions.length !== b.expressions.length) {
+        return false;
+      }
+      let i = a.quasis.length;
+      while (i--) {
+        if (a.quasis[i]?.value.raw !== b.quasis[i]?.value.raw) {
+          return false;
+        }
+      }
+      i = a.expressions.length;
+      while (i--) {
+        const exprA = a.expressions[i];
+        const exprB = b.expressions[i];
+        if (exprA == null || exprB == null) {
+          return false;
+        }
+        if (!isEqual(exprA, exprB)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    case a.type === AST.Identifier
+      && b.type === AST.Identifier:
+      return a.name === b.name;
+    case a.type === AST.PrivateIdentifier
+      && b.type === AST.PrivateIdentifier:
+      return a.name === b.name;
+    case a.type === AST.MemberExpression
+      && b.type === AST.MemberExpression:
+      return isEqual(a.property, b.property)
+        && isEqual(a.object, b.object);
+    case a.type === AST.CallExpression
+      && b.type === AST.CallExpression: {
+      if (a.optional !== b.optional) {
+        return false;
+      }
+      if (a.arguments.length !== b.arguments.length) {
+        return false;
+      }
+      if (!isEqual(a.callee, b.callee)) {
+        return false;
+      }
+      let i = a.arguments.length;
+      while (i--) {
+        const argA = a.arguments[i];
+        const argB = b.arguments[i];
+        if (argA == null || argB == null) {
+          return false;
+        }
+        if (!isEqual(argA, argB)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    case a.type === AST.JSXIdentifier
+      && b.type === AST.JSXIdentifier:
+      return a.name === b.name;
+    case a.type === AST.JSXNamespacedName
+      && b.type === AST.JSXNamespacedName:
+      return isEqual(a.namespace, b.namespace)
+        && isEqual(a.name, b.name);
+    case a.type === AST.JSXMemberExpression
+      && b.type === AST.JSXMemberExpression:
+      return isEqual(a.object, b.object)
+        && isEqual(a.property, b.property);
+    case a.type === AST.JSXAttribute
+      && b.type === AST.JSXAttribute: {
+      if (!isEqual(a.name, b.name)) {
+        return false;
+      }
+      if (a.value == null || b.value == null) {
+        return a.value === b.value;
+      }
+      return isEqual(a.value, b.value);
+    }
+    case a.type === AST.ThisExpression
+      && b.type === AST.ThisExpression:
+      return true;
+    default:
+      return false;
+  }
+});

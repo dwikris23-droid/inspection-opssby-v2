@@ -1,0 +1,111 @@
+---
+title: no-children-only
+description: Disallows the use of 'Children.only' from the 'react' package.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-children-only
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-children-only
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using `Children.only` to assert the children tree shape is a form of React child introspection. It creates fragile coupling between parent and child components:
+
+- Breaks when children are wrapped in HOCs, `forwardRef`, or `memo`.
+- Prevents React from optimizing rendering.
+- Creates implicit contracts that types can't enforce.
+- Makes composition unpredictable with fragments, portals, and other React features.
+
+Prefer these alternatives:
+
+- Compound components with context
+- Render props or slot props
+- Data-driven APIs (array of config objects)
+- CSS-based solutions (grid, flexbox, `:nth-child`, etc.)
+
+[See common alternatives](https://react.dev/reference/react/Children#alternatives).
+
+## Examples
+
+### Enforcing a single child
+
+Using `Children.only` to assert that a component receives exactly one child is fragile. If you need to restrict children, consider documenting the prop type or using a different API design.
+
+For example, if your component needs exactly one child element, you can type the prop as a single `ReactElement` instead of `React.ReactNode`:
+
+```tsx
+// 🟢 Recommended: type the children prop to enforce a single child at compile time
+import { type ReactElement } from "react";
+
+interface MyComponentProps {
+  children: ReactElement;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  return <div>{children}</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: Using Children.only to enforce a single child
+import React, { Children } from "react";
+
+interface MyComponentProps {
+  children: React.ReactNode;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  const element = Children.only(children);
+  // ...
+}
+```
+
+### Using a dedicated prop instead of children
+
+If your component is designed to work with a single element, consider accepting it as a regular prop instead of children. This makes the API clearer and avoids runtime checks.
+
+```tsx
+// 🟢 Recommended: accept the single element as a named prop
+import { type ReactElement } from "react";
+
+interface ModalProps {
+  content: ReactElement;
+}
+
+function Modal({ content }: ModalProps) {
+  return <div className="modal">{content}</div>;
+}
+
+function App() {
+  return <Modal content={<p>Hello, world!</p>} />;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-only/no-children-only.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-only/no-children-only.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-only/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `Children`](https://react.dev/reference/react/Children)
+- [Astryx `no-react-introspection` Rule](https://github.com/facebook/astryx/blob/main/internal/eslint-plugin-astryx/no-react-introspection.js)

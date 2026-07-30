@@ -1,0 +1,100 @@
+---
+title: no-set-state-in-component-will-update
+description: Disallows calling 'this.setState' in 'componentWillUpdate' outside functions such as callbacks.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-set-state-in-component-will-update
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-set-state-in-component-will-update
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Updating the state in `componentWillUpdate` is not allowed because the component is already about to re-render. It can lead to infinite loops and inconsistent state.
+
+## Examples
+
+### Calling setState directly in componentWillUpdate
+
+```tsx
+// 🔴 Problem: Calling setState directly in componentWillUpdate triggers another render and can easily cause infinite loops or layout thrashing
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  name: string;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  componentWillUpdate() {
+    this.setState({ name: "John" });
+    //   ^^^ Do not call `this.setState` in `componentWillUpdate` outside functions such as callbacks.
+  }
+
+  render() {
+    return <div>Hello {this.state.name}</div>;
+  }
+}
+```
+
+### Preparing for an update without setState
+
+If you need to compute something before an update, store it in an instance variable or derive it during `render`. Never call `setState` in `componentWillUpdate` because the component is already about to re-render.
+
+```tsx
+// 🟢 Recommended: Use instance variables or derive values during render
+import React from "react";
+
+interface MyComponentProps {
+  value: number;
+}
+
+interface MyComponentState {
+  prevValue: number;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    prevValue: 0,
+  };
+
+  componentWillUpdate(nextProps: MyComponentProps) {
+    // Store previous value in an instance variable, not state
+    this.previousValue = this.props.value;
+  }
+
+  render() {
+    const hasIncreased = this.props.value > this.state.prevValue;
+    return <div>Value increased: {hasIncreased ? "Yes" : "No"}</div>;
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-will-update/no-set-state-in-component-will-update.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-will-update/no-set-state-in-component-will-update.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-will-update/CHANGELOG.md)
+
+## Further Reading
+
+- [Legacy React APIs: `setState`](https://react.dev/reference/react/Component#setstate)
+- [Legacy React APIs: `componentWillUpdate`](https://react.dev/reference/react/Component#componentwillupdate)

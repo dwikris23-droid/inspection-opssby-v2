@@ -1,0 +1,9 @@
+[@eslint-react/core](../README.md) / SEL\_FUNCTION\_DISPLAY\_NAME\_ASSIGNMENT
+
+# Variable: SEL\_FUNCTION\_DISPLAY\_NAME\_ASSIGNMENT
+
+```ts
+const SEL_FUNCTION_DISPLAY_NAME_ASSIGNMENT: string;
+```
+
+The esquery selector matching `displayName` assignment expressions.

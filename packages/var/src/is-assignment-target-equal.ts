@@ -1,0 +1,20 @@
+import { Compare } from "@eslint-react/ast";
+import type { RuleContext } from "@eslint-react/eslint";
+import type { TSESTree } from "@typescript-eslint/types";
+import { isValueEqual } from "./is-value-equal";
+
+/**
+ * Check if two assignment targets are equal, either directly or by their values.
+ * @param context The rule context.
+ * @param a The first node to compare.
+ * @param b The second node to compare.
+ * @returns `true` if the assignment targets are equal.
+ * @internal
+ */
+export function isAssignmentTargetEqual(
+  context: RuleContext,
+  a: TSESTree.Node,
+  b: TSESTree.Node,
+) {
+  return Compare.isEqual(a, b) || isValueEqual(context, a, b);
+}

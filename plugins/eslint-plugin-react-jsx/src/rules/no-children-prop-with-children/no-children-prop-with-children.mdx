@@ -1,0 +1,89 @@
+---
+title: no-children-prop-with-children
+description: Disallows passing 'children' as a prop when children are also passed as nested content.
+---
+
+**Full Name in [`eslint-plugin-react-jsx`](https://npmx.dev/package/eslint-plugin-react-jsx/v/latest)**
+
+```plain copy
+react-jsx/no-children-prop-with-children
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/jsx-no-children-prop-with-children
+```
+
+**Features**
+
+`🔧`
+
+**Presets**
+
+`jsx`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+When using JSX, `children` should be passed either as a prop or as nested content between the opening and closing tags, but not both. Passing `children` both ways is redundant and can lead to confusion about which children will actually be rendered.
+
+## Examples
+
+### Passing children both as a prop and as nested content
+
+```tsx
+interface MyComponentProps {
+  children: React.ReactNode;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  // 🔴 Problem: Don't use children prop when element already has nested children
+  return <div children={children}>{children}</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: Don't use children prop when element already has nested children
+<Component children="text">text</Component>
+```
+
+### Passing children only as nested content
+
+```tsx
+interface MyComponentProps {
+  children: React.ReactNode;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  // 🟢 Recommended: Use nested children
+  return <div>{children}</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use nested children
+<Component>text</Component>
+```
+
+### Passing children only as a prop
+
+```tsx
+// 🔵 OK: Use children prop when no nested children
+<Component children="text" />
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-children-prop-with-children/no-children-prop-with-children.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-children-prop-with-children/no-children-prop-with-children.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-children-prop-with-children/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Passing JSX as children](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children)

@@ -1,0 +1,130 @@
+---
+title: no-unnecessary-use-prefix
+description: Enforces that a function with the 'use' prefix uses at least one Hook inside it.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unnecessary-use-prefix
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unnecessary-use-prefix
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+If your function doesn't call any Hooks, avoid the `use` prefix and write it as a regular function. This allows the function to be called anywhere, including in conditions. You should only use the `use` prefix when the function calls at least one Hook inside it.
+
+Technically, React does not enforce this. In principle, you could make a Hook that doesn't call other Hooks, but this is often confusing and limiting. However, there may be rare cases where it is helpful, such as when you plan to add Hook calls in the future. In that case, naming it with the `use` prefix makes sense so that components won't be able to call it conditionally once Hooks are added. If you don't plan to use Hooks inside it (now or later), don't make it a Hook.
+
+## Examples
+
+### Using the `use` prefix without calling any Hooks
+
+Functions with the `use` prefix are treated as Hooks and must follow Hook rules (for example, they cannot be called conditionally). If a function doesn't call any Hooks, remove the `use` prefix and make it a regular function.
+
+```tsx
+// 🔴 Problem: The function doesn't call any Hooks but uses the use prefix
+function useSorted(items) {
+  return items.slice().sort();
+}
+```
+
+```tsx
+// 🟢 Recommended: Convert it to a regular function so it can be called anywhere
+function getSorted(items) {
+  return items.slice().sort();
+}
+```
+
+As a regular function, it can safely be called inside conditional statements:
+
+```tsx
+// 🔵 OK: Regular functions allow conditional calls
+function List({ items, shouldSort }) {
+  let displayedItems = items;
+  if (shouldSort) {
+    displayedItems = getSorted(items);
+  }
+  // ...
+}
+```
+
+### Calling other Hooks inside the function
+
+When a function calls at least one Hook internally, using the `use` prefix is correct and necessary.
+
+```tsx
+// 🟢 Recommended: The function calls useContext, so the use prefix is justified
+function useAuth() {
+  return useContext(Auth);
+}
+```
+
+### Calling Hooks through tagged template literals
+
+Hook calls written as tagged template literals (for example, Motion's `useMotionTemplate`) also count as Hook calls, so the `use` prefix remains justified.
+
+```tsx
+// 🔵 OK: useMotionTemplate is called as a tagged template literal, which counts as a Hook call
+function useFilter() {
+  return useMotionTemplate`blur(${10}px) saturate(${50}%)`;
+}
+```
+
+### Not using Hooks now, but planning to add them later
+
+If a function doesn't currently call any Hooks but you plan to add Hook calls later, you can keep the `use` prefix. Add a TODO comment that includes the planned Hook call — the rule treats such comments as a signal of intent and won't report the function.
+
+```tsx
+// 🔴 Problem: No Hooks are used and there is no comment explaining future plans
+function useAuth() {
+  return TEST_USER;
+}
+```
+
+```tsx
+// 🟢 Recommended: Add an explicit TODO explaining it will be replaced with a Hook later
+function useAuth() {
+  // TODO: Replace with this line when authentication is implemented:
+  // return useContext(Auth);
+  return TEST_USER;
+}
+```
+
+### MDX component factory functions
+
+Some framework conventions (such as MDX) require factory functions with the `use` prefix. These well-known functions are allowed even if they don't call any Hooks.
+
+```tsx
+// 🔵 OK: Component mapping function that follows MDX conventions
+export function useMDXComponents(components) {
+  return {
+    ...components,
+  };
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unnecessary-use-prefix/no-unnecessary-use-prefix.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unnecessary-use-prefix/no-unnecessary-use-prefix.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unnecessary-use-prefix/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Should all functions called during rendering start with the `use` prefix? (the deep dive)](https://react.dev/learn/reusing-logic-with-custom-hooks#should-all-functions-called-during-rendering-start-with-the-use-prefix)

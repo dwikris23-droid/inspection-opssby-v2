@@ -1,0 +1,50 @@
+import { createRule } from "@/utils/create-rule";
+import * as core from "@eslint-react/core";
+import { type RuleContext, type RuleFeature, type RuleListener } from "@eslint-react/eslint";
+import { resolveEnclosingAssignmentTarget } from "@eslint-react/var";
+import { AST_NODE_TYPES as AST } from "@typescript-eslint/types";
+import { P, match } from "ts-pattern";
+
+export const RULE_NAME = "context-name";
+
+export const RULE_FEATURES = [] as const satisfies RuleFeature[];
+
+export type MessageID = "invalidContextName";
+
+export default createRule<[], MessageID>({
+  meta: {
+    type: "suggestion",
+    docs: {
+      description: "Enforces identifier names assigned from `createContext` calls to be a valid component name with the suffix `Context`.",
+    },
+    messages: {
+      invalidContextName: "A context name must be a valid component name with the suffix 'Context'.",
+    },
+    schema: [],
+  },
+  name: RULE_NAME,
+  create,
+  defaultOptions: [],
+});
+
+export function create(context: RuleContext<MessageID, []>): RuleListener {
+  // Fast path: skip if `createContext` is not present in the file
+  if (!context.sourceCode.text.includes("createContext")) return {};
+  return {
+    CallExpression(node) {
+      if (!core.isCreateContextCall(context, node)) return;
+      const [id, name] = match(resolveEnclosingAssignmentTarget(node))
+        // for cases like: const ThemeContext = createContext();
+        .with({ type: AST.Identifier, name: P.string }, (id) => [id, id.name] as const)
+        // for cases like: ctxs.ThemeContext = createContext();
+        .with({ type: AST.MemberExpression, property: { name: P.string } }, (id) => [id, id.property.name] as const)
+        .otherwise(() => [null, null] as const);
+      if (id == null) return;
+      if (core.isFunctionComponentName(name) && name.endsWith("Context")) return;
+      context.report({
+        messageId: "invalidContextName",
+        node: id,
+      });
+    },
+  };
+}

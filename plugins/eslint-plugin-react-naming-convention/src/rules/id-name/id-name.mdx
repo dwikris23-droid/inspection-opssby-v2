@@ -1,0 +1,74 @@
+---
+title: id-name
+description: Enforces identifier names assigned from 'useId' calls to be either 'id' or end with 'Id'.
+---
+
+**Full Name in `eslint-plugin-react-naming-convention`**
+
+```plain copy
+react-naming-convention/id-name
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/naming-convention-id-name
+```
+
+**Presets**
+
+`naming-convention`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Enforces identifier names assigned from `useId` calls to be either `id` or end with `Id`.
+
+## Examples
+
+```tsx
+// 🔴 Problem: Identifier 'myRef' does not end with 'Id'
+const myRef = useId();
+```
+
+```tsx
+// 🔴 Problem: Identifier 'randomString' does not end with 'Id'
+const randomString = useId();
+```
+
+```tsx
+// 🟢 Recommended: Name ends with 'Id'
+const myId = useId();
+```
+
+```tsx
+// 🟢 Recommended: Name is exactly 'id'
+const id = useId();
+```
+
+```tsx
+// 🔵 OK: Name ends with 'Id' (MemberExpression)
+obj.nested.myId = useId();
+```
+
+```tsx
+// 🔵 OK: Returning the result directly from a custom Hook
+function useCustomId() {
+  return useId();
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/id-name/id-name.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/id-name/id-name.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-naming-convention/src/rules/id-name/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `useId`](https://react.dev/reference/react/useId)

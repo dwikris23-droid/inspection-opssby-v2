@@ -1,0 +1,155 @@
+---
+title: no-duplicate-key
+description: Prevents duplicate 'key' props on sibling elements when rendering lists.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-duplicate-key
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-duplicate-key
+```
+
+**Features**
+
+`🧪`
+
+## Rule Details
+
+React uses keys to identify elements in an array. If two elements have the same key, React will not be able to distinguish them. This can lead to issues with state and rendering.
+
+## Examples
+
+### Returning sibling elements with duplicate keys in an array
+
+When multiple elements in an array use the same `key`, React cannot distinguish them correctly.
+
+```tsx
+// 🔴 Problem: Duplicate keys on sibling elements in an array
+function MyComponent () {
+  return [
+    <li key="1">Item 1</li>
+    <li key="1">Item 2</li>
+  ]
+};
+```
+
+```tsx
+// 🟢 Recommended: Assign a unique key to each sibling element
+function MyComponent () {
+  return [
+    <li key="1">Item 1</li>
+    <li key="2">Item 2</li>
+  ]
+};
+```
+
+### Writing sibling elements with duplicate keys in JSX
+
+Sibling elements written directly in JSX with the same key will also cause React identification issues.
+
+```tsx
+// 🔴 Problem: Duplicate keys on sibling elements in JSX
+function MyComponent() {
+  return (
+    <ul>
+      <li key="1">Item 1</li>
+      <li key="1">Item 2</li>
+    </ul>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Ensure keys are unique among sibling elements
+function MyComponent() {
+  return (
+    <ul>
+      <li key="1">Item 1</li>
+      <li key="2">Item 2</li>
+    </ul>
+  );
+}
+```
+
+### Using a fixed key value in a map loop
+
+Using a fixed string as a key in loops like `map` causes every iteration to produce elements with the same key.
+
+```tsx
+// 🔴 Problem: All elements in a map loop use the same key
+function MyComponent() {
+  return (
+    <ul>
+      {["a", "b"].map((id) => <li key="1">{id}</li>)}
+    </ul>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a unique identifier from the data as the key
+function MyComponent() {
+  return (
+    <ul>
+      {["a", "b"].map((id) => <li key={id}>{id}</li>)}
+    </ul>
+  );
+}
+```
+
+### Duplicate keys when rendering multiple lists side by side
+
+When two or more lists are rendered as siblings under the same parent element, using array indices as keys can produce duplicate key values.
+
+```tsx
+// 🔴 Problem: Two lists rendered side by side both use index keys
+function App({ activeItems, archivedItems }) {
+  return (
+    <div>
+      {activeItems.map((item, index) => (
+        <div key={index}>{item.name}</div>
+      ))}
+      {archivedItems.map((item, index) => (
+        <div key={index}>{item.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: Use unique identifiers from the data
+function App({ activeItems, archivedItems }) {
+  return (
+    <div>
+      {activeItems.map((item) => (
+        <div key={item.id}>{item.name}</div>
+      ))}
+      {archivedItems.map((item) => (
+        <div key={item.id}>{item.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-duplicate-key/no-duplicate-key.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-duplicate-key/no-duplicate-key.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-duplicate-key/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Why does React need keys?](https://react.dev/learn/rendering-lists#why-does-react-need-keys)
+- [React Docs: Rendering Lists](https://react.dev/learn/rendering-lists)

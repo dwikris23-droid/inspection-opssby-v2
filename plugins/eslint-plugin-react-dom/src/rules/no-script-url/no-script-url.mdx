@@ -1,0 +1,86 @@
+---
+title: no-script-url
+description: Disallows 'javascript:' URLs as attribute values.
+---
+
+**Full Name in `eslint-plugin-react-dom`**
+
+```plain copy
+react-dom/no-script-url
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/dom-no-script-url
+```
+
+**Presets**
+
+`dom`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+`javascript:` URLs are a form of [XSS](https://en.wikipedia.org/wiki/Cross-site_scripting) attack. They allow an attacker to execute arbitrary JavaScript in the context of your website, which can be used to steal user data, deface your website, or perform other malicious actions.
+
+## Examples
+
+### Passing URLs to link or resource attributes
+
+```tsx
+function MyComponent() {
+  // 🔴 Problem: `javascript:` URLs are a security risk and should be avoided
+  return <a href="javascript:alert('Hello, world!')">Click me</a>;
+  //        ^^^ Using a `javascript:` URL is a security risk and should be avoided.
+}
+```
+
+```tsx
+function MyComponent() {
+  // 🟢 Recommended: Use a safe URL instead
+  return <a href="/some-page">Click me</a>;
+}
+```
+
+### Using event handlers instead of `javascript:` URLs
+
+If you need to run JavaScript when a user clicks a link, attach an event handler to a `<button>` or use a safe `href` with an `onClick` handler on an `<a>` element.
+
+```tsx
+// 🟢 Recommended: Use a button with an onClick handler for actions
+function MyComponent() {
+  function handleClick() {
+    alert("Hello, world!");
+  }
+
+  return <button onClick={handleClick}>Click me</button>;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a safe href with an onClick handler for links
+function MyComponent() {
+  function handleClick(event: React.MouseEvent) {
+    event.preventDefault();
+    alert("Hello, world!");
+  }
+
+  return (
+    <a href="/safe-fallback" onClick={handleClick}>
+      Click me
+    </a>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-script-url/no-script-url.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-script-url/no-script-url.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-script-url/CHANGELOG.md)

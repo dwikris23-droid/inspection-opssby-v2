@@ -1,0 +1,33 @@
+import type { RuleFunction } from "@eslint-react/kit";
+
+/** Disallow JSX prop spreading the same identifier multiple times. */
+export function jsxPropsNoSpreadMulti(): RuleFunction {
+  return (context, { ast }) => ({
+    JSXOpeningElement(node) {
+      const seen = new Set<string>();
+
+      for (const attr of node.attributes) {
+        if (attr.type !== "JSXSpreadAttribute") continue;
+
+        // Extract spread identifier name
+        const argument = ast.unwrap(attr.argument);
+        let spreadKey: string;
+        if (argument.type === "Identifier") {
+          spreadKey = argument.name;
+        } else {
+          spreadKey = context.sourceCode.getText(attr.argument);
+        }
+
+        // Report duplicate spread
+        if (seen.has(spreadKey)) {
+          context.report({
+            message: `Spreading the same expression "${spreadKey}" multiple times is not allowed.`,
+            node: attr,
+          });
+        } else {
+          seen.add(spreadKey);
+        }
+      }
+    },
+  });
+}

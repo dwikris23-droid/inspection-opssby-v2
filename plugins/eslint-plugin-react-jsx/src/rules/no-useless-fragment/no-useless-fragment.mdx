@@ -1,0 +1,169 @@
+---
+title: no-useless-fragment
+description: Disallows useless fragment elements.
+---
+
+**Full Name in [`eslint-plugin-react-jsx`](https://npmx.dev/package/eslint-plugin-react-jsx/v/latest)**
+
+```plain copy
+react-jsx/no-useless-fragment
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/jsx-no-useless-fragment
+```
+
+**Features**
+
+`⚙️` `🔧`
+
+**Presets**
+
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+A fragment is redundant if it contains only one child or if it is the child of an host element and is not a [keyed fragment](https://react.dev/reference/react/Fragment#caveats).
+
+## Examples
+
+### Returning a single element wrapped in a fragment
+
+```tsx
+// 🔴 Problem: Fragment with only one child is redundant
+<><Foo /></>
+```
+
+### Using empty fragments
+
+```tsx
+// 🔴 Problem: Empty fragment serves no purpose
+<></>
+```
+
+### Wrapping children unnecessarily inside a host element
+
+```tsx
+// 🔴 Problem: Fragment inside a host element is redundant
+<p><>foo</></p>
+```
+
+```tsx
+// 🔴 Problem: Fragment inside a host element with no key is redundant
+<section>
+  <>
+    <div />
+    <div />
+  </>
+</section>
+```
+
+### Returning a single expression directly
+
+```tsx
+// 🟢 Recommended: Return the expression directly instead of wrapping in a fragment
+{foo}
+```
+
+```tsx
+// 🟢 Recommended: Return the element directly instead of wrapping in a fragment
+<Foo />
+```
+
+### Using fragments with multiple children or expressions
+
+```tsx
+// 🟢 Recommended: Fragment with multiple children
+<>
+  <Foo />
+  <Bar />
+</>
+```
+
+```tsx
+// 🔵 OK: Text and expression children (multiple children)
+<>foo {bar}</>
+```
+
+```tsx
+// 🔵 OK: Leading space with expression (multiple children)
+<> {foo}</>
+```
+
+```tsx
+// 🔵 OK: Expression child (allowed by default via allowExpressions)
+<>{children}</>
+```
+
+```tsx
+// 🔵 OK: Expression child (allowed by default via allowExpressions)
+<>{props.children}</>
+```
+
+```tsx
+// 🔵 OK: Single text node assigned to a variable
+const cat = <>meow</>
+```
+
+```tsx
+// 🔵 OK: Fragment inside a custom component (preserves grouping)
+<SomeComponent>
+  <>
+    <div />
+    <div />
+  </>
+</SomeComponent>
+```
+
+```tsx
+// 🔵 OK: Keyed fragment
+<Fragment key={item.id}>{item.value}</Fragment>
+```
+
+## Rule Options
+
+```ts
+type Options = {
+  allowEmptyFragment?: boolean;
+  allowExpressions?: boolean;
+};
+```
+
+### `allowEmptyFragment`
+
+When set to `true`, allows fragments that contain no children.
+
+Default: `false`
+
+### `allowExpressions`
+
+When set to `true`, allows fragments that contain a single expression child.
+
+Default: `true`
+
+## Note
+
+[By default, this rule always allows single expressions in a fragment](https://github.com/Rel1cx/eslint-react/pull/188). This is useful in places like TypeScript where `string` does not satisfy the expected return type of `JSX.Element`. A common workaround is to wrap the variable holding a string in a fragment and expression. To change this behavior, use the `allowExpressions` option.
+
+### Examples of correct code for single expressions in fragments
+
+```tsx
+<>{foo}</>
+
+<Fragment>{foo}</Fragment>
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-useless-fragment/no-useless-fragment.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-useless-fragment/no-useless-fragment.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-jsx/src/rules/no-useless-fragment/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `Fragment`](https://react.dev/reference/react/Fragment)
+- [GitHub Gist: `clemmy/react_state_preservation_behavior`](https://gist.github.com/clemmy/b3ef00f9507909429d8aa0d3ee4f986b)

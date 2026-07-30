@@ -1,0 +1,64 @@
+---
+title: jsx
+description: Reports all JSX elements and fragments in JSON format. Useful for debugging. This rule should be used only for debugging purposes; otherwise leave it off.
+---
+
+**Full Name in `eslint-plugin-react-debug`**
+
+```plain copy
+react-debug/jsx
+```
+
+**Features**
+
+`🐞`
+
+## Rule Details
+
+This rule reports all JSX elements and fragments in JSON format. It includes information about the JSX runtime (automatic or classic), factory, fragment factory, and import source derived from `tsconfig.json` or pragma comments.
+
+## Examples
+
+### Automatic runtime JSX
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
+    "jsxImportSource": "react"
+  }
+}
+```
+
+```tsx
+import React from "react";
+
+// This rule reports JSX elements and includes automatic runtime information.
+const element = <div>Hello World</div>;
+//              ^^^^^^^^^^^^^^^^^^^^^^
+//              - [jsx element] jsx: 'react-jsx', jsxFactory: 'React.createElement', jsxFragmentFactory: 'React.Fragment', jsxRuntime: 'automatic', jsxImportSource: 'react'
+```
+
+### Classic runtime with pragma comments
+
+```tsx
+/** @jsx Preact.h */
+/** @jsxFrag Preact.Fragment */
+/** @jsxImportSource preact */
+/** @jsxRuntime classic */
+
+import Preact from "preact";
+
+// This rule reports JSX elements and includes classic runtime information from pragma comments.
+const element = <div>Hello World</div>;
+//              ^^^^^^^^^^^^^^^^^^^^^^
+//              - [jsx element] jsx: 'react', jsxFactory: 'Preact.h', jsxFragmentFactory: 'Preact.Fragment', jsxRuntime: 'classic', jsxImportSource: 'preact'
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-debug/src/rules/jsx/jsx.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-debug/src/rules/jsx/jsx.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-debug/src/rules/jsx/CHANGELOG.md)

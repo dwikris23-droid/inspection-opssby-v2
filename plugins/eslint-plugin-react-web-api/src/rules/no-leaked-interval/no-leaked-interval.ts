@@ -1,0 +1,153 @@
+import { type ComponentPhaseKind, ComponentPhaseRelevance, type TimerEntry, getPhaseKindOfFunction } from "@/types";
+import { createRule } from "@/utils/create-rule";
+import { Extract, type TSESTreeFunction } from "@eslint-react/ast";
+import { type RuleContext, type RuleFeature, type RuleListener } from "@eslint-react/eslint";
+import { isAssignmentTargetEqual, resolveEnclosingAssignmentTarget } from "@eslint-react/var";
+import { type TSESTree } from "@typescript-eslint/types";
+import { P, isMatching } from "ts-pattern";
+
+// #region Rule Metadata
+
+export const RULE_NAME = "no-leaked-interval";
+
+export const RULE_FEATURES = [] as const satisfies RuleFeature[];
+
+export type MessageID =
+  | "expectedClearIntervalInCleanup"
+  | "expectedIntervalId";
+
+// #endregion
+
+// #region Types
+
+type FunctionKind = ComponentPhaseKind | "other";
+type EventMethodKind = "setInterval" | "clearInterval";
+type EffectMethodKind = "useEffect" | "useInsertionEffect" | "useLayoutEffect";
+type CallKind = EventMethodKind | EffectMethodKind | "other";
+
+// #endregion
+
+// #region Helpers
+
+function getCallKind(node: TSESTree.CallExpression): CallKind {
+  const name = Extract.getCalleeName(node);
+  if (name != null && isMatching(P.union("setInterval", "clearInterval"))(name)) {
+    return name;
+  }
+  return "other";
+}
+
+// #endregion
+
+// #region Rule Implementation
+
+export default createRule<[], MessageID>({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Enforces that every 'setInterval' in a component or custom hook has a corresponding 'clearInterval'.",
+    },
+    messages: {
+      expectedClearIntervalInCleanup: "A 'setInterval' created in '{{ kind }}' must be cleared with 'clearInterval' in the cleanup function.",
+
+      expectedIntervalId: "A 'setInterval' must be assigned to a variable for proper cleanup.",
+    },
+    schema: [],
+  },
+  name: RULE_NAME,
+  create,
+  defaultOptions: [],
+});
+
+export function create(context: RuleContext<MessageID, []>): RuleListener {
+  // Fast path: skip if `setInterval` is not present in the file
+  if (!context.sourceCode.text.includes("setInterval")) {
+    return {};
+  }
+  const fEntries: { kind: FunctionKind; node: TSESTreeFunction }[] = [];
+  const sEntries: TimerEntry[] = [];
+  const cEntries: TimerEntry[] = [];
+  function isInverseEntry(a: TimerEntry, b: TimerEntry) {
+    return isAssignmentTargetEqual(context, a.timerId, b.timerId);
+  }
+  return {
+    [":function"](node: TSESTreeFunction) {
+      const kind = getPhaseKindOfFunction(node) ?? "other";
+      fEntries.push({ kind, node });
+    },
+    [":function:exit"]() {
+      fEntries.pop();
+    },
+    ["CallExpression"](node) {
+      switch (getCallKind(node)) {
+        case "setInterval": {
+          const fEntry = fEntries.findLast((x) => x.kind !== "other");
+          if (fEntry == null) {
+            break;
+          }
+          if (!ComponentPhaseRelevance.has(fEntry.kind)) {
+            break;
+          }
+          const intervalIdNode = resolveEnclosingAssignmentTarget(node);
+          if (intervalIdNode == null) {
+            context.report({
+              messageId: "expectedIntervalId",
+              node,
+            });
+            break;
+          }
+          sEntries.push({
+            kind: "interval",
+            callee: node.callee,
+            node,
+            phase: fEntry.kind,
+            timerId: intervalIdNode,
+          });
+          break;
+        }
+        case "clearInterval": {
+          const fEntry = fEntries.findLast((x) => x.kind !== "other");
+          if (fEntry == null) {
+            break;
+          }
+          if (!ComponentPhaseRelevance.has(fEntry.kind)) {
+            break;
+          }
+          const [intervalIdNode] = node.arguments;
+          if (intervalIdNode == null) {
+            break;
+          }
+          cEntries.push({
+            kind: "interval",
+            callee: node.callee,
+            node,
+            phase: fEntry.kind,
+            timerId: intervalIdNode,
+          });
+          break;
+        }
+      }
+    },
+    ["Program:exit"]() {
+      for (const sEntry of sEntries) {
+        if (cEntries.some((cEntry) => isInverseEntry(sEntry, cEntry))) {
+          continue;
+        }
+        switch (sEntry.phase) {
+          case "setup":
+          case "cleanup":
+            context.report({
+              data: {
+                kind: "useEffect",
+              },
+              messageId: "expectedClearIntervalInCleanup",
+              node: sEntry.node,
+            });
+            continue;
+        }
+      }
+    },
+  };
+}
+
+// #endregion

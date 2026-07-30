@@ -1,0 +1,34 @@
+# Changelog
+
+All notable changes to the `react-jsx/no-leaked-dollar` rule will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [5.17.0] - 2026-07-17
+
+### Fixed
+
+- The intentional-`$` exemption (e.g. `<div>${price}</div>`) is no longer defeated by surrounding whitespace or empty siblings: a lone `$` before a single expression is allowed whenever all other siblings are non-substantive.
+
+## [5.16.1] - 2026-07-16
+
+### Changed
+
+- The rule no longer treats `$` character references (`&#36;`, `&#x24;`) as leaked dollar signs; only a literal `$` in the source is reported.
+
+## [5.2.3-beta.0] - 2026-04-14
+
+### Changed
+
+- Restructured monorepo directories: rule files moved to `plugins/eslint-plugin-react-jsx/src/rules/no-leaked-dollar/`.
+- Consolidated AST utilities to use normalized `Check`, `Compare`, `Extract` helpers.
+
+## [4.2.3] - 2026-04-03
+
+### Added
+
+- Initial release of the `no-leaked-dollar` rule. (#1688)
+- Reports leaked dollar signs (`$`) in JSX text nodes that may be rendered unexpectedly.

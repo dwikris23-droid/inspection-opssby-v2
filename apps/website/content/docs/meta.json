@@ -1,0 +1,25 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "getting-started",
+    "!migration",
+    "migrating-from-eslint-plugin-react",
+    "migrating-from-eslint-plugin-react-hooks",
+    "---Core Reference---",
+    "rules",
+    "presets",
+    "recipes",
+    "packages",
+    "!examples",
+    "configuration",
+    "---Project Information---",
+    "roadmap",
+    "changelog",
+    "!release-notes",
+    "faq",
+    "glossary",
+    "community",
+    "contributing",
+    "third-party-plugins"
+  ]
+}

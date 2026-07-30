@@ -1,0 +1,669 @@
+import tsx from "dedent";
+
+import { ruleTester } from "#/testing/helpers";
+import rule, { RULE_NAME } from "./static-components";
+
+ruleTester.run(RULE_NAME, rule, {
+  invalid: [
+    {
+      code: tsx`
+        function Parent() {
+          const ChildComponent = () => {
+            const [count, setCount] = useState(0);
+            return <button onClick={() => setCount(count + 1)}>{count}</button>;
+          };
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          function ChildComponent() {
+            return <div />;
+          }
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent({ type }) {
+          const Component = type === "button"
+            ? () => <button>Click</button>
+            : () => <div>Text</div>;
+
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const ChildComponent = React.memo(() => {
+            return <div />;
+          });
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const ChildComponent = class extends React.Component {
+            render() {
+              return <div />;
+            }
+          };
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const ChildComponent = createComponent();
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        class Parent extends React.Component {
+          render() {
+            const ChildComponent = () => <div />;
+            return <ChildComponent />;
+          }
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          function getComponent() {
+            const Nested = () => <div />;
+            return <Nested />;
+          }
+
+          return <div>{getComponent()}</div>;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Nested" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Nested" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Ported from react/compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/static-components
+    {
+      code: tsx`
+        function Example(props) {
+          function Component() {
+            return <div />;
+          }
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Example(props) {
+          const Component = new ComponentFactory();
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Example(props) {
+          const Component = props.foo.bar();
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Example(props) {
+          const Component = createComponent();
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Example(props) {
+          let Component;
+          if (props.cond) {
+            Component = createComponent();
+          } else {
+            Component = DefaultComponent;
+          }
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const A = () => <div />;
+          const B = A;
+          return <B />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "B" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "B" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const A = createComponent();
+          const B = A;
+          return <B />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "B" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "B" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const A = () => <div />;
+          const B = condition ? A : () => <span />;
+          return <B />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "B" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "B" },
+          messageId: "default",
+        },
+      ],
+    },
+    {
+      code: tsx`
+        function Parent() {
+          let Component = DefaultComponent;
+          Component = createComponent();
+          const B = Component;
+          return <B />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "B" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "B" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Component tag function that does not return JSX (from React Compiler fixtures)
+    {
+      code: tsx`
+        function Component() {
+          const Foo = () => {
+            someGlobal = true;
+          };
+          return <Foo />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Foo" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Foo" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Context variable reassigned via useMemo then used as JSX tag (from React Compiler fixtures)
+    // NOTE: The IMPL flags this as dynamic because it sees the CallExpression (useMemo)
+    // in the reassignment, even though the result is an external component.
+    {
+      code: tsx`
+        function Component(props) {
+          let Component = Stringify;
+          Component = useMemo(() => {
+            return Component;
+          }, [Component]);
+          return <Component {...props} />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Boundary: a `ClassDeclaration` nested directly inside render is dynamic,
+    // mirroring the `FunctionDeclaration` case above.
+    {
+      code: tsx`
+        function Parent() {
+          class ChildComponent extends React.Component {
+            render() {
+              return <div />;
+            }
+          }
+
+          return <ChildComponent />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "ChildComponent" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "ChildComponent" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Boundary: only the alternate branch of a ternary is dynamic; the consequent is a
+    // static external reference. The IMPL still flags the whole expression as dynamic.
+    {
+      code: tsx`
+        function Parent({ type }) {
+          const Component = type === "button"
+            ? StaticButton
+            : () => <div>Text</div>;
+
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+    // Boundary: only the consequent branch of a ternary is dynamic; the alternate is a
+    // static external reference. The IMPL still flags the whole expression as dynamic.
+    {
+      code: tsx`
+        function Parent({ type }) {
+          const Component = type === "button"
+            ? () => <button>Click</button>
+            : StaticText;
+
+          return <Component />;
+        }
+      `,
+      errors: [
+        {
+          data: { name: "Component" },
+          messageId: "createdHere",
+        },
+        {
+          data: { name: "Component" },
+          messageId: "default",
+        },
+      ],
+    },
+  ],
+  valid: [
+    {
+      code: tsx`
+        function Parent() {
+          return <ChildComponent />;
+        }
+
+        function ChildComponent() {
+          return <div />;
+        }
+      `,
+    },
+    {
+      code: tsx`
+        function Parent() {
+          const ChildComponent = () => <div />;
+          return <div />;
+        }
+      `,
+    },
+    {
+      code: tsx`
+        function Parent() {
+          function onClick(event) {
+            console.log(event);
+          }
+
+          return <button onClick={onClick} />;
+        }
+      `,
+    },
+    {
+      code: tsx`
+        function Parent() {
+          return <div><span>text</span></div>;
+        }
+      `,
+    },
+    {
+      code: tsx`
+        import ChildComponent from "./ChildComponent";
+
+        function Parent() {
+          return <ChildComponent />;
+        }
+      `,
+    },
+    {
+      code: tsx`
+        function Parent(props) {
+          return (
+            <ul>
+              {props.items.map((item) => (
+                <li key={item.id}>{item.name}</li>
+              ))}
+            </ul>
+          );
+        }
+      `,
+    },
+    {
+      code: tsx`
+        function Parent() {
+          return (
+            <SomeComponent footer={<OutsideDefinedComponent />} />
+          );
+        }
+      `,
+    },
+    {
+      code: tsx`
+        const External = () => <div />;
+
+        function Parent() {
+          const B = External;
+          return <B />;
+        }
+      `,
+    },
+    // Class component with render helper containing nested component (from React Compiler fixtures)
+    // NOTE: The IMPL does not flag this because the class-field arrow _renderMessage is not
+    // recognized as a function-component boundary, and the nested Message definition is traced
+    // through class-component detection in a way that does not surface here.
+    {
+      code: tsx`
+        class Component {
+          _renderMessage = () => {
+            const Message = () => {
+              const message = this.state.message;
+              return <div>{message}</div>;
+            };
+            return <Message />;
+          };
+
+          render() {
+            return this._renderMessage();
+          }
+        }
+      `,
+    },
+    // External component aliased in lambda callback (from React Compiler fixtures)
+    {
+      code: tsx`
+        function useFoo() {
+          const MyLocal = Stringify;
+          const callback = () => {
+            return <MyLocal value={4} />;
+          };
+          return callback();
+        }
+      `,
+    },
+    // Component variable referenced in non-assignment context should not crash
+    {
+      code: tsx`
+        function Parent() {
+          let Component = DefaultComponent;
+          console.log(Component);
+          return <Component />;
+        }
+      `,
+    },
+    // Component variable in array expression should not crash
+    {
+      code: tsx`
+        function Parent() {
+          let Component = DefaultComponent;
+          const arr = [Component];
+          return <Component />;
+        }
+      `,
+    },
+    // Component variable passed as argument should not crash
+    {
+      code: tsx`
+        function Parent() {
+          let Component = DefaultComponent;
+          fn(Component);
+          return <Component />;
+        }
+      `,
+    },
+    // Boundary: JSX member expression tags (e.g. `<Namespace.Bar />`) are ignored entirely,
+    // even when the referenced property is dynamically created.
+    {
+      code: tsx`
+        function Parent() {
+          const Namespace = { Bar: () => <div /> };
+          return <Namespace.Bar />;
+        }
+      `,
+    },
+    // Boundary: a lowercase-named binding is never treated as a component reference,
+    // regardless of how its value was created, because JSX treats lowercase tags as
+    // host elements rather than component references.
+    {
+      code: tsx`
+        function Parent() {
+          const childComponent = () => <div />;
+          return <childComponent />;
+        }
+      `,
+    },
+    // Boundary: hooks (names starting with lowercase "use") are not recognized as
+    // function-component render boundaries, so components nested directly inside a
+    // top-level hook (not itself nested inside a component) are not flagged.
+    {
+      code: tsx`
+        function useFoo() {
+          function Component() {
+            return <div />;
+          }
+          return <Component />;
+        }
+      `,
+    },
+    // Boundary: both branches of the ternary resolve to static/external references,
+    // so the assembled component is not considered dynamic.
+    {
+      code: tsx`
+        function Parent({ type }) {
+          const Component = type === "button" ? StaticButton : StaticText;
+          return <Component />;
+        }
+      `,
+    },
+    // Boundary: mutual reassignment between two variables must not cause infinite
+    // recursion; the cycle-detection guard should terminate and treat it as static.
+    {
+      code: tsx`
+        function Parent() {
+          let A = DefaultComponent;
+          let B = DefaultComponent;
+          A = B;
+          B = A;
+          return <A />;
+        }
+      `,
+    },
+  ],
+});

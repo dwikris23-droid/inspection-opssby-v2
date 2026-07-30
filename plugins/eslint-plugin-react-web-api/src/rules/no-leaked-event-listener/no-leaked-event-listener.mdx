@@ -1,0 +1,285 @@
+---
+title: no-leaked-event-listener
+description: Enforces that every 'addEventListener' in a component or custom hook has a corresponding 'removeEventListener'.
+---
+
+**Full Name in `eslint-plugin-react-web-api`**
+
+```plain copy
+react-web-api/no-leaked-event-listener
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/web-api-no-leaked-event-listener
+```
+
+**Presets**
+
+`web-api`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Adding an event listener without removing it can lead to memory leaks and unexpected behavior because the event listener will continue to exist even after the component or hook is unmounted.
+
+## Examples
+
+### Adding event listener without cleanup in useEffect
+
+```tsx
+import React, { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    const handleClick = () => {
+      console.log("clicked");
+    };
+
+    // 🔴 Problem: An 'addEventListener' in 'useEffect' should have a corresponding 'removeEventListener' in its cleanup function.
+    document.addEventListener("click", handleClick);
+  }, []);
+
+  return null;
+}
+```
+
+### Proper cleanup in useEffect
+
+```tsx
+import React, { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    const handleClick = () => {
+      console.log("clicked");
+    };
+
+    // 🟢 Recommended: Add listener in effect setup
+    document.addEventListener("click", handleClick);
+
+    return () => {
+      // 🟢 Recommended: Remove listener in effect cleanup
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  return null;
+}
+```
+
+### Adding event listener without cleanup in class components
+
+```tsx
+import React, { Component } from "react";
+
+class MyComponent extends Component {
+  componentDidMount() {
+    // 🔴 Problem: An 'addEventListener' in 'componentDidMount' should have a corresponding 'removeEventListener' in the 'componentWillUnmount' method.
+    document.addEventListener("click", this.handleClick);
+  }
+
+  handleClick() {
+    console.log("clicked");
+  }
+
+  render() {
+    return null;
+  }
+}
+```
+
+### Proper cleanup in class components
+
+```tsx
+import React, { Component } from "react";
+
+class MyComponent extends Component {
+  componentDidMount() {
+    // 🟢 Recommended: Add listener in mount
+    document.addEventListener("click", this.handleClick);
+  }
+
+  componentWillUnmount() {
+    // 🟢 Recommended: Remove listener in unmount
+    document.removeEventListener("click", this.handleClick);
+  }
+
+  handleClick() {
+    console.log("clicked");
+  }
+
+  render() {
+    return null;
+  }
+}
+```
+
+### Using inline listener functions
+
+```tsx
+import React, { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    // 🔴 Problem: An 'addEventListener' should not have an inline listener function.
+    document.addEventListener("click", () => console.log("clicked"));
+  }, []);
+
+  return null;
+}
+```
+
+### Mismatched options between add and remove
+
+```tsx
+import React, { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    const handleClick = () => {
+      console.log("clicked");
+    };
+
+    document.addEventListener("click", handleClick, { capture: true });
+    // 🔴 Problem: An 'addEventListener' in 'useEffect' should have a corresponding 'removeEventListener' in its cleanup function.
+
+    return () => {
+      // 🔴 Problem: Options don't match — removeEventListener must use the same capture value
+      document.removeEventListener("click", handleClick, { capture: false });
+    };
+  }, []);
+
+  return null;
+}
+```
+
+### Matching options between add and remove
+
+```tsx
+import React, { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    const handleClick = () => {
+      console.log("clicked");
+    };
+
+    document.addEventListener("click", handleClick, { capture: true });
+
+    return () => {
+      // 🟢 Recommended: Use identical options in both add and remove
+      document.removeEventListener("click", handleClick, { capture: true });
+    };
+  }, []);
+
+  return null;
+}
+```
+
+### Dynamic entries that may differ between setup and cleanup
+
+```tsx
+import { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    if (!el) {
+      return;
+    }
+
+    // 🔴 Problem: The entries are not guaranteed to be the same as those in the effect cleanup function.
+    for (const [name, handler] of Object.entries(handlers)) {
+      el.addEventListener(name, handler);
+    }
+
+    return () => {
+      // 🔴 Problem: The entries are not guaranteed to be the same as those in the effect setup function.
+      for (const [name, handler] of Object.entries(handlers)) {
+        el.removeEventListener(name, handler);
+      }
+    };
+  }, [el]);
+
+  return null;
+}
+```
+
+### Pre-computing entries for consistency
+
+```tsx
+import { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    if (!el) {
+      return;
+    }
+
+    // 🟢 Recommended: Always use the same entries in both the setup and cleanup functions:
+    const handlerEntries = Object.entries(handlers); // <- Use the same entries array
+
+    for (const [name, handler] of handlerEntries) {
+      el.addEventListener(name, handler);
+    }
+
+    return () => {
+      for (const [name, handler] of handlerEntries) {
+        el.removeEventListener(name, handler);
+      }
+    };
+  }, [el]);
+  return null;
+}
+```
+
+### Using stable arrays for multiple listeners
+
+```tsx
+import { useEffect } from "react";
+
+function MyComponent() {
+  useEffect(() => {
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
+    const handleActivity = () => {};
+
+    events.forEach((event) => {
+      // 🟢 Recommended: Use a stable array for consistent setup and cleanup
+      window.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handleActivity);
+      });
+    };
+  }, []);
+
+  return null;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-event-listener/no-leaked-event-listener.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-event-listener/no-leaked-event-listener.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-event-listener/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Subscribing to events](https://react.dev/learn/synchronizing-with-effects#subscribing-to-events)
+- [React Docs: Connecting to an external system](https://react.dev/reference/react/useEffect#connecting-to-an-external-system)
+- [MDN: `EventTarget.addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
+- [MDN: `EventTarget.removeEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)

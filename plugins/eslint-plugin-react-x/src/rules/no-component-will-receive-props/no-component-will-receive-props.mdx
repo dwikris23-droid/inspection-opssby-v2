@@ -1,0 +1,74 @@
+---
+title: no-component-will-receive-props
+description: Replaces usage of 'componentWillReceiveProps' with 'UNSAFE_componentWillReceiveProps'.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-component-will-receive-props
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-component-will-receive-props
+```
+
+**Features**
+
+`🔄`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+This API was renamed from `componentWillReceiveProps` to `UNSAFE_componentWillReceiveProps`. The old name has been deprecated. In a future major version of React, only the new name will work.
+
+## Examples
+
+### Using the legacy lifecycle method name in class components
+
+React has renamed `componentWillReceiveProps` to `UNSAFE_componentWillReceiveProps`. The old name will no longer work in future versions.
+
+```tsx
+import React from "react";
+
+// 🔴 Problem: Continuing to use the deprecated componentWillReceiveProps
+class MyComponent extends React.Component {
+  componentWillReceiveProps() {
+    // ...
+  }
+}
+```
+
+```tsx
+import React from "react";
+
+// 🟢 Recommended: Use UNSAFE_componentWillReceiveProps instead
+class MyComponent extends React.Component {
+  UNSAFE_componentWillReceiveProps() {
+    // ...
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-component-will-receive-props/no-component-will-receive-props.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-component-will-receive-props/no-component-will-receive-props.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-component-will-receive-props/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `UNSAFE_componentWillReceiveProps`](https://react.dev/reference/react/Component#unsafe_componentwillreceiveprops)
+- [React Docs: You Probably Don't Need Derived State](https://legacy.reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html)
+- [React Docs: Updating to Async Rendering](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html)

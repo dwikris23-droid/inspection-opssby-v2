@@ -1,0 +1,131 @@
+---
+title: no-unused-props
+description: Warns about component props that are defined but never used.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unused-props
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unused-props
+```
+
+**Features**
+
+`💭` `🧪`
+
+**Presets**
+
+`strict-type-checked`
+
+## Rule Details
+
+Unused props increase maintenance overhead and may mislead consumers of the component into thinking the prop is required or meaningful even when it has no effect.
+
+This is the TypeScript-only version of [`eslint-plugin-react/no-unused-prop-types`](https://github.com/jsx-eslint/eslint-plugin-react/blob/master/docs/rules/no-unused-prop-types.md). In contrast to the original rule, this rule
+
+- doesn't support the legacy propTypes syntax
+- combines the used props of one type definition declared by multiple components
+
+## Examples
+
+### Props defined but not used inside the component body
+
+Declaring a field in a type or interface but not reading or using it in the component function causes the type definition to be inconsistent with the actual implementation.
+
+```tsx
+// 🔴 Problem: onClick is defined in ButtonProps but never used
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+function Button({ children }: ButtonProps) {
+  return <button type="button">{children}</button>;
+}
+```
+
+```tsx
+// 🟢 Recommended: actually use all declared props in the component
+type ButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+};
+
+function Button({ children, onClick }: ButtonProps) {
+  return (
+    <button type="button" onClick={onClick}>
+      {children}
+    </button>
+  );
+}
+```
+
+### Fields declared in an interface but missed during destructuring
+
+Even if props are destructured, missing some fields from the interface is considered unused.
+
+```tsx
+// 🔴 Problem: avatarUrl is defined in UserProfileProps but never used
+interface UserProfileProps {
+  username: string;
+  avatarUrl: string;
+}
+
+function UserProfile({ username }: UserProfileProps) {
+  return <div>{username}</div>;
+}
+```
+
+### Passing all props through to child elements via the spread operator
+
+Using the `...rest` spread operator passes through all props that are not explicitly destructured, so these props are considered used.
+
+```tsx
+// 🔵 OK: ...rest is considered to use all non-destructured props
+interface TextProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Text({ children, ...rest }: TextProps) {
+  return <p {...rest}>{children}</p>;
+}
+```
+
+### Multiple components sharing the same props type definition
+
+When a type/interface is shared by multiple components, as long as each field is used in at least one component, it will not be reported as unused.
+
+```tsx
+// 🔵 OK: userId and theme are used in different components respectively
+interface ProfileProps {
+  userId: string; // Used by ProfilePage
+  theme: "light" | "dark"; // Used by ProfileAvatar
+}
+
+function ProfilePage({ userId }: ProfileProps) {
+  // ...
+  return <div>User ID: {userId}</div>;
+}
+
+function ProfileAvatar({ theme }: ProfileProps) {
+  // ...
+  return <div className={theme}>...</div>;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unused-props/no-unused-props.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unused-props/no-unused-props.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unused-props/CHANGELOG.md)

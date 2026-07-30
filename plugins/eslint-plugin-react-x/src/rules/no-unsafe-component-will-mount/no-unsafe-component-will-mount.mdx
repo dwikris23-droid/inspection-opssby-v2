@@ -1,0 +1,71 @@
+---
+title: no-unsafe-component-will-mount
+description: Warns about the use of 'UNSAFE_componentWillMount' in class components.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unsafe-component-will-mount
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unsafe-component-will-mount
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using unsafe lifecycle methods like `UNSAFE_componentWillMount` makes your component's behavior less predictable and more likely to cause bugs. Consider using `constructor` or `componentDidMount` instead.
+
+## Examples
+
+### Using `UNSAFE_componentWillMount` in class components
+
+`UNSAFE_componentWillMount` is a deprecated lifecycle method and may be removed in a future version of React. Initialization logic should go in the `constructor`, and side effects should go in `componentDidMount`.
+
+```tsx
+// 🔴 Problem: Uses an unsafe lifecycle method
+import React from "react";
+
+class MyComponent extends React.Component {
+  UNSAFE_componentWillMount() {
+    // ...
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: initialize state in the constructor or as a class field, move side effects to componentDidMount
+import React from "react";
+
+class MyComponent extends React.Component {
+  state = { counter: 0 };
+
+  componentDidMount() {
+    // Side effects belong here
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-mount/no-unsafe-component-will-mount.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-mount/no-unsafe-component-will-mount.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-mount/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `UNSAFE_componentWillMount`](https://react.dev/reference/react/Component#unsafe_componentwillmount)
+- [React Docs: Updating to Async Rendering](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html)

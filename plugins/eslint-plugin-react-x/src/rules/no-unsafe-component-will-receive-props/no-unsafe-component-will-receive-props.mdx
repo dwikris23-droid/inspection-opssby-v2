@@ -1,0 +1,81 @@
+---
+title: no-unsafe-component-will-receive-props
+description: Warns about the use of 'UNSAFE_componentWillReceiveProps' in class components.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unsafe-component-will-receive-props
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unsafe-component-will-receive-props
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using unsafe lifecycle methods like `UNSAFE_componentWillReceiveProps` makes your component's behavior less predictable and more likely to cause bugs. Consider using `getDerivedStateFromProps` or `componentDidUpdate` instead.
+
+## Examples
+
+### Using `UNSAFE_componentWillReceiveProps` in class components
+
+`UNSAFE_componentWillReceiveProps` is a deprecated lifecycle method. If you need to update state when props change, use the static method `getDerivedStateFromProps`; if you need to perform side effects, use `componentDidUpdate`.
+
+```tsx
+// 🔴 Problem: Uses an unsafe lifecycle method
+import React from "react";
+
+class MyComponent extends React.Component {
+  UNSAFE_componentWillReceiveProps() {
+    // ...
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: derive state with getDerivedStateFromProps or use componentDidUpdate for side effects
+import React from "react";
+
+class MyComponent extends React.Component {
+  static getDerivedStateFromProps(props, state) {
+    if (props.userID !== state.prevUserID) {
+      return {
+        prevUserID: props.userID,
+        email: props.defaultEmail,
+      };
+    }
+    return null;
+  }
+
+  state = {
+    email: this.props.defaultEmail,
+    prevUserID: this.props.userID,
+  };
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-receive-props/no-unsafe-component-will-receive-props.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-receive-props/no-unsafe-component-will-receive-props.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unsafe-component-will-receive-props/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `UNSAFE_componentWillReceiveProps`](https://react.dev/reference/react/Component#unsafe_componentwillreceiveprops)
+- [React Docs: You Probably Don't Need Derived State](https://legacy.reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html)
+- [React Docs: Updating to Async Rendering](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html)

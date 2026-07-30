@@ -1,0 +1,132 @@
+---
+title: no-leaked-interval
+description: Enforces that every 'setInterval' in a component or custom hook has a corresponding 'clearInterval'.
+---
+
+**Full Name in `eslint-plugin-react-web-api`**
+
+```plain copy
+react-web-api/no-leaked-interval
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/web-api-no-leaked-interval
+```
+
+**Presets**
+
+`web-api`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Scheduling an interval within the setup function of `useEffect` without canceling it in the cleanup function can lead to unwanted `setInterval` callback executions and may also result in using stale values captured by previous renders' effects after each subsequent re-render.
+
+## Examples
+
+### Setting interval without cleanup in useEffect
+
+```tsx
+import React, { useEffect, useState } from "react";
+
+function MyComponent() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // 🔴 Problem: A 'setInterval' created in 'useEffect' must be cleared in the cleanup function.
+    const intervalId = setInterval(() => console.log(count), 1000);
+  }, []);
+
+  return null;
+}
+```
+
+### Clearing interval in useEffect cleanup
+
+```tsx
+import React, { useEffect, useState } from "react";
+
+function MyComponent() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // 🟢 Recommended: Store the interval ID
+    const intervalId = setInterval(() => console.log(count), 1000);
+    // 🟢 Recommended: Clear the interval in the cleanup function
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return null;
+}
+```
+
+### Avoiding stale dependencies in intervals
+
+If your interval callback reads state, including that state in the dependency array will reset the interval on every change. Use a state updater function instead so the interval can run with an empty dependency array.
+
+```tsx
+// 🟢 Recommended: use a state updater to avoid stale closures and unnecessary resets
+import { useState, useEffect } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCount((c) => c + 1);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return <h1>{count}</h1>;
+}
+```
+
+### Encapsulating interval logic in a custom hook
+
+When multiple components need the same interval behavior, extract it into a custom hook. This keeps the cleanup logic centralized and ensures every `setInterval` has a matching `clearInterval`.
+
+```tsx
+// 🟢 Recommended: encapsulate interval logic in a custom hook with cleanup
+import { useState, useEffect } from "react";
+
+function useTimer(callback: () => void, delay: number) {
+  useEffect(() => {
+    const id = setInterval(() => {
+      callback();
+    }, delay);
+    return () => {
+      clearInterval(id);
+    };
+  }, [delay, callback]);
+}
+
+function Timer() {
+  const [count, setCount] = useState(0);
+
+  useTimer(() => {
+    setCount((c) => c + 1);
+  }, 1000);
+
+  return <h1>Counter: {count}</h1>;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-interval/no-leaked-interval.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-interval/no-leaked-interval.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-web-api/src/rules/no-leaked-interval/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Synchronizing with effects](https://react.dev/learn/synchronizing-with-effects#putting-it-all-together)
+- [MDN: `setInterval`](https://developer.mozilla.org/en-US/docs/Web/API/setInterval)
+- [MDN: `clearInterval`](https://developer.mozilla.org/en-US/docs/Web/API/clearInterval)

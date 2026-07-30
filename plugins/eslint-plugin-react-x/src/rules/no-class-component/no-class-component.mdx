@@ -1,0 +1,124 @@
+---
+title: no-class-component
+description: Disallows class components except for error boundaries.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-class-component
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-class-component
+```
+
+**Presets**
+
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Component is the base class for React components defined as JavaScript classes. Class components are still supported by React, but we don't recommend using them in new code.
+
+We recommend defining components as functions instead of classes. [See how to migrate](https://react.dev/reference/react/Component#alternatives).
+
+## Examples
+
+### Writing a new component
+
+For new code, prefer function components with Hooks. They are simpler, easier to compose, and align with React's current direction.
+
+```tsx
+// 🔴 Problem: Using a class component for new logic
+import React from "react";
+
+interface MyComponentProps {
+  name: string;
+}
+
+class MyComponent extends React.Component<MyComponentProps> {
+  render() {
+    return <h1>Hello, {this.props.name}!</h1>;
+  }
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a function component instead
+interface MyComponentProps {
+  name: string;
+}
+
+function MyComponent({ name }: MyComponentProps) {
+  return <h1>Hello, {name}!</h1>;
+}
+```
+
+### Defining an error boundary
+
+Error boundaries must currently be implemented as class components because `componentDidCatch` and `getDerivedStateFromError` have no function-component equivalent. This is an allowed exception.
+
+```tsx
+// 🔵 OK: Error boundaries must be implemented as class components
+import React, { Component } from "react";
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### Migrating a class component with state
+
+Class components that manage local state can be converted to function components using the `useState` Hook.
+
+```tsx
+// 🟢 Recommended: Use a function component with Hooks
+import { useState } from "react";
+
+function Counter() {
+  const [age, setAge] = useState(42);
+
+  function handleAgeChange() {
+    setAge((prevAge) => prevAge + 1);
+  }
+
+  return (
+    <>
+      <button onClick={handleAgeChange}>Increment age</button>
+      <p>You are {age}.</p>
+    </>
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-class-component/no-class-component.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-class-component/no-class-component.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-class-component/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Alternatives to class components](https://react.dev/reference/react/Component#alternatives)
+- [Legacy React APIs: `Component`](https://react.dev/reference/react/Component)

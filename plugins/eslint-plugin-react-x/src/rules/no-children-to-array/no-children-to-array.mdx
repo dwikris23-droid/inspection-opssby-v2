@@ -1,0 +1,136 @@
+---
+title: no-children-to-array
+description: Disallows the use of 'Children.toArray' from the 'react' package.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-children-to-array
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-children-to-array
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Using `Children.toArray` to materialize the children tree is a form of React child introspection. It creates fragile coupling between parent and child components:
+
+- Breaks when children are wrapped in HOCs, `forwardRef`, or `memo`.
+- Prevents React from optimizing rendering.
+- Creates implicit contracts that types can't enforce.
+- Makes composition unpredictable with fragments, portals, and other React features.
+
+Prefer these alternatives:
+
+- Compound components with context
+- Render props or slot props
+- Data-driven APIs (array of config objects)
+- CSS-based solutions (grid, flexbox, `:nth-child`, etc.)
+
+[See common alternatives](https://react.dev/reference/react/Children#alternatives).
+
+## Examples
+
+### Converting children to an array for manipulation
+
+Using `Children.toArray` to turn children into an array assumes internal React details that may change. If you need to reorder or filter items, accept structured data as props instead.
+
+For example, if you need to reverse a list, let the parent pass an array prop and use standard array methods:
+
+```tsx
+// 🟢 Recommended: accept data as an array prop and manipulate it directly
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent({ items }: MyComponentProps) {
+  const reversed = [...items].reverse();
+  return (
+    <>
+      {reversed.map((item) => (
+        <div key={item}>{item}</div>
+      ))}
+    </>
+  );
+}
+```
+
+```tsx
+// 🔴 Problem: Using Children.toArray to convert children into an array for manipulation
+import React, { Children } from "react";
+
+interface MyComponentProps {
+  children: React.ReactNode;
+}
+
+function MyComponent({ children }: MyComponentProps) {
+  const result = Children.toArray(children);
+  result.reverse();
+  // ...
+}
+```
+
+### Passing structured data as props
+
+Instead of converting children to an array, accept structured data as a prop and use standard array methods. This keeps your component decoupled from React's internal children representation.
+
+```tsx
+// 🟢 Recommended: accept structured data as a prop and map over it
+interface Row {
+  id: string;
+  content: React.ReactNode;
+}
+
+interface RowListProps {
+  rows: Row[];
+}
+
+function RowList({ rows }: RowListProps) {
+  return (
+    <div className="RowList">
+      {rows.map((row) => (
+        <div className="Row" key={row.id}>
+          {row.content}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <RowList
+      rows={[
+        { id: "first", content: <p>This is the first item.</p> },
+        { id: "second", content: <p>This is the second item.</p> },
+        { id: "third", content: <p>This is the third item.</p> },
+      ]}
+    />
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-to-array/no-children-to-array.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-to-array/no-children-to-array.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-children-to-array/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `Children`](https://react.dev/reference/react/Children)
+- [Astryx `no-react-introspection` Rule](https://github.com/facebook/astryx/blob/main/internal/eslint-plugin-astryx/no-react-introspection.js)

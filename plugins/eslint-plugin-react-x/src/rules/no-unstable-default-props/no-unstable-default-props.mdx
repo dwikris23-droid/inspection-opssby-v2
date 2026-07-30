@@ -1,0 +1,223 @@
+---
+title: no-unstable-default-props
+description: Prevents using referential-type values as default props in object destructuring.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-unstable-default-props
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-unstable-default-props
+```
+
+**Features**
+
+`⚙️`
+
+**Presets**
+
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+When using object destructuring syntax, you can set the default value for a given property if it does not exist. If you set the default value to one of the values that is compared by identity, then each time the destructuring is evaluated the JS engine will create a new, distinct value in the destructured variable.
+
+This harms performance, as it means that React will have to re-evaluate hooks and re-render memoized components more often than necessary.
+
+To fix the violations, the easiest way is to use a referencing variable in module scope instead of using the literal values.
+
+## Examples
+
+### Using array literals as default props
+
+Array literals `[]` create a new reference every time, causing Hooks or memoized components that depend on the reference to recompute frequently.
+
+```tsx
+// 🔴 Problem: Array literal as a default prop creates a new reference on every render
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent({ items = [] }: MyComponentProps) {
+  //                           ^^^ An 'Array literal' as a default prop. This could lead to a potential infinite render loop in React. Use a variable instead of 'Array literal'.
+  return null;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a stable module-level variable instead of a literal
+import React from "react";
+
+const emptyArray: string[] = [];
+
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent({ items = emptyArray }: MyComponentProps) {
+  return null;
+}
+```
+
+### Using object literals as default props
+
+Object literals `{}` also create a new reference on every render, causing unnecessary re-render overhead.
+
+```tsx
+// 🔴 Problem: Object literal as a default prop
+interface MyComponentProps {
+  items: Record<string, string>;
+}
+
+function MyComponent({ items = {} }: MyComponentProps) {
+  //                           ^^^ An 'Object literal' as a default prop. This could lead to a potential infinite render loop in React. Use a variable instead of 'Object literal'.
+  return null;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a stable module-level object variable
+import React from "react";
+
+const emptyObject = {};
+
+interface MyComponentProps {
+  items: Record<string, string>;
+}
+
+function MyComponent({ items = emptyObject }: MyComponentProps) {
+  return null;
+}
+```
+
+### Using arrow functions as default props
+
+Arrow function expressions generate a new function reference on every render, breaking memo optimizations for child components.
+
+```tsx
+// 🔴 Problem: Arrow function as a default prop
+interface MyComponentProps {
+  onClick: () => void;
+}
+
+function MyComponent({ onClick = () => {} }: MyComponentProps) {
+  //                             ^^^ An 'arrow function expression' as a default prop. This could lead to a potential infinite render loop in React. Use a variable instead of 'arrow function expression'.
+  return null;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a stable module-level function reference
+import React from "react";
+
+const noop = () => {};
+
+interface MyComponentProps {
+  onClick: () => void;
+}
+
+function MyComponent({ onClick = noop }: MyComponentProps) {
+  return null;
+}
+```
+
+### Using unstable default values in destructured props
+
+Even when assigning default values after destructuring `props`, using literals still causes the same reference instability problem.
+
+```tsx
+// 🔴 Problem: Using an array literal after destructuring
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent(props: MyComponentProps) {
+  const { items = [] } = props;
+  //              ^^^ An 'Array literal' as a default prop. This could lead to a potential infinite render loop in React. Use a variable instead of 'Array literal'.
+  return null;
+}
+```
+
+```tsx
+// 🟢 Recommended: Use a stable module-level variable
+import React from "react";
+
+const emptyArray: string[] = [];
+
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent(props: MyComponentProps) {
+  const { items = emptyArray } = props;
+
+  return null;
+}
+```
+
+### Using the `use memo` directive
+
+In React 19, if a component uses the `"use memo"` directive, the compiler automatically optimizes reference stability for default props, so literal default values are acceptable.
+
+```tsx
+// 🔵 OK: The use memo directive automatically optimizes references
+interface MyComponentProps {
+  items: string[];
+}
+
+function MyComponent({ items = [] }: MyComponentProps) {
+  "use memo";
+  return null;
+}
+```
+
+### Using primitive types as default props
+
+Primitive types (number, string, boolean, etc.) are compared by value and don't have reference instability issues, so they can be inlined directly.
+
+```tsx
+// 🔵 OK: Primitive default props are safe
+interface MyComponentProps {
+  num: number;
+  str: string;
+  bool: boolean;
+}
+
+function MyComponent({ num = 3, str = "foo", bool = true }: MyComponentProps) {
+  //                   ^^^ Primitives are all compared by value, so they are safe to inline as default props.
+  return null;
+}
+```
+
+## Rule Options
+
+```ts
+type Options = {
+  safeDefaultProps?: string[];
+};
+```
+
+### `safeDefaultProps`
+
+An array of identifier names or regex patterns that are safe to use as default props. If the default prop value is created by calling one of the allowlisted identifiers, it will be considered safe.
+
+Default: `[]`
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-default-props/no-unstable-default-props.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-default-props/no-unstable-default-props.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-unstable-default-props/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `memo`](https://react.dev/reference/react/memo)
+- [React Docs: `useMemo`](https://react.dev/reference/react/useMemo)
+- [React Compiler: `compilationMode`](https://react.dev/reference/react-compiler/compilationMode)

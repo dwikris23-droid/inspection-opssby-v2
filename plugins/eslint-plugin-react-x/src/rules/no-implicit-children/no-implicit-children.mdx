@@ -1,0 +1,100 @@
+---
+title: no-implicit-children
+description: Prevents implicitly passing the 'children' prop to components.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-implicit-children
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-implicit-children
+```
+
+**Features**
+
+`💭` `🧪`
+
+## Rule Details
+
+This makes it hard to see whether the children was passed correctly to the element or where it came from.
+
+The following cases are **allowed** and will not be reported:
+
+1. The `children` property originates from React's own type definitions (ex: `React.DOMAttributes.children`, `React.PropsWithChildren.children`), such as when spreading `React.ComponentProps<"div">`, `React.HTMLAttributes<T>`, `React.PropsWithChildren<T>`, or similar React-provided types.
+2. The `children` property's **type** is a React-defined children type alias, such as `React.ReactNode`, `React.ReactElement`, `React.ReactPortal`, or `JSX.Element`, even if the property is declared in a user-defined type.
+
+## Examples
+
+### Implicitly passing children via the spread operator
+
+Spreading an object that contains `children` directly onto a component makes the source of `children` unclear.
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; children: string };
+
+// 🔴 Problem: Implicitly passing children when spreading an object
+function MyComponent() {
+  return <div {...someValues} />;
+}
+```
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; children: string };
+
+// 🟢 Recommended: Explicitly destructure and pass children
+function MyComponent() {
+  const { children, ...rest } = someValues;
+  return <div {...rest}>{children}</div>;
+}
+```
+
+### children type is a React built-in type
+
+When the `children` type is a React built-in children type alias, spreading is allowed.
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; children: React.ReactNode };
+
+// 🔵 OK: children type is React.ReactNode, which is a React built-in type alias
+function MyComponent() {
+  return <div {...someValues} data-slot="my-component" />;
+}
+```
+
+### Spreading React built-in component props
+
+When spreading props from React built-in types (such as `React.ComponentProps`), the `children` originates from React's type definitions and is allowed.
+
+```tsx
+import React from "react";
+
+// 🔵 OK: props come from React.ComponentProps, children originates from React.DOMAttributes
+function PaginationItem({ ...props }: React.ComponentProps<"li">) {
+  return <li data-slot="pagination-item" {...props} />;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-children/no-implicit-children.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-children/no-implicit-children.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-children/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Passing Props to a Component](https://react.dev/learn/passing-props-to-a-component)

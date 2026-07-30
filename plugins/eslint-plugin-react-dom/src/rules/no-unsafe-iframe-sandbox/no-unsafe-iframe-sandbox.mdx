@@ -1,0 +1,80 @@
+---
+title: no-unsafe-iframe-sandbox
+description: Enforces that the 'sandbox' attribute for 'iframe' elements is not set to unsafe combinations.
+---
+
+**Full Name in `eslint-plugin-react-dom`**
+
+```plain copy
+react-dom/no-unsafe-iframe-sandbox
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/dom-no-unsafe-iframe-sandbox
+```
+
+**Presets**
+
+`dom`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+This rule reports cases where the attribute contains `allow-scripts` and `allow-same-origin` at the same time, as this combination allows the embedded document to remove the sandbox attribute and bypass the restrictions.
+
+## Examples
+
+### Sandboxing third-party content in an iframe
+
+```tsx
+function MyComponent() {
+  return (
+    // 🔴 Problem: allow-scripts together with allow-same-origin lets the embedded
+    // document escape the sandbox by removing the attribute via JavaScript
+    <iframe
+      src="https://eslint-react.xyz"
+      sandbox="allow-scripts allow-same-origin"
+    />
+  );
+}
+```
+
+```tsx
+function MyComponent() {
+  // 🟢 Recommended: Use a safer sandbox value that does not combine both flags
+  return <iframe src="https://eslint-react.xyz" sandbox="allow-popups" />;
+}
+```
+
+### Restrictive sandboxing for untrusted content
+
+When embedding untrusted third-party content, use a restrictive `sandbox` attribute that limits the embedded document's capabilities without allowing script execution combined with same-origin access.
+
+```tsx
+// 🟢 Recommended: Use restrictive sandbox values for untrusted content
+function MyComponent() {
+  return (
+    <iframe
+      src="https://example.com"
+      sandbox="allow-popups allow-popups-to-escape-sandbox"
+    />
+  );
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-unsafe-iframe-sandbox/no-unsafe-iframe-sandbox.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-unsafe-iframe-sandbox/no-unsafe-iframe-sandbox.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-dom/src/rules/no-unsafe-iframe-sandbox/CHANGELOG.md)
+
+## Further Reading
+
+- [MDN: `iframe` `sandbox`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attributes)

@@ -1,0 +1,177 @@
+---
+title: set-state-in-render
+description: Validates against unconditionally setting state during render, which can trigger additional renders and potential infinite render loops.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/set-state-in-render
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/set-state-in-render
+```
+
+**Features**
+
+`🧪`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Calling `setState` during render unconditionally triggers another render before the current one finishes. This creates an infinite loop that crashes your app.
+
+## Examples
+
+### Unconditional setState in render
+
+Calling a state setter directly in the component body, without any guard condition, will trigger a re-render immediately, leading to an infinite loop.
+
+```tsx
+// 🔴 Problem: unconditionally calling setState during render
+function Component({ value }) {
+  const [count, setCount] = useState(0);
+  setCount(value); // infinite loop!
+  return <div>{count}</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: derive values directly during rendering
+function Component({ items }) {
+  const sorted = [...items].sort();
+  return <ul>{sorted.map(/*...*/)}</ul>;
+}
+```
+
+```tsx
+// 🟢 Recommended: set state in event handlers
+function Component() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      {count}
+    </button>
+  );
+}
+```
+
+### Deriving values from props
+
+If you only need to transform props before displaying them, compute the value directly during rendering instead of copying it into state.
+
+```tsx
+// 🟢 Recommended: derive values directly during rendering
+function Component({ user }) {
+  const name = user?.name || "";
+  const email = user?.email || "";
+  return <div>{name}</div>;
+}
+```
+
+### Syncing state to a prop
+
+A common mistake is trying to "fix" state after it renders. For example, clamping a counter to a `max` prop during render causes an infinite loop as soon as the value exceeds the limit.
+
+```tsx
+// 🔴 Problem: adjusting state during render
+function Counter({ max }) {
+  const [count, setCount] = useState(0);
+
+  if (count > max) {
+    setCount(max); // triggers infinite loop when exceeding max
+  }
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      {count}
+    </button>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: limit the value when updating
+function Counter({ max }) {
+  const [count, setCount] = useState(0);
+
+  const increment = () => {
+    setCount(current => Math.min(current + 1, max));
+  };
+
+  return <button onClick={increment}>{count}</button>;
+}
+```
+
+### Conditional state updates during render
+
+In rare cases, you may need to adjust state based on information from previous renders. This is valid only when guarded by a condition that prevents infinite loops.
+
+```tsx
+// 🔵 OK: conditionally updating state based on information from the previous render
+function Component({ items }) {
+  const [isReverse, setIsReverse] = useState(false);
+  const [selection, setSelection] = useState(null);
+
+  const [prevItems, setPrevItems] = useState(items);
+  if (items !== prevItems) { // condition prevents infinite loop
+    setPrevItems(items);
+    setSelection(null);
+  }
+  // ...
+}
+```
+
+```tsx
+// 🟢 Recommended: compute directly during rendering whenever possible
+function Component({ items }) {
+  const [isReverse, setIsReverse] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const selection = items.find((item) => item.id === selectedId) ?? null;
+  // ...
+}
+```
+
+## Options
+
+### Shared Settings
+
+Custom state hooks can also be configured via shared ESLint settings, which apply consistently across all rules in the plugin:
+
+```json
+{
+  "settings": {
+    "react-x": {
+      "additionalStateHooks": "(useMyState|useCustomState)"
+    }
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/set-state-in-render/set-state-in-render.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/set-state-in-render/set-state-in-render.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/set-state-in-render/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `set-state-in-render` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-render)
+- [React Docs: Storing information from previous renders](https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+- [React Docs: `useState`](https://react.dev/reference/react/useState)

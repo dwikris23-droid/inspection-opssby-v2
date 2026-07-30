@@ -1,0 +1,204 @@
+---
+title: purity
+description: Validates that components and hooks are pure by checking that they do not call known-impure functions during render.
+---
+
+<Callout type="warn">
+  This is an evaluation implementation and may contain false positives or negatives that have not yet been fully audited. Review each report carefully before applying fixes.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/purity
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/purity
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+React components must be pure functions — given the same props, they should always return the same JSX. When components use functions like `Math.random()` or `Date.now()` during render, they produce different output each time, breaking React's assumptions and causing bugs like hydration mismatches, incorrect memoization, and unpredictable behavior.
+
+In general, any API that returns a different value for the same inputs violates this rule. Usual examples include:
+
+- `Math.random()`
+- `Date.now()` / `new Date()`
+- `crypto.randomUUID()` / `crypto.getRandomValues()`
+- `performance.now()`
+
+## Examples
+
+### Generating random values during render
+
+Random values change on every render, making the component's output unpredictable. This breaks memoization and can cause hydration mismatches in server-rendered apps.
+
+```tsx
+// 🔴 Problem: produces a different value on every render
+function Component() {
+  const id = Math.random(); // different on every render
+  //         ^^^ Do not call 'Math.random()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return <div key={id}>Content</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: calling crypto.randomUUID() directly during render
+function Component() {
+  const id = crypto.randomUUID(); // different on every render
+  //         ^^^ Do not call 'crypto.randomUUID()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return <div id={id}>Content</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: use lazy initialization to ensure a stable value
+function Component() {
+  const [id] = useState(() => crypto.randomUUID());
+  return <div key={id}>Content</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: useMemo cannot make an impure call pure
+function Component() {
+  const value = useMemo(() => Math.random(), []);
+  //                  ^^^ Do not call 'Math.random()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return <div>{value}</div>;
+}
+```
+
+### Using time-based values during render
+
+Time-based values change constantly. Using them directly in render makes the component impure and causes unnecessary re-renders or hydration issues.
+
+```tsx
+// 🔴 Problem: time-based value changes on every render
+function Component() {
+  const timestamp = Date.now(); // constantly changing
+  //                ^^^ Do not call 'Date.now()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return <div>Created at: {timestamp}</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: new Date() is also impure
+function Component() {
+  const date = new Date(); // new time on every render
+  //           ^^^ Do not call 'new Date()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return <div>{date.toISOString()}</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: use time-based values in effects or event handlers
+function Component() {
+  useEffect(() => {
+    const timestamp = Date.now();
+    console.log(timestamp);
+  }, []);
+  return <div>Content</div>;
+}
+```
+
+### Showing the current time
+
+Calling `Date.now()` directly in JSX produces a different value on every render and makes the component impure.
+
+```tsx
+// 🔴 Problem: time changes on every render
+function Clock() {
+  return <div>Current time: {Date.now()}</div>;
+}
+```
+
+When you need to display a constantly updating value like the current time, use state and an effect rather than calling `Date.now()` directly in render.
+
+```tsx
+// 🟢 Recommended: manage time with state and effects
+function Clock() {
+  const [time, setTime] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  return <div>Current time: {time}</div>;
+}
+```
+
+### Using time-based values in custom hooks
+
+Custom hooks are also part of the render phase, so impure calls inside them are flagged just like in components.
+
+```tsx
+// 🔴 Problem: impure call inside a custom hook
+function useTimestamp() {
+  const t = Date.now(); // called during render
+  //        ^^^ Do not call 'Date.now()' during render. Components and hooks must be pure. Move this call into an event handler, effect, or state initializer.
+  return t;
+}
+```
+
+```tsx
+// 🟢 Recommended: move impure logic into an effect
+function useTimestamp() {
+  const [timestamp, setTimestamp] = useState(() => Date.now());
+  useEffect(() => {
+    setTimestamp(Date.now());
+  }, []);
+  return timestamp;
+}
+```
+
+### Impure calls in event handlers and effects
+
+Event handlers and effects run outside of React's render cycle, so impure functions are perfectly acceptable there.
+
+```tsx
+// 🟢 Recommended: use random numbers in event handlers
+function Component() {
+  return (
+    <button onClick={() => console.log(Math.random())}>
+      Roll
+    </button>
+  );
+}
+```
+
+```tsx
+// 🟢 Recommended: use timestamps in effects
+function Component() {
+  useEffect(() => {
+    const timestamp = Date.now();
+    console.log(timestamp);
+  }, []);
+  return <div>Content</div>;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/purity/purity.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/purity/purity.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/purity/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `purity` Lint Rule](https://react.dev/reference/eslint-plugin-react-hooks/lints/purity)
+- [React Docs: Components and Hooks must be pure](https://react.dev/reference/rules/components-and-hooks-must-be-pure)
+- [React Docs: Keeping Components Pure](https://react.dev/learn/keeping-components-pure)

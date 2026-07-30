@@ -1,0 +1,113 @@
+---
+title: no-set-state-in-component-did-update
+description: Disallows calling 'this.setState' in 'componentDidUpdate' outside functions such as callbacks.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-set-state-in-component-did-update
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-set-state-in-component-did-update
+```
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+Updating the state after a component updates will trigger an additional `render()` call and can lead to property/layout thrashing or infinite loops.
+
+## Examples
+
+### Calling setState directly in componentDidUpdate
+
+```tsx
+// 🔴 Problem: Calling setState directly in componentDidUpdate triggers another render and can easily cause infinite loops or layout thrashing
+import React from "react";
+
+interface MyComponentProps {}
+
+interface MyComponentState {
+  name: string;
+}
+
+class MyComponent extends React.Component<MyComponentProps, MyComponentState> {
+  componentDidUpdate() {
+    this.setState({ name: "John" });
+    //   ^^^ Do not call `this.setState` in `componentDidUpdate` outside functions such as callbacks.
+  }
+
+  render() {
+    return <div>Hello {this.state.name}</div>;
+  }
+}
+```
+
+### Responding to prop changes without extra state
+
+If you need to perform side effects when props change, do so conditionally and avoid synchronous `setState` calls that trigger additional renders.
+
+```tsx
+// 🟢 Recommended: Perform conditional side effects without synchronous setState
+import React from "react";
+
+interface MyComponentProps {
+  roomId: string;
+}
+
+interface MyComponentState {
+  serverUrl: string;
+}
+
+class ChatRoom extends React.Component<MyComponentProps, MyComponentState> {
+  state = {
+    serverUrl: "https://localhost:1234",
+  };
+
+  componentDidUpdate(prevProps: MyComponentProps) {
+    if (this.props.roomId !== prevProps.roomId) {
+      this.destroyConnection();
+      this.setupConnection(); // Side effect, not setState
+    }
+  }
+
+  componentWillUnmount() {
+    this.destroyConnection();
+  }
+
+  setupConnection() {
+    /* ... */
+  }
+
+  destroyConnection() {
+    /* ... */
+  }
+
+  render() {
+    return <div>Room: {this.props.roomId}</div>;
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-update/no-set-state-in-component-did-update.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-update/no-set-state-in-component-did-update.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-set-state-in-component-did-update/CHANGELOG.md)
+
+## Further Reading
+
+- [Legacy React APIs: `setState`](https://react.dev/reference/react/Component#setstate)
+- [Legacy React APIs: `componentDidUpdate`](https://react.dev/reference/react/Component#componentdidupdate)

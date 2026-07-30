@@ -1,0 +1,100 @@
+---
+title: no-implicit-ref
+description: Prevents implicitly passing the 'ref' prop to components.
+---
+
+<Callout type="warn">
+  This rule is experimental and may change in the future or be removed. It is not recommended for use in production code at this time.
+</Callout>
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/no-implicit-ref
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/no-implicit-ref
+```
+
+**Features**
+
+`💭` `🧪`
+
+## Rule Details
+
+This makes it hard to see whether the ref was passed correctly to the element or where it came from.
+
+The following cases are **allowed** and will not be reported:
+
+1. The `ref` property originates from React's own type definitions (ex: `React.ClassAttributes.ref`), such as when spreading `React.ComponentProps<"div">`, `React.HTMLAttributes<T>`, or similar React-provided types.
+2. The `ref` property's **type** is a React-defined ref type alias, such as `React.Ref`, `React.RefObject`, `React.RefCallback`, or `React.LegacyRef`, even if the property is declared in a user-defined type.
+
+## Examples
+
+### Implicitly passing ref via the spread operator
+
+Spreading an object that contains `ref` directly onto a component makes the source and target of `ref` unclear.
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; ref: null };
+
+// 🔴 Problem: Implicitly passing ref when spreading an object
+function MyComponent() {
+  return <div {...someValues} />;
+}
+```
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; ref: null };
+
+// 🟢 Recommended: Explicitly destructure and pass ref
+function MyComponent() {
+  const { ref, ...rest } = someValues;
+  return <div ref={ref} {...rest} />;
+}
+```
+
+### ref type is a React built-in ref type
+
+When the `ref` type is a React built-in ref type alias, spreading is allowed.
+
+```tsx
+import React from "react";
+
+declare let someValues: { id: string; className: string; ref: React.Ref<HTMLDivElement> };
+
+// 🔵 OK: ref type is React.Ref, which is a React built-in type alias
+function MyComponent() {
+  return <div {...someValues} data-slot="pagination-item" />;
+}
+```
+
+### Spreading React built-in component props
+
+When spreading props from React built-in types (such as `React.ComponentProps`), the `ref` originates from React's type definitions and is allowed.
+
+```tsx
+import React from "react";
+
+// 🔵 OK: props come from React.ComponentProps, ref originates from React.ClassAttributes
+function PaginationItem({ ...props }: React.ComponentProps<"li">) {
+  return <li data-slot="pagination-item" {...props} />;
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-ref/no-implicit-ref.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-ref/no-implicit-ref.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/no-implicit-ref/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: Manipulating the DOM with Refs](https://react.dev/learn/manipulating-the-dom-with-refs)

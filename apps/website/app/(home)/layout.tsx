@@ -1,0 +1,48 @@
+import { baseOptions } from "@/app/layout.config";
+import { HomeLayout } from "fumadocs-ui/layouts/home";
+import type { LinkItemType } from "fumadocs-ui/layouts/shared";
+import type { ReactNode } from "react";
+
+const links = [
+  {
+    active: "nested-url",
+    text: "Docs",
+    url: "/docs/getting-started/typescript",
+  },
+  {
+    active: "nested-url",
+    text: "Rules",
+    url: "/docs/rules",
+  },
+  {
+    active: "nested-url",
+    text: "Presets",
+    url: "/docs/presets",
+  },
+  {
+    active: "nested-url",
+    text: "Recipes",
+    url: "/docs/recipes",
+  },
+  {
+    active: "nested-url",
+    text: "Packages",
+    url: "/docs/packages",
+  },
+  {
+    active: "nested-url",
+    text: "Changelog",
+    url: "/docs/changelog",
+  },
+] as const satisfies LinkItemType[];
+
+export default function Layout({ children }: { children: ReactNode }) {
+  return (
+    <HomeLayout
+      {...baseOptions}
+      links={links}
+    >
+      {children}
+    </HomeLayout>
+  );
+}

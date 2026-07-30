@@ -1,0 +1,688 @@
+---
+title: "@eslint-react/kit"
+description: ESLint React's toolkit for building custom React rules with JavaScript functions
+---
+
+import { BskyPost } from "@/components/BskyPost";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+
+<Callout type="warn">
+  This module is currently in **beta**. APIs may change in future releases.
+</Callout>
+
+## Installation
+
+```sh
+npm install --save-dev @eslint-react/kit
+```
+
+## Quick Start
+
+```ts twoslash title="eslint.config.ts"
+import eslintReact from "@eslint-react/eslint-plugin";
+import eslintReactKit, { merge } from "@eslint-react/kit";
+import type { RuleFunction } from "@eslint-react/kit";
+import eslintJs from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
+
+/** Enforce function declarations for function components. */
+function functionComponentDefinition(): RuleFunction {
+  return (context, { collect }) => {
+    const { query, visitor } = collect.components(context);
+    return merge(
+      visitor,
+      {
+        "Program:exit"(program) {
+          for (const { node } of query.all(program)) {
+            if (node.type === "FunctionDeclaration") continue;
+            context.report({
+              node,
+              message: "Function components must be defined with function declarations.",
+            });
+          }
+        },
+      },
+    );
+  };
+}
+
+export default defineConfig(
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      eslintJs.configs.recommended,
+      tseslint.configs.recommended,
+      eslintReact.configs["recommended-typescript"],
+      eslintReactKit()
+        .use(functionComponentDefinition)
+        .getConfig(),
+    ],
+  },
+);
+```
+
+The rule name is derived automatically from the function name (`functionComponentDefinition` → `function-component-definition`), and registered as `@eslint-react/kit/function-component-definition` at `"error"` severity.
+
+## API Reference
+
+### `eslintReactKit` (default export)
+
+```ts
+import eslintReactKit from "@eslint-react/kit";
+
+eslintReactKit(): Builder
+```
+
+Creates a `Builder` instance for registering custom rules via the chainable `.use()` API.
+
+### `RuleFunction`
+
+```ts
+import type { RuleFunction } from "@eslint-react/kit";
+
+type RuleFunction = (context: RuleContext, toolkit: RuleToolkit) => RuleListener;
+```
+
+A function that receives the ESLint rule context and the structured `RuleToolkit` toolkit, and returns a `RuleListener` (AST visitor object).
+
+Rules are defined as **named functions** that return a `RuleFunction`. The function name is automatically converted to kebab-case and used as the rule name under the `@eslint-react/kit` plugin namespace.
+
+```ts
+// Function name `noForwardRef` → rule name `no-forward-ref`
+// Registered as `@eslint-react/kit/no-forward-ref`
+function noForwardRef(): RuleFunction {
+  return (context, { is }) => ({ ... });
+}
+
+// Functions that accept options work the same way
+function forbidElements({ forbidden }: ForbidElementsOptions): RuleFunction {
+  return (context) => ({ ... });
+}
+```
+
+<Accordions>
+  <Accordion title="Anonymous Rules">
+    When you use an **anonymous function** (arrow function without a name) with `.use()`, a random hex string is automatically generated as the rule name:
+
+    ```ts
+    // Registered as `@eslint-react/kit/a1b2c3d4e5f67890`
+    eslintReactKit().use(() => (context) => ({
+      CallExpression(node) {
+        // Critical check that cannot be easily disabled
+      },
+    }));
+    ```
+
+    Anonymous rules are ideal for checks that are **critical to code quality or security** and should never be bypassed via disable comments:
+
+    ```ts
+    // This critical security check cannot be easily disabled by developers
+    eslintReactKit().use(() => (context) => ({
+      Property(node) {
+        // Prevent direct construction of '__html' objects in product code
+        if (node.key.type === "Identifier" && node.key.name === "__html") {
+          context.report({
+            node,
+            message: "Do not construct '__html' objects directly. Use a sanitization library or receive them from server-side code.",
+          });
+        }
+      },
+    }));
+    ```
+
+    **Note:** Since the rule name is random and changes on every ESLint run, developers cannot use standard rules configs or disable comments like:
+
+    ```ts
+    // This will NOT work - the rule name is random!
+    { rules: { "@eslint-react/kit/01KNE2WSJ8011D2HXE3A6H717C": "off" } }
+
+    // This will NOT work - the rule name is random!
+    // eslint-disable-next-line @eslint-react/kit/01KNE2WSJ8011D2HXE3A6H717C
+    ```
+
+    To disable an anonymous rule, developers must modify the ESLint configuration file directly, which provides an audit trail for policy violations.
+  </Accordion>
+</Accordions>
+
+### `Builder`
+
+```ts
+interface Builder {
+  use<F extends (...args: any[]) => RuleFunction>(factory: F, ...args: Parameters<F>): Builder;
+  getConfig(): Linter.Config;
+  getPlugin(): ESLint.Plugin;
+}
+```
+
+A chainable builder for registering custom rules.
+
+| Method      | Description                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `use`       | Registers a rule factory. The rule name is `kebabCase(factory.name)`. Options type is inferred from the factory signature. |
+| `getConfig` | Returns a `Linter.Config` with all registered rules enabled at `"error"` severity.                                         |
+| `getPlugin` | Returns an `ESLint.Plugin` containing the registered rules and plugin metadata.                                            |
+
+#### `getConfig`
+
+Returns a flat `Linter.Config` object with all registered rules set to `"error"`. This is a convenience wrapper that calls `getPlugin()` internally and adds the plugin plus rule entries to the config.
+
+```ts
+eslintReactKit()
+  .use(noForwardRef) // no-arg factory
+  .use(version, "19") // factory with inferred options
+  .getConfig();
+```
+
+#### `getPlugin`
+
+Returns an `ESLint.Plugin` object containing the registered rules and plugin metadata (`name` and `version`). Use this when you need finer-grained control over how the plugin is integrated into your ESLint configuration.
+
+```ts title="eslint.config.ts"
+const kit = eslintReactKit()
+  .use(noForwardRef)
+  .use(version, "19");
+
+// Retrieve the raw plugin object
+const plugin = kit.getPlugin();
+
+// Use it in a custom flat config with your own namespace and severity
+export default [
+  {
+    files: ["**/*.{ts,tsx}"],
+    plugins: {
+      react: plugin,
+    },
+    rules: {
+      "react/version": "error",
+      "react/no-forward-ref": "error",
+    },
+  },
+];
+```
+
+### `merge`
+
+```ts
+import { merge } from "@eslint-react/kit";
+
+merge(...listeners: RuleListener[]): RuleListener
+```
+
+Merges multiple `RuleListener` (visitor) objects into a single listener. When two or more listeners define the same visitor key, the handlers are chained and execute in order.
+
+This is essential for combining a collector's `visitor` with your own inspection logic.
+
+## `RuleToolkit` — the toolkit object
+
+The second argument passed to the `RuleFunction` function is a structured `RuleToolkit` object:
+
+```
+kit
+├── collect            -> Semantic collectors (components, hooks)
+├── is                 -> All predicates (component, hook, React API, import source)
+├── ast                -> AST utilities (unwrap type expressions)
+├── hint               -> Detection hint bit-flags
+├── flag               -> Component characteristic bit-flags
+├── settings           -> Normalized ESLint React settings
+```
+
+---
+
+### `collect`
+
+Collector factories create a `{ query, visitor }` pair. The `visitor` must be merged into your rule listener via `merge()`. After traversal completes, `query.all(program)` yields all detected semantic nodes.
+
+| Method                          | Returns                                               | Description                                                                             |
+| ------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `components(context, options?)` | `CollectorWithContext<FunctionComponentSemanticNode>` | Detects function components. Options: `{ hint?: bigint, collectDisplayName?: boolean }` |
+| `hooks(context)`                | `CollectorWithContext<HookSemanticNode>`              | Detects custom hook definitions.                                                        |
+
+**`CollectorWithContext`** extends `Collector` with contextual queries:
+
+| Query                | Description                               |
+| -------------------- | ----------------------------------------- |
+| `query.all(program)` | All collected semantic nodes in the file. |
+
+---
+
+### `is`
+
+All predicates live under `kit.is` — organized into four sub-sections.
+
+#### Component
+
+| Predicate                  | Signature                 | Description                                                                 |
+| -------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| `componentDecl`            | `(node, hint) -> boolean` | Whether a function node is a component. (context pre-bound)                 |
+| `componentName`            | `(name) -> boolean`       | Strict PascalCase component name check.                                     |
+| `componentNameLoose`       | `(name) -> boolean`       | Loose component name check.                                                 |
+| `componentWrapperCall`     | `(node) -> boolean`       | Whether a node is a `memo(…)` or `forwardRef(…)` call. (context pre-bound)  |
+| `componentWrapperCallback` | `(node) -> boolean`       | Whether a function is the callback passed to a wrapper. (context pre-bound) |
+
+#### Hook
+
+General hook predicates:
+
+| Predicate                  | Signature                             | Description                                                  |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------------ |
+| `hookDecl`                 | `(node) -> boolean`                   | Whether a function node is a hook (by name).                 |
+| `hookCall`                 | `(node) -> boolean`                   | Whether a node is a hook call.                               |
+| `hookName`                 | `(name) -> boolean`                   | Whether a string matches the `use[A-Z]` convention.          |
+| `useEffectLikeCall`        | `(node, additionalHooks?) -> boolean` | Whether a node is a `useEffect`/`useLayoutEffect`-like call. |
+| `useRefLikeCall`           | `(node, additionalHooks?) -> boolean` | Whether a node is a `useRef`-like call.                      |
+| `useStateLikeCall`         | `(node, additionalHooks?) -> boolean` | Whether a node is a `useState`-like call.                    |
+| `useEffectSetupCallback`   | `(node) -> boolean`                   | Whether a node is a useEffect setup function.                |
+| `useEffectCleanupCallback` | `(node) -> boolean`                   | Whether a node is a useEffect cleanup function.              |
+
+#### React API
+
+Factory functions (context pre-bound):
+
+| Predicate | Signature                        | Description                                                                  |
+| --------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| `API`     | `(apiName) -> (node) -> boolean` | Factory: creates a predicate for a React API identifier. (context pre-bound) |
+| `APICall` | `(apiName) -> (node) -> boolean` | Factory: creates a predicate for a React API call. (context pre-bound)       |
+
+All React API predicates and factories have `context` pre-bound — no need to pass the rule context manually:
+
+```ts
+// Direct check
+is.memoCall(node);
+
+// Useful in filter/find
+nodes.filter(is.memoCall);
+
+// Factory for any API name
+const isCreateRefCall = is.APICall("createRef");
+
+// Returns true when the node is a call to `createRef`
+isCreateRefCall(node);
+```
+
+<Accordions>
+  <Accordion title="Why `is.API` / `is.APICall` instead of a hand-written check?">
+    <Callout type="warn" title="Under Construction">
+      This part is under construction.
+    </Callout>
+
+    Consider this single statement:
+
+    ```ts
+    const ownerStack = ((React as any).captureOwnerStack)?.()! satisfies OwnerStack;
+    ```
+
+    The call to `captureOwnerStack` is nested within four layers of syntax:
+
+    1. a `React as any` cast (`TSAsExpression`),
+    2. an optional call (`?.()` → `ChainExpression`),
+    3. a trailing non-null assertion (`!` → `TSNonNullExpression`), and
+    4. a `satisfies OwnerStack` clause (`TSSatisfiesExpression`).
+
+    A naive guard such as `node.callee.type === "Identifier" && node.callee.name === "captureOwnerStack"` matches **nothing**: the callee is not an `Identifier` — it is a `MemberExpression` whose `object` is a `TSAsExpression`.
+
+    `is.APICall("captureOwnerStack")` still returns `true`, because the factory:
+
+    - runs `ast.unwrap` first, peeling off `ChainExpression` and TS wrappers (`TSAsExpression`, `TSSatisfiesExpression`, `TSNonNullExpression`, `TSTypeAssertion`, parentheses) until it reaches the real callee;
+    - matches on the **fully-qualified name**, so a single predicate covers both the bare `captureOwnerStack` and the namespaced `React.captureOwnerStack` (any name ending in `.captureOwnerStack`).
+
+    Use `is.API(name)` for the reference itself and `is.APICall(name)` for a call to it. Hand-rolling this means re-implementing unwrapping and member-expression resolution for **every** API — and breaking the moment someone adds a `?.`, an `as`, or a `React.` prefix.
+  </Accordion>
+</Accordions>
+
+---
+
+### `ast`
+
+Low-level AST utilities for handling TypeScript-specific syntax.
+
+| Method       | Signature                      | Description                                                                                                                                                                                                                                  |
+| ------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `findParent` | `(node, test) -> Node \| null` | Walks up the AST from the given node and returns the first ancestor that satisfies the predicate, stopping at `Program`. Returns `null` if no match is found.                                                                                |
+| `unwrap`     | `(node) -> Node`               | Recursively strips TypeScript type-expression wrappers (`TSAsExpression`, `TSSatisfiesExpression`, `TSNonNullExpression`, `TSTypeAssertion`, `TSInstantiationExpression`) and `ChainExpression` from a node, returning the underlying value. |
+
+---
+
+### `hint`
+
+Bit-flags that control what the component collector considers a "component". Combine with bitwise OR (`|`) and remove with bitwise AND-NOT (`& ~`).
+
+```ts
+// The default hint used when none is specified
+hint.component.Default;
+
+// All available flags
+hint.component.DoNotIncludeFunctionDefinedAsObjectMethod;
+hint.component.DoNotIncludeFunctionDefinedAsClassMethod;
+hint.component.DoNotIncludeFunctionDefinedAsArrayMapCallback;
+hint.component.DoNotIncludeFunctionDefinedAsArbitraryCallExpressionCallback;
+// … and more (inherits all JsxDetectionHint flags)
+```
+
+**Customization example:**
+
+```ts
+const { query, visitor } = collect.components(context, {
+  // Also treat object methods as components (remove the exclusion flag)
+  hint: hint.component.Default & ~hint.component.DoNotIncludeFunctionDefinedAsObjectMethod,
+});
+```
+
+---
+
+### `flag`
+
+Bit-flags indicating component characteristics. Check with bitwise AND (`&`).
+
+```ts
+flag.component.None; // 0n — no flags
+flag.component.Memo; // wrapped in React.memo
+flag.component.ForwardRef; // wrapped in React.forwardRef
+```
+
+**Usage:**
+
+```ts
+for (const component of query.all(program)) {
+  if (component.flag & flag.component.Memo) {
+    // This component is memoized
+  }
+}
+```
+
+---
+
+### `settings`
+
+Exposes the normalized `react-x` settings from the ESLint shared configuration (`context.settings["react-x"]`). This lets your custom rules read and react to the same project-level settings used by the built-in rules.
+
+| Property                | Type                                                    | Default     | Description                                               |
+| ----------------------- | ------------------------------------------------------- | ----------- | --------------------------------------------------------- |
+| `version`               | `string`                                                | auto-detect | Resolved React version (e.g. `"19.2.7"`).                 |
+| `importSource`          | `string`                                                | `"react"`   | The module React is imported from (e.g. `"@pika/react"`). |
+| `compilationMode`       | `"infer" \| "annotation" \| "syntax" \| "all" \| "off"` | `"off"`     | The React Compiler compilation mode the project uses.     |
+| `polymorphicPropName`   | `string \| null`                                        | `"as"`      | Prop name used for polymorphic components.                |
+| `additionalRefHooks`    | `RegExpLike`                                            | —           | Pattern matching custom hooks treated as ref hooks.       |
+| `additionalStateHooks`  | `RegExpLike`                                            | —           | Pattern matching custom hooks treated as state hooks.     |
+| `additionalEffectHooks` | `RegExpLike`                                            | —           | Pattern matching custom hooks treated as effect hooks.    |
+
+`RegExpLike` is an object with a `test(s: string) => boolean` method (same interface as `RegExp`).
+
+**Usage:**
+
+```ts twoslash
+import type { RuleFunction } from "@eslint-react/kit";
+
+function version(major = "19"): RuleFunction {
+  return (context, { settings }) => ({
+    Program(program) {
+      if (!settings.version.startsWith(`${major}.`)) {
+        context.report({
+          node: program,
+          message: `This project requires React ${major}, but detected version ${settings.version}.`,
+        });
+      }
+    },
+  });
+}
+```
+
+---
+
+## Examples
+
+<Accordions>
+  <Accordion title="Simple: Ban `forwardRef`">
+    This is a simplified kit reimplementation of the built-in [`react-x/no-forward-ref`](/docs/rules/no-forward-ref) rule.
+
+    ```ts twoslash
+    import type { RuleFunction } from "@eslint-react/kit";
+    import eslintReactKit, { merge } from "@eslint-react/kit";
+
+    function noForwardRef(): RuleFunction {
+      return (context, { is }) => ({
+        CallExpression(node) {
+          if (is.forwardRefCall(node)) {
+            context.report({ node, message: "forwardRef is deprecated in React 19. Pass ref as a prop instead." });
+          }
+        },
+      });
+    }
+
+    // Usage
+    eslintReactKit()
+      .use(noForwardRef)
+      .getConfig();
+    ```
+  </Accordion>
+
+  <Accordion title="Component: Destructure component props">
+    This is a simplified kit reimplementation that enforces destructuring assignment for component props.
+
+    ```ts twoslash
+    import type { RuleFunction } from "@eslint-react/kit";
+    import eslintReactKit, { merge } from "@eslint-react/kit";
+
+    function destructureComponentProps(): RuleFunction {
+      return (context, { collect }) => {
+        const { query, visitor } = collect.components(context);
+
+        return merge(visitor, {
+          "Program:exit"(program) {
+            for (const { node } of query.all(program)) {
+              const [props] = node.params;
+              if (props == null) continue;
+              if (props.type !== "Identifier") continue;
+              const propName = props.name;
+              const propVariable = context.sourceCode.getScope(node).variables.find((v) => v.name === propName);
+              const propReferences = propVariable?.references ?? [];
+              for (const ref of propReferences) {
+                const { parent } = ref.identifier;
+                if (parent.type !== "MemberExpression") continue;
+                context.report({
+                  message: "Use destructuring assignment for component props.",
+                  node: parent,
+                });
+              }
+            }
+          },
+        });
+      };
+    }
+
+    // Usage
+    eslintReactKit()
+      .use(destructureComponentProps)
+      .getConfig();
+    ```
+  </Accordion>
+
+  <Accordion title="Hooks: Warn on custom hooks that don't call other hooks">
+    This is a simplified kit reimplementation of the built-in [`react-x/no-unnecessary-use-prefix`](/docs/rules/no-unnecessary-use-prefix) rule.
+
+    ```ts twoslash
+    import type { RuleFunction } from "@eslint-react/kit";
+    import eslintReactKit, { merge } from "@eslint-react/kit";
+
+    function noUnnecessaryUsePrefix(): RuleFunction {
+      return (context, { collect }) => {
+        const { query, visitor } = collect.hooks(context);
+
+        return merge(visitor, {
+          "Program:exit"(program) {
+            for (const { node, hookCalls } of query.all(program)) {
+              if (hookCalls.length === 0) {
+                context.report({
+                  node,
+                  message: "A custom hook should use at least one hook, otherwise it's just a regular function.",
+                });
+              }
+            }
+          },
+        });
+      };
+    }
+
+    // Usage
+    eslintReactKit()
+      .use(noUnnecessaryUsePrefix)
+      .getConfig();
+    ```
+  </Accordion>
+
+  <Accordion title="Multiple Collectors: Error Boundaries">
+    Validates usage of Error Boundaries instead of `try/catch` for errors in child components or the `use` hook.
+
+    This is a simplified kit reimplementation of the built-in [`react-x/error-boundaries`](/docs/rules/error-boundaries) rule.
+
+    ```ts twoslash
+    import eslintReactKit, { type RuleFunction, merge } from "@eslint-react/kit";
+    import type { TSESTree } from "@typescript-eslint/types";
+
+    function isJsxLike(node: TSESTree.Node | null): boolean {
+      if (node == null) return false;
+      return node.type === "JSXElement" || node.type === "JSXFragment";
+    }
+
+    /** Validates usage of Error Boundaries instead of try/catch for errors in child components. */
+    export function errorBoundaries(): RuleFunction {
+      return (context, { ast, collect, is }) => {
+        // Fast path: skip if `try` is not present in the file
+        if (!context.sourceCode.text.includes("try")) return {};
+
+        const fc = collect.components(context);
+        const hk = collect.hooks(context);
+
+        const reported = new Set<TSESTree.TryStatement>();
+        const useCalls = new Set<TSESTree.CallExpression>();
+
+        return merge(
+          fc.visitor,
+          hk.visitor,
+          {
+            CallExpression(node) {
+              if (!is.useCall(node)) return;
+              useCalls.add(node);
+            },
+            "Program:exit"(program) {
+              const comps = fc.query.all(program);
+              const hooks = hk.query.all(program);
+              const funcs = [...comps, ...hooks];
+
+              for (const call of useCalls) {
+                const stmt = ast.findParent(call, (n) => n.type === "TryStatement");
+                const func = ast.findParent(stmt, (n) => funcs.some((f) => f.node === n));
+                if (stmt != null && func != null && !reported.has(stmt)) {
+                  context.report({
+                    node: stmt,
+                    message:
+                      "Use an Error Boundary instead of try/catch around the 'use' hook. The 'use' hook suspends the component, and its errors can only be caught by Error Boundaries.",
+                  });
+                  reported.add(stmt);
+                }
+              }
+
+              for (const { rets } of funcs) {
+                for (const ret of rets) {
+                  if (ret == null) continue;
+                  if (!isJsxLike(ret)) continue;
+                  const stmt = ast.findParent(ret, (n) => n.type === "TryStatement");
+                  if (stmt != null && !reported.has(stmt)) {
+                    context.report({
+                      node: stmt,
+                      message:
+                        "Use an Error Boundary to catch errors in child components. Try/catch can't catch errors during React's rendering process.",
+                    });
+                    reported.add(stmt);
+                  }
+                }
+              }
+            },
+          },
+        );
+      };
+    }
+
+    // Usage
+    eslintReactKit()
+      .use(errorBoundaries)
+      .getConfig();
+    ```
+  </Accordion>
+
+  <Accordion title="Override Config: Using spread syntax with `getConfig`">
+    `getConfig()` returns a plain config object. You can spread it into a new object to override or supplement its properties — for example, to scope the config to specific files or add extra settings alongside your kit rules.
+
+    ```ts twoslash title="eslint.config.ts"
+    import type { RuleFunction } from "@eslint-react/kit";
+
+    declare function noForwardRef(): RuleFunction;
+
+    declare function version(major: string): RuleFunction;
+
+    // ---cut---
+
+    import eslintReactKit from "@eslint-react/kit";
+
+    // Spread the config into a new object to add or override properties like `files`:
+    export default [
+      {
+        ...eslintReactKit()
+          .use(noForwardRef)
+          .use(version, "19")
+          .getConfig(),
+        // Override `name` so it shows your own label in config inspector tools
+        name: "react-custom-rules",
+        // Override `files` to scope the kit rules to specific source files
+        files: ["src/**/*.ts", "src/**/*.tsx"],
+      },
+    ];
+    ```
+
+    This pattern is especially useful when composing kit configs alongside other ESLint configs (e.g. `typescript-eslint`, `eslint-plugin-react-hooks`) via `defineConfig` — you can nest the spread object inside `extends` arrays and attach shared properties like `files` or `languageOptions` at the same level.
+  </Accordion>
+
+  <Accordion title="Advanced Config: Using `getPlugin` for custom plugin namespace">
+    Use `getPlugin()` when you want full control over the plugin namespace and rule severities instead of the all-in-one `getConfig()`.
+
+    ```ts twoslash title="eslint.config.ts"
+    import type { RuleFunction } from "@eslint-react/kit";
+
+    declare function noForwardRef(): RuleFunction;
+
+    declare function version(major: string): RuleFunction;
+
+    // ---cut---
+
+    import eslintReactKit from "@eslint-react/kit";
+
+    const kit = eslintReactKit()
+      .use(noForwardRef)
+      .use(version, "19");
+
+    // Instead of kit.getConfig(), use kit.getPlugin() for full control:
+    const plugin = kit.getPlugin();
+
+    export default [
+      {
+        files: ["**/*.{ts,tsx}"],
+        plugins: {
+          // Choose your own namespace
+          "react-custom-rules": plugin,
+        },
+        rules: {
+          // Set individual severities
+          "react-custom-rules/no-forward-ref": "error",
+          "react-custom-rules/version": "error",
+        },
+      },
+    ];
+    ```
+  </Accordion>
+</Accordions>
+
+## Resources
+
+- [AST Explorer](https://ast-explorer.dev/#eNpNkE9PwzAMxb+K5dMmDbiXrQeQOCIEEqdcQuqJjDSpEncCVf3u2Al/donk3/Pzi71gwA5P9myLy35i3OEkgL8mauCKSvBRuRPuxyllhmeyjuGY0wgGsxYGb000UX1wNzOn+JTTVOAAi4kA7t2HIVPsmvW6vo9pIHEBpHgfvPvoYLOFQw/n5Afha514nKNjn+LP1M3yNwvW7jJq25Iy8Zwj7N+qAvqhg8FWGeyXX/e6v2mw1ygTZcEkC9YZBsmN9pVykWCDnYBgmYpsufvXH8hKFBVtqDYVTuVTa84z1VZlcrTgaXjh7PVQTVVRYldcvwGs9YT5) - A tool for exploring the abstract syntax tree (AST) of JavaScript code, which is essential for writing custom rules.
+- [ESLint Developer Guide](https://eslint.org/docs/latest/extend/custom-rules) - Official ESLint documentation for creating custom rules.
+- [Using the TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#type-checker-apis) - TypeScript compiler API documentation for working with type information in custom rules.

@@ -1,0 +1,228 @@
+---
+title: use-state
+description: Enforces correct usage of 'useState', including destructuring, symmetric naming of the value and setter, and wrapping expensive initializers in a lazy initializer function.
+---
+
+**Full Name in [`eslint-plugin-react-x`](https://npmx.dev/package/eslint-plugin-react-x/v/latest)**
+
+```plain copy
+react-x/use-state
+```
+
+**Full Name in [`@eslint-react/eslint-plugin`](https://npmx.dev/package/@eslint-react/eslint-plugin/v/latest)**
+
+```plain copy
+@eslint-react/use-state
+```
+
+**Features**
+
+`⚙️`
+
+**Presets**
+
+`x`
+`recommended`
+`recommended-typescript`
+`recommended-type-checked`
+`strict`
+`strict-typescript`
+`strict-type-checked`
+
+## Rule Details
+
+This rule covers three concerns:
+
+1. The return value of `useState` must be destructured into a value and setter pair (ex: `const [count, setCount] = useState(0)`). Bare calls or assignments (ex: `useState(0)` or `const count = useState(0)`) are reported as invalid usage.
+2. The setter must be named symmetrically — `set` followed by the capitalized value name (ex: `count` -> `setCount`). The state value must be a plain identifier; destructured patterns (`ObjectPattern`, `ArrayPattern`, etc.) are reported as an invalid assignment form.
+3. Function calls passed directly as the initial state argument are reported. Wrapping them in an initializer function (ex: `() => getValue()`) avoids re-invoking the function on every render.
+
+> Lazy initialization behavior was previously a standalone `prefer-use-state-lazy-initialization` rule. That rule has been merged into `use-state` and removed.
+
+## Examples
+
+### Not destructuring the useState return value
+
+`useState` must return a `[value, setter]` array pattern. Assigning directly to a single variable prevents calling the setter to update state.
+
+```tsx
+// 🔴 Problem: not destructured into a [value, setter] pair
+import { useState } from "react";
+
+function Counter() {
+  const count = useState(0);
+  //    ^^^ useState should be destructured into a value and setter pair, e.g. const [state, setState] = useState(...).
+  return <div>{count}</div>;
+}
+```
+
+If only the state value is needed and not the setter, you can destructure just the value:
+
+```tsx
+// 🔵 OK: destructure only the value, omitting the setter
+import { useState } from "react";
+
+function Component() {
+  const [value] = useState(() => expensiveSetup());
+  return <div>{value}</div>;
+}
+```
+
+### Setter name does not follow the symmetric naming convention
+
+The setter name should be `set` followed by the capitalized state variable name, for example `count` corresponds to `setCount`. Snake\_case names also allow symmetric forms.
+
+```tsx
+// 🔴 Problem: setter name is not symmetric with the state name
+import { useState } from "react";
+
+function Counter() {
+  const [count, updateCount] = useState(0);
+  //            ^^^ The setter should be named 'set' followed by the capitalized state variable name, e.g. 'setCount' for 'count'.
+  return <div>{count}</div>;
+}
+```
+
+```tsx
+// 🔴 Problem: correct prefix but case mismatch
+import { useState } from "react";
+
+function Counter() {
+  const [count, setcount] = useState(0);
+  return <div>{count}</div>;
+}
+```
+
+```tsx
+// 🟢 Recommended: use symmetric camelCase naming
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <div>{count}</div>;
+}
+```
+
+```tsx
+// 🔵 OK: symmetric snake_case naming
+import { useState } from "react";
+
+function Counter() {
+  const [foo_bar, set_foo_bar] = useState(0);
+  return <div>{foo_bar}</div>;
+}
+```
+
+### Using complex objects as state with plain identifiers
+
+The state value itself must be a plain identifier and cannot be a destructuring pattern. However, storing objects or arrays as the state value is completely allowed.
+
+```tsx
+// 🔵 OK: object state stored under a plain identifier
+import { useState } from "react";
+
+function Form() {
+  const [form, setForm] = useState({ foo: "a", bar: "b" });
+  return <div>{form.foo}</div>;
+}
+```
+
+### Passing a function call directly as the initial value
+
+If the initial value needs to be computed by a function, passing the function call directly causes it to re-execute on every render. It should be wrapped in a lazy initializer function.
+
+```tsx
+// 🔴 Problem: generateTodos is called on every render
+import { useState } from "react";
+
+function MyComponent() {
+  const [value, setValue] = useState(generateTodos());
+  //                                 ^^^ To prevent re-computation, consider using lazy initial state. Ex: 'useState(() => getValue())'.
+  return null;
+}
+
+declare function generateTodos(): string[];
+```
+
+```tsx
+// 🟢 Recommended: use a lazy initializer function that only runs on the first render
+import { useState } from "react";
+
+function MyComponent() {
+  const [value, setValue] = useState(() => generateTodos());
+  return null;
+}
+
+declare function generateTodos(): string[];
+```
+
+React's `use()` Hook is safe as an initial value because it has special handling semantics:
+
+```tsx
+// 🔵 OK: use() calls as the initial value are always allowed
+import { useState, use } from "react";
+
+function Component({ promise }) {
+  const [data, setData] = useState(use(promise));
+  return null;
+}
+```
+
+## Options
+
+### Rule Options
+
+```ts
+type Options = {
+  enforceAssignment?: boolean;         // default: true
+  enforceSetterName?: boolean;         // default: true
+  enforceLazyInitialization?: boolean; // default: true
+};
+```
+
+#### `enforceAssignment`
+
+When `true`, requires `useState` to be destructured into a `[value, setter]` array pattern. Bare assignments (ex: `const state = useState(0)`) or calls without any assignment are reported.
+
+Default: `true`
+
+#### `enforceSetterName`
+
+When `true`, requires the setter to be named `set` + capitalized value name (ex: `setCount` for `count`). Snake-case and object-pattern state names are normalized before comparison.
+
+Default: `true`
+
+#### `enforceLazyInitialization`
+
+When `true`, reports function calls passed directly as the initial state argument to `useState`. React calls the initializer on every render and discards the result after the first — wrapping expensive calls in an [initializer function](https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state) avoids this overhead.
+
+Primitive wrapper calls (`Boolean(...)`, `String(...)`, `Number(...)`) and React hook calls (including `use(...)`) are always allowed.
+
+Default: `true`
+
+### Shared Settings
+
+Custom state hooks can also be configured via shared ESLint settings, which apply consistently across all rules in the plugin:
+
+```json
+{
+  "settings": {
+    "react-x": {
+      "additionalStateHooks": "/^(useMyState|useCustomState)$/u",
+    }
+  }
+}
+```
+
+## Resources
+
+- [Rule Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/use-state/use-state.ts)
+- [Test Source](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/use-state/use-state.spec.ts)
+- [Rule Changelog](https://github.com/Rel1cx/eslint-react/tree/main/plugins/eslint-plugin-react-x/src/rules/use-state/CHANGELOG.md)
+
+## Further Reading
+
+- [React Docs: `useState`](https://react.dev/reference/react/useState)
+- [React Docs: Avoiding recreating the initial state](https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state)
+- [React Docs: Storing information from previous renders](https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+- [React Docs: State naming conventions](https://react.dev/learn/state-a-components-memory#meet-your-first-hook)
